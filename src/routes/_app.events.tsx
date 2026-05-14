@@ -31,15 +31,22 @@ const STATUS_OPTIONS = [
 function sheetDateToInput(s: string): string {
   if (!s) return "";
   const t = s.trim();
-  // DD-MM-YYYY or D-M-YYYY
-  let m = t.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
   // YYYY-MM-DD
-  m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  // DD/MM/YYYY or MM/DD/YYYY — assume DD/MM/YYYY (matches Jotform / non-US)
-  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  // M-D-YYYY / D-M-YYYY or with slashes — sheet uses US M-D-YYYY
+  m = t.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (m) {
+    let a = parseInt(m[1], 10);
+    let b = parseInt(m[2], 10);
+    const y = m[3];
+    let mm: number, dd: number;
+    if (a > 12 && b <= 12) { dd = a; mm = b; }       // DD-MM
+    else if (b > 12 && a <= 12) { mm = a; dd = b; }  // MM-DD
+    else { mm = a; dd = b; }                         // ambiguous → US MM-DD
+    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return "";
+    return `${y}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  }
   // Fallback: let Date parse it (e.g. "Aug 8, 2025")
   const d = new Date(t);
   if (!isNaN(d.getTime())) {
@@ -54,7 +61,8 @@ function inputDateToSheet(s: string): string {
   if (!s) return "";
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return s;
-  return `${m[3]}-${m[2]}-${m[1]}`;
+  // Sheet format: M-D-YYYY (US)
+  return `${m[2]}-${m[3]}-${m[1]}`;
 }
 function formatSheetDate(s: string): string {
   const iso = sheetDateToInput(s);
