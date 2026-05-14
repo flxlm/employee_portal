@@ -63,6 +63,7 @@ export type EventInquiry = {
   endTime: string;
   barService: string;
   foodService: string;
+  foodServiceTime: string;
   dj: string;
   description: string;
   budget: string;
@@ -137,6 +138,7 @@ type InquiryRow = {
   end_time: string;
   bar_service: string;
   food_service: string;
+  food_service_time: string;
   dj: string;
   description: string;
   budget: string;
@@ -164,6 +166,7 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     endTime: r.end_time,
     barService: r.bar_service,
     foodService: r.food_service,
+    foodServiceTime: r.food_service_time ?? "",
     dj: r.dj,
     description: r.description,
     budget: r.budget,
@@ -195,6 +198,7 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   endTime: "end_time",
   barService: "bar_service",
   foodService: "food_service",
+  foodServiceTime: "food_service_time",
   dj: "dj",
   description: "description",
   budget: "budget",

@@ -1,0 +1,1 @@
+ALTER TABLE public.event_inquiries ADD COLUMN food_service_time text NOT NULL DEFAULT '';

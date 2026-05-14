@@ -51,6 +51,7 @@ export type Database = {
           event_date: string | null
           event_date_raw: string
           food_service: string
+          food_service_time: string
           guests: string
           id: string
           new_date_raw: string
@@ -74,6 +75,7 @@ export type Database = {
           event_date?: string | null
           event_date_raw?: string
           food_service?: string
+          food_service_time?: string
           guests?: string
           id?: string
           new_date_raw?: string
@@ -97,6 +99,7 @@ export type Database = {
           event_date?: string | null
           event_date_raw?: string
           food_service?: string
+          food_service_time?: string
           guests?: string
           id?: string
           new_date_raw?: string

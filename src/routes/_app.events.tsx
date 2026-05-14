@@ -127,7 +127,8 @@ const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" |
   { key: "endTime", label: "End time", type: "time" },
   { key: "barService", label: "Bar service", type: "input" },
   { key: "foodService", label: "Food service", type: "input" },
-  { key: "dj", label: "DJ", type: "input" },
+  { key: "foodServiceTime", label: "Food service time", type: "time" },
+  { key: "dj", label: "Other options", type: "input" },
   { key: "budget", label: "Budget", type: "input" },
   { key: "prepaid", label: "Prepaid bar", type: "input" },
   { key: "description", label: "Notes", type: "textarea" },
@@ -483,7 +484,8 @@ function EventsPage() {
                   <Field label="End" value={selected.endTime} />
                   <Field label="Bar service" value={selected.barService} />
                   <Field label="Food service" value={selected.foodService} />
-                  <Field label="DJ" value={selected.dj} />
+                  <Field label="Food service time" value={selected.foodServiceTime} />
+                  <Field label="Other options" value={selected.dj} />
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
                   <Field label="Notes" value={selected.description} multiline />
