@@ -96,7 +96,7 @@ function FunctionsPage() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {functions.map(({ key, title, description, icon: Icon, onClick, footer }) => (
+        {functions.map(({ key, title, description, icon: Icon, onClick }) => (
           <button key={key} onClick={onClick} className="text-left group">
             <Card className="h-full transition-colors group-hover:border-primary">
               <CardHeader>
