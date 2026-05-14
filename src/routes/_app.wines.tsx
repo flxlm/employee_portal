@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { getWineList, addWine, updateWineStock, type WineEntry } from "@/lib/sheets.functions";
+import { getWineList, addWine, updateWineStock, updateWine, type WineEntry } from "@/lib/sheets.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Search, Wine as WineIcon, ExternalLink, Loader2, Plus } from "lucide-react";
+import { RefreshCw, Search, Wine as WineIcon, ExternalLink, Loader2, Plus, Pencil } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -154,6 +154,24 @@ function WinesPage() {
 
 function WineDetail({ wine }: { wine: WineEntry }) {
   const insightsFn = useServerFn(getWineInsights);
+  const updateFn = useServerFn(updateWine);
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const parseMoney = (v: string) => Number(String(v ?? "").replace(/[^0-9.\-]/g, "")) || 0;
+  const [form, setForm] = useState({
+    name: wine.name,
+    domaine: wine.domaine,
+    year: wine.year,
+    country: wine.country,
+    type: wine.type,
+    colour: wine.colour,
+    inventory: String(parseMoney(wine.inventory)),
+    bottle: String(parseMoney(wine.bottle)),
+    togo: String(parseMoney(wine.togo)),
+  });
+
   const { data: insights, isLoading, error } = useQuery({
     queryKey: ["wine-insights", wine.id],
     queryFn: () =>
@@ -169,7 +187,96 @@ function WineDetail({ wine }: { wine: WineEntry }) {
       }),
     staleTime: 1000 * 60 * 60,
     retry: 1,
+    enabled: !editing,
   });
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await updateFn({
+        data: {
+          id: wine.id,
+          name: form.name,
+          domaine: form.domaine,
+          year: form.year,
+          country: form.country,
+          type: form.type,
+          colour: form.colour,
+          inventory: Number(form.inventory),
+          bottle: Number(form.bottle),
+          togo: Number(form.togo),
+        },
+      });
+      toast.success("Wine updated");
+      await queryClient.invalidateQueries({ queryKey: ["wine-list"] });
+      setEditing(false);
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to update");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <>
+        <DialogHeader>
+          <DialogTitle className="text-xl">Edit wine</DialogTitle>
+          <DialogDescription>Update wine details.</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="col-span-2">
+            <Label>Name</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="col-span-2">
+            <Label>Domaine</Label>
+            <Input value={form.domaine} onChange={(e) => setForm({ ...form, domaine: e.target.value })} />
+          </div>
+          <div>
+            <Label>Colour</Label>
+            <Select value={form.colour} onValueChange={(v) => setForm({ ...form, colour: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {COLOUR_OPTIONS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Type</Label>
+            <Input value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} />
+          </div>
+          <div>
+            <Label>Year</Label>
+            <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+          </div>
+          <div>
+            <Label>Country</Label>
+            <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+          </div>
+          <div>
+            <Label>Stock</Label>
+            <Input type="number" min="0" step="1" value={form.inventory} onChange={(e) => setForm({ ...form, inventory: e.target.value })} />
+          </div>
+          <div>
+            <Label>Bottle price</Label>
+            <Input type="number" min="0" step="0.01" value={form.bottle} onChange={(e) => setForm({ ...form, bottle: e.target.value })} />
+          </div>
+          <div>
+            <Label>To-go price</Label>
+            <Input type="number" min="0" step="0.01" value={form.togo} onChange={(e) => setForm({ ...form, togo: e.target.value })} />
+          </div>
+        </div>
+        <DialogFooter className="pt-2">
+          <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Save
+          </Button>
+        </DialogFooter>
+      </>
+    );
+  }
 
   return (
     <>
@@ -182,6 +289,11 @@ function WineDetail({ wine }: { wine: WineEntry }) {
             <DialogTitle className="text-xl leading-tight">{wine.name}</DialogTitle>
             <DialogDescription className="text-sm">{wine.domaine || "—"}</DialogDescription>
           </div>
+        </div>
+        <div className="pt-2">
+          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2 pt-2">
           {wine.colour && <Badge variant="secondary">{wine.colour}</Badge>}
