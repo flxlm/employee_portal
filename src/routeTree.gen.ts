@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
+import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
@@ -47,6 +48,11 @@ const AppOpenCloseRoute = AppOpenCloseRouteImport.update({
   path: '/open-close',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEventsRoute = AppEventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
+  '/home': typeof AppHomeRoute
   '/open-close': typeof AppOpenCloseRoute
   '/wines': typeof AppWinesRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
+  '/home': typeof AppHomeRoute
   '/open-close': typeof AppOpenCloseRoute
   '/wines': typeof AppWinesRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/events': typeof AppEventsRoute
+  '/_app/home': typeof AppHomeRoute
   '/_app/open-close': typeof AppOpenCloseRoute
   '/_app/wines': typeof AppWinesRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/events'
+    | '/home'
     | '/open-close'
     | '/wines'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/events'
+    | '/home'
     | '/open-close'
     | '/wines'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_app/admin'
     | '/_app/events'
+    | '/_app/home'
     | '/_app/open-close'
     | '/_app/wines'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpenCloseRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/events': {
       id: '/_app/events'
       path: '/events'
@@ -189,6 +208,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppEventsRoute: typeof AppEventsRoute
+  AppHomeRoute: typeof AppHomeRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
   AppWinesRoute: typeof AppWinesRoute
 }
@@ -196,6 +216,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppEventsRoute: AppEventsRoute,
+  AppHomeRoute: AppHomeRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
   AppWinesRoute: AppWinesRoute,
 }
@@ -211,3 +232,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
