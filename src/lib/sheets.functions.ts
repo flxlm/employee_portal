@@ -1,43 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const SPREADSHEET_ID = "1I6quIaAQuMpLk97WVRtDys1mZ53d2Ys5Xj8YI3Zw10A";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
-
-async function fetchRange(range: string): Promise<string[][]> {
-  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-  const GOOGLE_SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
-  if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
-
-  const encodedRange = range.replace(/ /g, "%20");
-  const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/${encodedRange}?valueRenderOption=FORMATTED_VALUE`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Sheets API ${res.status}: ${body}`);
-  }
-  const data = (await res.json()) as { values?: string[][] };
-  return data.values ?? [];
-}
-
-function rowsToObjects(rows: string[][]): Record<string, string>[] {
-  if (rows.length === 0) return [];
-  const headers = rows[0];
-  return rows.slice(1).map((r) => {
-    const obj: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      obj[h] = r[i] ?? "";
-    });
-    return obj;
-  });
-}
-
 export type StatusBucket =
   | "NEW"
   | "ONGOING"
