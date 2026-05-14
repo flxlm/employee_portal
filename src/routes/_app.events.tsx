@@ -485,13 +485,32 @@ function EventsPage() {
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
                   <Field label="Notes" value={selected.description} multiline />
-                  <div className="pt-2">
-                    <a
-                      href={`mailto:${selected.email}`}
-                      className="inline-flex items-center gap-2 text-primary hover:underline"
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleDraftEstimate("english")}
+                      disabled={drafting !== null || !selected.email}
                     >
-                      <Mail className="h-4 w-4" /> Reply by email <ExternalLink className="h-3 w-3" />
-                    </a>
+                      {drafting === "english" ? (
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1.5" />
+                      )}
+                      Send English Estimate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleDraftEstimate("french")}
+                      disabled={drafting !== null || !selected.email}
+                    >
+                      {drafting === "french" ? (
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1.5" />
+                      )}
+                      Send French Estimate
+                    </Button>
                   </div>
                 </div>
               )}
