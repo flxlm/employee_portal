@@ -63,6 +63,7 @@ export type EventInquiry = {
   endTime: string;
   barService: string;
   foodService: string;
+  foodServiceTime: string;
   dj: string;
   description: string;
   budget: string;
