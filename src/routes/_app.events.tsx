@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -134,6 +134,10 @@ function EventsPage() {
   const [selected, setSelected] = useState<EventInquiry | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [bucketFilter, setBucketFilter] = useState<string>("NEW");
+  const [ongoingSub, setOngoingSub] = useState<string>("ALL");
+
+  const ONGOING_SUBSTATUSES = ["FORM FILLED", "ESTIMATE SENT", "REMINDER SENT"] as const;
 
   useEffect(() => {
     if (selected) {
@@ -194,33 +198,66 @@ function EventsPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="NEW">
-        <TabsList className="mb-4 flex-wrap h-auto">
-          {BUCKETS.map((b) => (
-            <TabsTrigger key={b.id} value={b.id}>
-              {b.label}
-              <Badge variant="secondary" className="ml-2">
-                {grouped[b.id]?.length ?? 0}
-              </Badge>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {(() => {
+        const activeBucket = BUCKETS.find((b) => b.id === bucketFilter);
+        let items = grouped[bucketFilter] ?? [];
+        if (bucketFilter === "ONGOING" && ongoingSub !== "ALL") {
+          items = items.filter((e) => e.rawStatus.trim().toUpperCase() === ongoingSub);
+        }
+        return (
+          <>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUCKETS.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.label} ({grouped[b.id]?.length ?? 0})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {BUCKETS.map((b) => (
-          <TabsContent key={b.id} value={b.id}>
+              {bucketFilter === "ONGOING" && (
+                <>
+                  <span className="text-muted-foreground text-sm">›</span>
+                  <Select value={ongoingSub} onValueChange={setOngoingSub}>
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All ongoing</SelectItem>
+                      {ONGOING_SUBSTATUSES.map((s) => {
+                        const count = (grouped["ONGOING"] ?? []).filter(
+                          (e) => e.rawStatus.trim().toUpperCase() === s,
+                        ).length;
+                        return (
+                          <SelectItem key={s} value={s}>
+                            {s} ({count})
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+            </div>
+
             {isLoading ? (
               <div className="grid gap-3 md:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
               </div>
-            ) : (grouped[b.id]?.length ?? 0) === 0 ? (
+            ) : items.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
-                  No {b.label.toLowerCase()} inquiries.
+                  No {(activeBucket?.label ?? "").toLowerCase()} inquiries.
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {grouped[b.id].map((e) => (
+                {items.map((e) => (
                   <Card
                     key={e.id}
                     className="cursor-pointer hover:border-primary transition-colors"
@@ -243,9 +280,9 @@ function EventsPage() {
                 ))}
               </div>
             )}
-          </TabsContent>
-        ))}
-      </Tabs>
+          </>
+        );
+      })()}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && !mutation.isPending && setSelected(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
