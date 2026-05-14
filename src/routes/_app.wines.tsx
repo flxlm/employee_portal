@@ -392,7 +392,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
-            <Button type="submit" disabled={submitting || !name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct}>
+            <Button type="submit" disabled={submitting || !name.trim() || !domaine.trim() || !validCost || !validMarkup || !validPct}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Add wine
             </Button>
