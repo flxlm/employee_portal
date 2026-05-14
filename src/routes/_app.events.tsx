@@ -484,7 +484,8 @@ function EventsPage() {
                   <Field label="End" value={selected.endTime} />
                   <Field label="Bar service" value={selected.barService} />
                   <Field label="Food service" value={selected.foodService} />
-                  <Field label="DJ" value={selected.dj} />
+                  <Field label="Food service time" value={selected.foodServiceTime} />
+                  <Field label="Other options" value={selected.dj} />
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
                   <Field label="Notes" value={selected.description} multiline />
