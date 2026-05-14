@@ -7,6 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil } from "lucide-react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -163,15 +167,108 @@ function RecipesPage() {
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="max-w-xl">
-          {selected && <RecipeDetail recipe={selected} />}
+          {selected && (
+            <RecipeDetail
+              recipe={selected}
+              onSaved={(updated) => {
+                setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+                setSelected(updated);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-function RecipeDetail({ recipe }: { recipe: Recipe }) {
+function RecipeDetail({ recipe, onSaved }: { recipe: Recipe; onSaved: (r: Recipe) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    product: recipe.product,
+    category: recipe.category,
+    dish_used: recipe.dish_used,
+    special_instructions: recipe.special_instructions,
+    recipe: recipe.recipe,
+  });
+
+  useEffect(() => {
+    setForm({
+      product: recipe.product,
+      category: recipe.category,
+      dish_used: recipe.dish_used,
+      special_instructions: recipe.special_instructions,
+      recipe: recipe.recipe,
+    });
+    setEditing(false);
+  }, [recipe.id]);
+
   const steps = parseSteps(recipe.recipe);
+
+  async function save() {
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("recipes")
+      .update(form)
+      .eq("id", recipe.id)
+      .select("id, category, product, recipe, dish_used, special_instructions, sort_order")
+      .single();
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Recipe updated");
+    onSaved(data as Recipe);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <>
+        <DialogHeader>
+          <DialogTitle className="text-xl leading-tight">Edit recipe</DialogTitle>
+          <DialogDescription>Update the recipe details below.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 pt-2">
+          <div className="space-y-1.5">
+            <Label>Product</Label>
+            <Input value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Category</Label>
+            <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Dish used</Label>
+            <Input value={form.dish_used} onChange={(e) => setForm({ ...form, dish_used: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notes</Label>
+            <Textarea
+              rows={3}
+              value={form.special_instructions}
+              onChange={(e) => setForm({ ...form, special_instructions: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Instructions (one step per line)</Label>
+            <Textarea
+              rows={8}
+              value={form.recipe}
+              onChange={(e) => setForm({ ...form, recipe: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <DialogHeader>
@@ -181,9 +278,14 @@ function RecipeDetail({ recipe }: { recipe: Recipe }) {
           {recipe.dish_used && <Badge variant="secondary">Served in: {recipe.dish_used}</Badge>}
           <Badge variant="outline">{steps.length} {steps.length === 1 ? "step" : "steps"}</Badge>
         </div>
+        <div className="pt-2">
+          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </Button>
+        </div>
       </DialogHeader>
 
-      {recipe.special_instructions && (
+      {recipe.special_instructions?.trim() && (
         <div className="border-t border-border pt-4 mt-2">
           <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Notes</div>
           <p className="text-sm leading-relaxed bg-muted/50 border border-border rounded-md px-3 py-2 italic">
