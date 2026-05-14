@@ -31,7 +31,7 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back");
-    navigate({ to: "/events" });
+    navigate({ to: "/home" });
   };
 
   return (
