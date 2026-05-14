@@ -7,10 +7,6 @@ import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "l
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
-  },
   component: AppLayout,
 });
 
