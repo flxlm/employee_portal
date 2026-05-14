@@ -20,11 +20,14 @@ export const Route = createFileRoute("/_app/events")({
 });
 
 const BUCKETS = [
-  { id: "new", label: "New" },
-  { id: "ongoing", label: "Ongoing" },
-  { id: "confirmed", label: "Confirmed" },
-  { id: "declined", label: "Declined" },
-  { id: "past", label: "Past" },
+  { id: "FORM FILLED", label: "Form filled" },
+  { id: "ESTIMATE SENT", label: "Estimate sent" },
+  { id: "REMINDER SENT", label: "Reminder sent" },
+  { id: "AWAITING PAYMENT", label: "Awaiting payment" },
+  { id: "CONFIRMED", label: "Confirmed" },
+  { id: "DECLINED", label: "Declined" },
+  { id: "REFUSED, LOW BUDGET", label: "Refused, low budget" },
+  { id: "PAST", label: "Past" },
 ] as const;
 
 const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" }[] = [
@@ -46,10 +49,13 @@ const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" |
 
 function statusVariant(b: EventInquiry["bucket"]) {
   switch (b) {
-    case "confirmed": return "bg-emerald-100 text-emerald-900 border-emerald-300";
-    case "declined": return "bg-rose-100 text-rose-900 border-rose-300";
-    case "ongoing": return "bg-amber-100 text-amber-900 border-amber-300";
-    case "past": return "bg-muted text-muted-foreground border-border";
+    case "CONFIRMED": return "bg-emerald-100 text-emerald-900 border-emerald-300";
+    case "DECLINED":
+    case "REFUSED, LOW BUDGET": return "bg-rose-100 text-rose-900 border-rose-300";
+    case "ESTIMATE SENT":
+    case "REMINDER SENT":
+    case "AWAITING PAYMENT": return "bg-amber-100 text-amber-900 border-amber-300";
+    case "PAST": return "bg-muted text-muted-foreground border-border";
     default: return "bg-sky-100 text-sky-900 border-sky-300";
   }
 }
@@ -125,7 +131,7 @@ function EventsPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="new">
+      <Tabs defaultValue="FORM FILLED">
         <TabsList className="mb-4 flex-wrap h-auto">
           {BUCKETS.map((b) => (
             <TabsTrigger key={b.id} value={b.id}>

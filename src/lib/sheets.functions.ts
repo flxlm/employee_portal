@@ -37,12 +37,22 @@ function rowsToObjects(rows: string[][]): Record<string, string>[] {
   });
 }
 
+export type StatusBucket =
+  | "FORM FILLED"
+  | "ESTIMATE SENT"
+  | "REMINDER SENT"
+  | "AWAITING PAYMENT"
+  | "CONFIRMED"
+  | "DECLINED"
+  | "REFUSED, LOW BUDGET"
+  | "PAST";
+
 export type EventInquiry = {
   id: string;
   rowNumber: number;
   status: string;
   rawStatus: string;
-  bucket: "new" | "ongoing" | "confirmed" | "declined" | "past";
+  bucket: StatusBucket;
   timestamp: string;
   email: string;
   eventDate: string;
@@ -60,33 +70,51 @@ export type EventInquiry = {
   prepaid: string;
 };
 
-function bucketFor(rawStatus: string, eventDate: string | null): EventInquiry["bucket"] {
-  const s = (rawStatus || "").trim().toUpperCase();
-  const isPast = eventDate ? new Date(eventDate).getTime() < Date.now() - 24 * 3600 * 1000 : false;
+const KNOWN_STATUSES: StatusBucket[] = [
+  "FORM FILLED",
+  "ESTIMATE SENT",
+  "REMINDER SENT",
+  "AWAITING PAYMENT",
+  "CONFIRMED",
+  "DECLINED",
+  "REFUSED, LOW BUDGET",
+];
 
-  if (s === "CONFIRMED") return isPast ? "past" : "confirmed";
-  if (s === "DECLINED" || s.startsWith("REFUSED")) return "declined";
-  if (s === "ESTIMATE SENT" || s === "REMINDER SENT") return "ongoing";
-  // FORM FILLED or empty => new
-  return isPast ? "past" : "new";
+function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
+  const s = (rawStatus || "").trim().toUpperCase();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const isPast = eventDate ? eventDate.getTime() < todayStart.getTime() : false;
+
+  if (s === "CONFIRMED" && isPast) return "PAST";
+  const match = KNOWN_STATUSES.find((k) => k === s);
+  if (match) return match;
+  // empty / unknown => FORM FILLED
+  return "FORM FILLED";
 }
 
-function parseDate(s: string): string | null {
+function parseDate(s: string): Date | null {
   if (!s) return null;
-  // try MM/DD/YYYY
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (m) {
-    const d = new Date(Number(m[3]), Number(m[1]) - 1, Number(m[2]));
-    return isNaN(d.getTime()) ? null : d.toISOString();
+  // MM/DD/YYYY or M/D/YYYY (Google Sheets default US locale)
+  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mdy) {
+    const d = new Date(Date.UTC(Number(mdy[3]), Number(mdy[1]) - 1, Number(mdy[2])));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // ISO YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
+    return isNaN(d.getTime()) ? null : d;
   }
   const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d.toISOString();
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export const getEventInquiries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async (): Promise<EventInquiry[]> => {
-    const rows = await fetchRange("Event Inquiries!A1:P");
+    const rows = await fetchRange("Event Inquiries!A1:Z");
     const objs = rowsToObjects(rows);
     return objs
       .map((o, idx) => {
@@ -101,7 +129,7 @@ export const getEventInquiries = createServerFn({ method: "GET" })
           timestamp: o["Timestamp"] ?? "",
           email: o["Email Address"] ?? "",
           eventDate: o["Date of your event"] ?? "",
-          eventDateParsed: eventDate,
+          eventDateParsed: eventDate ? eventDate.toISOString() : null,
           guests: o["Number of expected guests"] ?? "",
           reservationType: o["Type of reservation needed"] ?? "",
           startTime: o["Start time of your event"] ?? "",
