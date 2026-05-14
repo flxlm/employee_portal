@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
@@ -48,6 +48,7 @@ function AppLayout() {
     { to: "/events", label: "Confirmed Events", icon: CalendarDays, search: { status: "CONFIRMED" } },
     { to: "/wines", label: "Wine List", icon: Wine },
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
+    { to: "/functions", label: "Functions", icon: Zap },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users }] : []),
   ];
 

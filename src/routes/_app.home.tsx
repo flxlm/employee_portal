@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Wine, ClipboardCheck, Users } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -28,6 +28,7 @@ function HomePage() {
     { to: "/events", title: "Event Inquiries", description: "Review new, ongoing, confirmed, declined and past events.", icon: CalendarDays },
     { to: "/wines", title: "Wine List", description: "Browse the current wine offering and inventory.", icon: Wine },
     { to: "/open-close", title: "Open / Close Log", description: "Log opening and closing shifts with till and photo.", icon: ClipboardCheck },
+    { to: "/functions", title: "Functions", description: "Operational actions like refreshing menu screens.", icon: Zap },
     ...(isAdmin ? [{ to: "/admin", title: "Admin", description: "Manage who can sign in to the portal.", icon: Users }] : []),
   ];
 
