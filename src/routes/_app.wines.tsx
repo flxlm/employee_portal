@@ -366,8 +366,8 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
           <div className="border-t border-border pt-4 space-y-3">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="w-bottle">Bottle price *</Label>
-                <Input id="w-bottle" type="number" min="0" step="0.01" value={bottle} onChange={(e) => setBottle(e.target.value)} placeholder="45.00" required />
+                <Label htmlFor="w-cost">Cost *</Label>
+                <Input id="w-cost" type="number" min="0" step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="20.00" required />
               </div>
               <div>
                 <Label htmlFor="w-markup">Markup ×</Label>
@@ -380,8 +380,8 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm bg-muted/40 rounded-md p-3">
               <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">Cost (bottle ÷ markup)</div>
-                <div className="font-medium tabular-nums">{cost != null ? `$${cost.toFixed(2)}` : "—"}</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Bottle price (cost × markup)</div>
+                <div className="font-medium tabular-nums">{bottleN != null ? `$${bottleN.toFixed(2)}` : "—"}</div>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">To-go price</div>
