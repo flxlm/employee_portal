@@ -233,6 +233,7 @@ export type Database = {
           product: string
           recipe: string
           sort_order: number
+          special_instructions: string
           updated_at: string
         }
         Insert: {
@@ -243,6 +244,7 @@ export type Database = {
           product?: string
           recipe?: string
           sort_order?: number
+          special_instructions?: string
           updated_at?: string
         }
         Update: {
@@ -253,6 +255,7 @@ export type Database = {
           product?: string
           recipe?: string
           sort_order?: number
+          special_instructions?: string
           updated_at?: string
         }
         Relationships: []

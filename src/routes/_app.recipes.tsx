@@ -20,6 +20,7 @@ type Recipe = {
   product: string;
   recipe: string;
   dish_used: string;
+  special_instructions: string;
   sort_order: number;
 };
 
@@ -61,7 +62,7 @@ function RecipesPage() {
     (async () => {
       const { data, error } = await supabase
         .from("recipes")
-        .select("id, category, product, recipe, dish_used, sort_order")
+        .select("id, category, product, recipe, dish_used, special_instructions, sort_order")
         .order("sort_order", { ascending: true });
       if (error) {
         toast.error(error.message);
@@ -181,6 +182,15 @@ function RecipeDetail({ recipe }: { recipe: Recipe }) {
           <Badge variant="outline">{steps.length} {steps.length === 1 ? "step" : "steps"}</Badge>
         </div>
       </DialogHeader>
+
+      {recipe.special_instructions && (
+        <div className="border-t border-border pt-4 mt-2">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Before you start</div>
+          <p className="text-sm leading-relaxed bg-muted/50 border border-border rounded-md px-3 py-2 italic">
+            {recipe.special_instructions}
+          </p>
+        </div>
+      )}
 
       <div className="border-t border-border pt-4 mt-2">
         <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Instructions</div>

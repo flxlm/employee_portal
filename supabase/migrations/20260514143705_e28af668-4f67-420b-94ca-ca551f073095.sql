@@ -1,0 +1,1 @@
+ALTER TABLE public.recipes ADD COLUMN IF NOT EXISTS special_instructions text NOT NULL DEFAULT '';
