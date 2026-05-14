@@ -114,27 +114,34 @@ export const Route = createFileRoute('/api/public/webhook')({
         }
 
         const contentType = request.headers.get('content-type') ?? '';
+
+        // Always read the full raw body first so nothing is lost, then parse.
+        const rawBody = await request.text();
         let form: FormData | null = null;
-        let payload: unknown;
+        let payload: unknown = rawBody;
 
         try {
-          if (contentType.includes('form')) {
-            form = await request.formData();
+          if (contentType.includes('application/json')) {
+            payload = JSON.parse(rawBody);
+          } else if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+            // Re-parse the raw body as form data using a synthetic Request so we keep the full payload.
+            const res = new Request('http://localhost/_parse', {
+              method: 'POST',
+              headers: { 'content-type': contentType },
+              body: rawBody,
+            });
+            form = await res.formData();
             payload = Object.fromEntries(form.entries());
-          } else if (contentType.includes('application/json')) {
-            payload = await request.json();
-          } else {
-            payload = await request.text();
           }
-        } catch {
-          payload = null;
+        } catch (e) {
+          console.error('[webhook] body parse failed', e);
         }
 
         const formId =
           (form?.get('formID')?.toString() ??
             (typeof payload === 'object' && payload && (payload as any).formID)) || '';
 
-        console.log('[webhook] received', { contentType, formId });
+        console.log('[webhook] received', { contentType, formId, bodyLength: rawBody.length, payload });
 
         if (form && formId === EVENT_INQUIRY_FORM_ID) {
           const result = await insertEventInquiry(form);
