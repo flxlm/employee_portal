@@ -84,7 +84,7 @@ function WinesPage() {
                   <th className="text-left px-4 py-3 font-medium">Origin</th>
                   <th className="text-left px-4 py-3 font-medium">Year</th>
                   <th className="text-left px-4 py-3 font-medium">Colour</th>
-                  <th className="text-right px-4 py-3 font-medium">Glass</th>
+                  <th className="text-right px-4 py-3 font-medium">To-go</th>
                   <th className="text-right px-4 py-3 font-medium">Bottle</th>
                   <th className="text-right px-4 py-3 font-medium">Stock</th>
                 </tr>
@@ -103,7 +103,7 @@ function WinesPage() {
                     <td className="px-4 py-3 text-muted-foreground">{w.country}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.year}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.colour}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.glass || "—"}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{w.togo || "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{w.bottle || "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{w.inventory || "0"}</td>
                   </tr>
