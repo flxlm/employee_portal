@@ -233,6 +233,7 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
 
 export type WineEntry = {
   id: string;
+  rowNumber: number;
   name: string;
   domaine: string;
   year: string;
@@ -252,9 +253,9 @@ export const getWineList = createServerFn({ method: "GET" })
     const rows = await fetchRange("Wine List!A1:L");
     const objs = rowsToObjects(rows);
     return objs
-      .filter((o) => (o["Name"] ?? "").trim())
       .map((o, idx) => ({
         id: `${idx}-${o["Name"]}`,
+        rowNumber: idx + 2,
         name: o["Name"] ?? "",
         domaine: o["Domaine"] ?? "",
         year: o["Year"] ?? "",
@@ -266,7 +267,8 @@ export const getWineList = createServerFn({ method: "GET" })
         glass: o["Glass"] ?? "",
         bottle: o["Bottle"] ?? "",
         togo: o["To-go price"] ?? "",
-      }));
+      }))
+      .filter((o) => o.name.trim());
   });
 
 export const addWine = createServerFn({ method: "POST" })
@@ -338,5 +340,41 @@ export const addWine = createServerFn({ method: "POST" })
       throw new Error(`Sheets API ${res.status}: ${body}`);
     }
     return { added: true };
+  });
+
+export const updateWineStock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { rowNumber: number; inventory: number }) => {
+    if (!Number.isFinite(data.rowNumber) || data.rowNumber < 2) throw new Error("Invalid rowNumber");
+    if (!Number.isFinite(data.inventory) || data.inventory < 0) throw new Error("Invalid inventory");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+    const GOOGLE_SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
+
+    const headerRows = await fetchRange("Wine List!A1:L1");
+    const headers = headerRows[0] ?? [];
+    const colIdx = headers.findIndex((h) => h === "Inventory");
+    if (colIdx < 0) throw new Error("Inventory column not found");
+    const range = `Wine List!${colLetter(colIdx + 1)}${data.rowNumber}`;
+    const encoded = range.replace(/ /g, "%20");
+    const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/${encoded}?valueInputOption=USER_ENTERED`;
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values: [[String(data.inventory)]] }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Sheets API ${res.status}: ${body}`);
+    }
+    return { updated: true };
   });
 
