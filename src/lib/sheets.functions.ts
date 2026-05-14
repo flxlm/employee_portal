@@ -129,7 +129,7 @@ export const getEventInquiries = createServerFn({ method: "GET" })
           timestamp: o["Timestamp"] ?? "",
           email: o["Email Address"] ?? "",
           eventDate: o["Date of your event"] ?? "",
-          eventDateParsed: eventDate,
+          eventDateParsed: eventDate ? eventDate.toISOString() : null,
           guests: o["Number of expected guests"] ?? "",
           reservationType: o["Type of reservation needed"] ?? "",
           startTime: o["Start time of your event"] ?? "",
