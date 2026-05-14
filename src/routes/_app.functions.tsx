@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,16 +18,52 @@ export const Route = createFileRoute("/_app/functions")({
   component: FunctionsPage,
 });
 
+type MenuKey = "main" | "grab_n_go";
+const STORAGE_KEY = "savsav.menu.lastRefreshed";
+
+function loadTimestamps(): Record<MenuKey, string | null> {
+  if (typeof window === "undefined") return { main: null, grab_n_go: null };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { main: null, grab_n_go: null };
+    const parsed = JSON.parse(raw);
+    return { main: parsed.main ?? null, grab_n_go: parsed.grab_n_go ?? null };
+  } catch {
+    return { main: null, grab_n_go: null };
+  }
+}
+
+function formatRelative(iso: string | null): string {
+  if (!iso) return "Never refreshed";
+  const date = new Date(iso);
+  return `Last refreshed ${date.toLocaleString()}`;
+}
+
 function FunctionsPage() {
   const [refreshOpen, setRefreshOpen] = useState(false);
-  const [pending, setPending] = useState<null | "main" | "grab_n_go">(null);
+  const [pending, setPending] = useState<null | MenuKey>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Record<MenuKey, string | null>>({
+    main: null,
+    grab_n_go: null,
+  });
   const refresh = useServerFn(refreshScreencloudMenu);
 
-  const handleRefresh = async (menu: "main" | "grab_n_go") => {
+  useEffect(() => {
+    setLastRefreshed(loadTimestamps());
+  }, []);
+
+  const handleRefresh = async (menu: MenuKey) => {
     setPending(menu);
     try {
       const result = await refresh({ data: { menu } });
       if (result.ok) {
+        const next = { ...lastRefreshed, [menu]: new Date().toISOString() };
+        setLastRefreshed(next);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore storage failures
+        }
         toast.success(menu === "main" ? "Main menu refreshed" : "Grab & Go menu refreshed");
         setRefreshOpen(false);
       } else {
@@ -47,6 +83,12 @@ function FunctionsPage() {
       description: "Force the in-restaurant menu screens to reload their content.",
       icon: RefreshCw,
       onClick: () => setRefreshOpen(true),
+      footer: (
+        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+          <div>Main: {formatRelative(lastRefreshed.main)}</div>
+          <div>Grab & Go: {formatRelative(lastRefreshed.grab_n_go)}</div>
+        </div>
+      ),
     },
   ];
 
@@ -60,7 +102,7 @@ function FunctionsPage() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {functions.map(({ key, title, description, icon: Icon, onClick }) => (
+        {functions.map(({ key, title, description, icon: Icon, onClick, footer }) => (
           <button key={key} onClick={onClick} className="text-left group">
             <Card className="h-full transition-colors group-hover:border-primary">
               <CardHeader>
@@ -73,6 +115,7 @@ function FunctionsPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>{description}</CardDescription>
+                {footer}
               </CardContent>
             </Card>
           </button>
@@ -96,6 +139,9 @@ function FunctionsPage() {
             >
               <Monitor className="h-5 w-5" />
               <span>{pending === "main" ? "Refreshing..." : "Main Menu"}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {formatRelative(lastRefreshed.main)}
+              </span>
             </Button>
             <Button
               variant="outline"
@@ -105,6 +151,9 @@ function FunctionsPage() {
             >
               <Coffee className="h-5 w-5" />
               <span>{pending === "grab_n_go" ? "Refreshing..." : "Grab & Go Menu"}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {formatRelative(lastRefreshed.grab_n_go)}
+              </span>
             </Button>
           </div>
         </DialogContent>
