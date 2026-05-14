@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/login")({
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/home" });
-  },
   component: LoginPage,
 });
 
 function LoginPage() {
-  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  if (!authLoading && user) return <Navigate to="/home" />;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
