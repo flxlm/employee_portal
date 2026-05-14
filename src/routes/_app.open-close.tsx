@@ -270,7 +270,7 @@ function OpenClosePage() {
               </Card>
             ))}
           </div>
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
     </div>
   );
