@@ -76,6 +76,25 @@ function FunctionsPage() {
     }
   };
 
+  const handleAppRefresh = async () => {
+    try {
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch {
+      // ignore — still reload
+    }
+    toast.success("Reloading with the latest version...");
+    const url = new URL(window.location.href);
+    url.searchParams.set("_r", Date.now().toString());
+    window.location.replace(url.toString());
+  };
+
   const functions = [
     {
       key: "refresh-menu",
@@ -83,6 +102,13 @@ function FunctionsPage() {
       description: "Force the in-restaurant menu screens to reload their content.",
       icon: RefreshCw,
       onClick: () => setRefreshOpen(true),
+    },
+    {
+      key: "refresh-app",
+      title: "Refresh App",
+      description: "Clear cached files and reload to get the latest version of the portal.",
+      icon: RotateCw,
+      onClick: handleAppRefresh,
     },
   ];
 
