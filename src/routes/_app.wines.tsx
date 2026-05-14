@@ -53,7 +53,7 @@ function WinesPage() {
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-serif">Wine List</h1>
-          <p className="text-muted-foreground text-sm">{filtered.length} wines · live from Google Sheets</p>
+          <p className="text-muted-foreground text-sm">{filtered.length} wines</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={() => setAddOpen(true)}>
@@ -328,7 +328,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl">Add a wine</DialogTitle>
-          <DialogDescription>Appends a new row to the Wine List sheet.</DialogDescription>
+          <DialogDescription>Adds a new wine to the database.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
@@ -421,7 +421,7 @@ function StockEditor({ wine }: { wine: WineEntry }) {
     }
     setSaving(true);
     try {
-      await updateFn({ data: { rowNumber: wine.rowNumber, inventory: Math.floor(n) } });
+      await updateFn({ data: { id: wine.id, inventory: Math.floor(n) } });
       toast.success(`${wine.name}: stock set to ${Math.floor(n)}`);
       await queryClient.invalidateQueries({ queryKey: ["wine-list"] });
       setOpen(false);
