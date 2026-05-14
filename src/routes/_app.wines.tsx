@@ -68,6 +68,13 @@ function WinesPage() {
             {colours.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={stock} onValueChange={(v) => setStock(v as "in" | "all")}>
+          <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="in">In stock only</SelectItem>
+            <SelectItem value="all">Show out of stock</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {error && (
