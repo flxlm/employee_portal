@@ -273,6 +273,42 @@ function EventsPage() {
                           onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
                           rows={4}
                         />
+                      ) : f.type === "select" ? (
+                        <Select
+                          value={draft[f.key as string] ?? ""}
+                          onValueChange={(v) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: v === "__empty__" ? "" : v }))
+                          }
+                        >
+                          <SelectTrigger id={`field-${f.key as string}`}>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s || "__empty__"} value={s || "__empty__"}>
+                                {s || "— (empty / new)"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : f.type === "date" ? (
+                        <Input
+                          id={`field-${f.key as string}`}
+                          type="date"
+                          value={sheetDateToInput(draft[f.key as string] ?? "")}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: inputDateToSheet(e.target.value) }))
+                          }
+                        />
+                      ) : f.type === "time" ? (
+                        <Input
+                          id={`field-${f.key as string}`}
+                          type="time"
+                          value={sheetTimeToInput(draft[f.key as string] ?? "")}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: inputTimeToSheet(e.target.value) }))
+                          }
+                        />
                       ) : (
                         <Input
                           id={`field-${f.key as string}`}
