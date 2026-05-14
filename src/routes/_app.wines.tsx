@@ -29,6 +29,7 @@ function WinesPage() {
   const [colour, setColour] = useState("all");
   const [stock, setStock] = useState<"in" | "all">("in");
   const [selected, setSelected] = useState<WineEntry | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const colours = useMemo(
     () => Array.from(new Set((data ?? []).map((w) => w.colour).filter(Boolean))),
