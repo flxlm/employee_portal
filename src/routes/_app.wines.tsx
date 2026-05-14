@@ -143,6 +143,8 @@ function WinesPage() {
           {selected && <WineDetail wine={selected} />}
         </DialogContent>
       </Dialog>
+
+      <AddWineDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }
