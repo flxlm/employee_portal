@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
+import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/events")({
@@ -63,6 +63,7 @@ function EventsPage() {
     queryFn: () => fetchFn(),
   });
   const [selected, setSelected] = useState<EventInquiry | null>(null);
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -70,6 +71,7 @@ function EventsPage() {
       const d: Record<string, string> = {};
       for (const f of EDITABLE_FIELDS) d[f.key as string] = (selected[f.key] as string) ?? "";
       setDraft(d);
+      setEditing(false);
     }
   }, [selected]);
 
@@ -92,7 +94,7 @@ function EventsPage() {
       if (draft[k] !== ((selected[f.key] as string) ?? "")) updates[k] = draft[k];
     }
     if (Object.keys(updates).length === 0) {
-      setSelected(null);
+      setEditing(false);
       return;
     }
     mutation.mutate({ rowNumber: selected.rowNumber, updates });
@@ -181,60 +183,97 @@ function EventsPage() {
           {selected && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-serif text-2xl flex items-center gap-3">
-                  Edit inquiry
-                  <span className={`text-xs px-2 py-0.5 rounded border ${statusVariant(selected.bucket)}`}>
-                    {selected.status}
-                  </span>
-                </DialogTitle>
+                <div className="flex items-start justify-between gap-3 pr-8">
+                  <DialogTitle className="font-serif text-2xl flex items-center gap-3 flex-wrap">
+                    {selected.email}
+                    <span className={`text-xs px-2 py-0.5 rounded border ${statusVariant(selected.bucket)}`}>
+                      {selected.status}
+                    </span>
+                  </DialogTitle>
+                  {!editing && (
+                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                    </Button>
+                  )}
+                </div>
               </DialogHeader>
-              <div className="space-y-3 text-sm">
-                <div className="text-xs text-muted-foreground">
-                  Submitted: {selected.timestamp || "—"}
+
+              {editing ? (
+                <div className="space-y-3 text-sm">
+                  <div className="text-xs text-muted-foreground">Submitted: {selected.timestamp || "—"}</div>
+                  {EDITABLE_FIELDS.map((f) => (
+                    <div key={f.key as string} className="space-y-1">
+                      <Label htmlFor={`field-${f.key as string}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {f.label}
+                      </Label>
+                      {f.type === "textarea" ? (
+                        <Textarea
+                          id={`field-${f.key as string}`}
+                          value={draft[f.key as string] ?? ""}
+                          onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
+                          rows={4}
+                        />
+                      ) : (
+                        <Input
+                          id={`field-${f.key as string}`}
+                          value={draft[f.key as string] ?? ""}
+                          onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {EDITABLE_FIELDS.map((f) => (
-                  <div key={f.key as string} className="space-y-1">
-                    <Label htmlFor={`field-${f.key as string}`} className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {f.label}
-                    </Label>
-                    {f.type === "textarea" ? (
-                      <Textarea
-                        id={`field-${f.key as string}`}
-                        value={draft[f.key as string] ?? ""}
-                        onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
-                        rows={4}
-                      />
-                    ) : (
-                      <Input
-                        id={`field-${f.key as string}`}
-                        value={draft[f.key as string] ?? ""}
-                        onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
-                      />
-                    )}
+              ) : (
+                <div className="space-y-3 text-sm">
+                  <Field label="Event date" value={selected.eventDate} />
+                  <Field label="Submitted" value={selected.timestamp} />
+                  <Field label="Guests" value={selected.guests} />
+                  <Field label="Reservation type" value={selected.reservationType} />
+                  <Field label="Start" value={selected.startTime} />
+                  <Field label="Guest arrival" value={selected.arrivalTime} />
+                  <Field label="End" value={selected.endTime} />
+                  <Field label="Bar service" value={selected.barService} />
+                  <Field label="Food service" value={selected.foodService} />
+                  <Field label="DJ" value={selected.dj} />
+                  <Field label="Budget" value={selected.budget} />
+                  <Field label="Prepaid bar" value={selected.prepaid} />
+                  <Field label="Notes" value={selected.description} multiline />
+                  <div className="pt-2">
+                    <a
+                      href={`mailto:${selected.email}`}
+                      className="inline-flex items-center gap-2 text-primary hover:underline"
+                    >
+                      <Mail className="h-4 w-4" /> Reply by email <ExternalLink className="h-3 w-3" />
+                    </a>
                   </div>
-                ))}
-                <div className="pt-2">
-                  <a
-                    href={`mailto:${selected.email}`}
-                    className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
-                  >
-                    <Mail className="h-4 w-4" /> Reply by email <ExternalLink className="h-3 w-3" />
-                  </a>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelected(null)} disabled={mutation.isPending}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={mutation.isPending}>
-                  {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Save changes
-                </Button>
-              </DialogFooter>
+              )}
+
+              {editing && (
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setEditing(false)} disabled={mutation.isPending}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} disabled={mutation.isPending}>
+                    {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save changes
+                  </Button>
+                </DialogFooter>
+              )}
             </>
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function Field({ label, value, multiline }: { label: string; value: string; multiline?: boolean }) {
+  if (!value) return null;
+  return (
+    <div className={multiline ? "" : "flex gap-3"}>
+      <div className="text-muted-foreground text-xs uppercase tracking-wide w-32 shrink-0 pt-0.5">{label}</div>
+      <div className={multiline ? "mt-1 whitespace-pre-wrap" : "flex-1"}>{value}</div>
     </div>
   );
 }
