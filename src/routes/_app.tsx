@@ -11,11 +11,22 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
+        Loading…
+      </div>
+    );
+  }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   useEffect(() => {
     if (!user) return;
