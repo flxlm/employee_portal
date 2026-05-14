@@ -42,6 +42,18 @@ function OpenClosePage() {
   const [submitting, setSubmitting] = useState(false);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const loadLogs = async () => {
     const { data, error } = await supabase
