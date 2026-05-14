@@ -291,6 +291,21 @@ function EventsPage() {
                   </Select>
                 </div>
               )}
+
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sort by</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[240px] h-11 border-2 shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="submission-desc">Submission date (newest first)</SelectItem>
+                    <SelectItem value="submission-asc">Submission date (oldest first)</SelectItem>
+                    <SelectItem value="event-desc">Event date (latest first)</SelectItem>
+                    <SelectItem value="event-asc">Event date (earliest first)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {isLoading ? (
