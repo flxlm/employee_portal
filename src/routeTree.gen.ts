@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
+import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
@@ -44,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppWinesRoute = AppWinesRouteImport.update({
   id: '/wines',
   path: '/wines',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecipesRoute = AppRecipesRouteImport.update({
+  id: '/recipes',
+  path: '/recipes',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOpenCloseRoute = AppOpenCloseRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/open-close': typeof AppOpenCloseRoute
+  '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/open-close': typeof AppOpenCloseRoute
+  '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/open-close': typeof AppOpenCloseRoute
+  '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/functions'
     | '/home'
     | '/open-close'
+    | '/recipes'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/webhook'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/functions'
     | '/home'
     | '/open-close'
+    | '/recipes'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/webhook'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_app/functions'
     | '/_app/home'
     | '/_app/open-close'
+    | '/_app/recipes'
     | '/_app/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/webhook'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/wines'
       fullPath: '/wines'
       preLoaderRoute: typeof AppWinesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/recipes': {
+      id: '/_app/recipes'
+      path: '/recipes'
+      fullPath: '/recipes'
+      preLoaderRoute: typeof AppRecipesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/open-close': {
@@ -271,6 +290,7 @@ interface AppRouteChildren {
   AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
+  AppRecipesRoute: typeof AppRecipesRoute
   AppWinesRoute: typeof AppWinesRoute
 }
 
@@ -280,6 +300,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
+  AppRecipesRoute: AppRecipesRoute,
   AppWinesRoute: AppWinesRoute,
 }
 
