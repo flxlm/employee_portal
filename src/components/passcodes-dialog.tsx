@@ -101,7 +101,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
 
   const handleAdd = async () => {
     if (!newLabel.trim() || !newCode.trim()) {
-      toast.error("Label and code are required");
+      toast.error("Title and code are required");
       return;
     }
     setBusyId("new");
