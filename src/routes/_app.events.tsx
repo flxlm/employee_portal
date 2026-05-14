@@ -122,16 +122,21 @@ const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" |
   { key: "eventDate", label: "Event date", type: "date" },
   { key: "guests", label: "Guests", type: "input" },
   { key: "reservationType", label: "Reservation type", type: "input" },
+  { key: "weddingSections", label: "Wedding sections", type: "input" },
   { key: "startTime", label: "Start time", type: "time" },
   { key: "arrivalTime", label: "Guest arrival", type: "time" },
   { key: "endTime", label: "End time", type: "time" },
   { key: "barService", label: "Bar service", type: "input" },
+  { key: "premiumDrinks", label: "Premium drinks", type: "input" },
+  { key: "premiumDrinksDetails", label: "Premium drinks details", type: "textarea" },
   { key: "foodService", label: "Food service", type: "input" },
   { key: "foodServiceTime", label: "Food service time", type: "time" },
+  { key: "foodRestrictions", label: "Food restrictions", type: "textarea" },
   { key: "dj", label: "Other options", type: "input" },
   { key: "budget", label: "Budget", type: "input" },
   { key: "prepaid", label: "Prepaid bar", type: "input" },
   { key: "description", label: "Notes", type: "textarea" },
+  { key: "referralSource", label: "How they heard about us", type: "input" },
 ];
 
 function statusVariant(b: EventInquiry["bucket"]) {
