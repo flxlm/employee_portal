@@ -109,7 +109,6 @@ function FunctionsPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>{description}</CardDescription>
-                {footer}
               </CardContent>
             </Card>
           </button>
