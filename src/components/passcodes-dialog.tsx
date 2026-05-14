@@ -44,6 +44,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
   const [newCode, setNewCode] = useState("");
   const [newAdminOnly, setNewAdminOnly] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   const load = async () => {
     setLoading(true);
