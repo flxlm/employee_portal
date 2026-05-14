@@ -132,7 +132,7 @@ function EventsPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="FORM FILLED">
+      <Tabs defaultValue="NEW">
         <TabsList className="mb-4 flex-wrap h-auto">
           {BUCKETS.map((b) => (
             <TabsTrigger key={b.id} value={b.id}>
