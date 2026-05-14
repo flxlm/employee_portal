@@ -75,7 +75,7 @@ function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
   todayStart.setHours(0, 0, 0, 0);
   const isPast = eventDate ? eventDate.getTime() < todayStart.getTime() : false;
 
-  if (s === "") return "NEW";
+  if (s === "" || s === "NEW") return "NEW";
   if (s === "CONFIRMED") return isPast ? "PAST" : "CONFIRMED";
   if (s === "AWAITING PAYMENT") return "AWAITING PAYMENT";
   if (s === "DECLINED" || s === "REFUSED, LOW BUDGET" || s.startsWith("REFUSED")) return "DECLINED";
