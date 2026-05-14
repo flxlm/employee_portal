@@ -405,19 +405,19 @@ function EventsPage() {
           {selected && (
             <>
               <DialogHeader className="pr-8">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
-                  <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 sm:gap-3 flex-wrap break-all">
-                    <span className="break-all">{selected.email}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded border shrink-0 ${statusVariant(selected.bucket)}`}>
-                      {selected.status}
-                    </span>
-                  </DialogTitle>
-                  {!editing && (
-                    <Button variant="outline" size="sm" className="self-start shrink-0" onClick={() => setEditing(true)}>
+                <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 sm:gap-3 flex-wrap break-all">
+                  <span className="break-all">{selected.email}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded border shrink-0 ${statusVariant(selected.bucket)}`}>
+                    {selected.status}
+                  </span>
+                </DialogTitle>
+                {!editing && (
+                  <div className="pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                       <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </DialogHeader>
 
               {editing ? (
