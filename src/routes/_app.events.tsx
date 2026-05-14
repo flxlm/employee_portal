@@ -173,6 +173,28 @@ function EventsPage() {
   }, [search.status]);
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("submission-desc");
+  const draftFn = useServerFn(draftEstimateEmail);
+  const [drafting, setDrafting] = useState<null | "english" | "french">(null);
+
+  const handleDraftEstimate = async (language: "english" | "french") => {
+    if (!selected) return;
+    setDrafting(language);
+    try {
+      const inquiry: Record<string, string> = {};
+      for (const f of EDITABLE_FIELDS) {
+        const v = (selected[f.key] as string) ?? "";
+        if (v) inquiry[f.label] = v;
+      }
+      const result = await draftFn({ data: { language, inquiry } });
+      const subject = encodeURIComponent(result.subject || "");
+      const body = encodeURIComponent(result.body || "");
+      window.open(`mailto:${selected.email}?subject=${subject}&body=${body}`, "_blank");
+    } catch (e) {
+      toast.error(`Draft failed: ${(e as Error).message}`);
+    } finally {
+      setDrafting(null);
+    }
+  };
 
   useEffect(() => {
     setSortBy(bucketFilter === "CONFIRMED" ? "event-asc" : "submission-desc");
