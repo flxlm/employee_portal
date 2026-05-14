@@ -12,8 +12,61 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
+
+const STATUS_OPTIONS = [
+  "",
+  "FORM FILLED",
+  "ESTIMATE SENT",
+  "REMINDER SENT",
+  "AWAITING PAYMENT",
+  "CONFIRMED",
+  "DECLINED",
+  "REFUSED, LOW BUDGET",
+];
+
+// Sheet date format: DD-MM-YYYY <-> HTML date input YYYY-MM-DD
+function sheetDateToInput(s: string): string {
+  if (!s) return "";
+  const m = s.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  const iso = s.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  return "";
+}
+function inputDateToSheet(s: string): string {
+  if (!s) return "";
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+// Sheet time format: "6:00 PM" <-> HTML time input HH:MM (24h)
+function sheetTimeToInput(s: string): string {
+  if (!s) return "";
+  const t = s.trim();
+  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!m) return "";
+  let h = Number(m[1]);
+  const min = m[2];
+  const ampm = m[3]?.toUpperCase();
+  if (ampm === "PM" && h < 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${min}`;
+}
+function inputTimeToSheet(s: string): string {
+  if (!s) return "";
+  const m = s.match(/^(\d{2}):(\d{2})$/);
+  if (!m) return s;
+  let h = Number(m[1]);
+  const min = m[2];
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${ampm}`;
+}
 
 export const Route = createFileRoute("/_app/events")({
   component: EventsPage,
@@ -31,15 +84,15 @@ const BUCKETS = [
   { id: "PAST", label: "Past" },
 ] as const;
 
-const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" }[] = [
-  { key: "rawStatus", label: "Status", type: "input" },
+const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" | "select" | "date" | "time" }[] = [
+  { key: "rawStatus", label: "Status", type: "select" },
   { key: "email", label: "Email", type: "input" },
-  { key: "eventDate", label: "Event date", type: "input" },
+  { key: "eventDate", label: "Event date", type: "date" },
   { key: "guests", label: "Guests", type: "input" },
   { key: "reservationType", label: "Reservation type", type: "input" },
-  { key: "startTime", label: "Start time", type: "input" },
-  { key: "arrivalTime", label: "Guest arrival", type: "input" },
-  { key: "endTime", label: "End time", type: "input" },
+  { key: "startTime", label: "Start time", type: "time" },
+  { key: "arrivalTime", label: "Guest arrival", type: "time" },
+  { key: "endTime", label: "End time", type: "time" },
   { key: "barService", label: "Bar service", type: "input" },
   { key: "foodService", label: "Food service", type: "input" },
   { key: "dj", label: "DJ", type: "input" },
@@ -219,6 +272,42 @@ function EventsPage() {
                           value={draft[f.key as string] ?? ""}
                           onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
                           rows={4}
+                        />
+                      ) : f.type === "select" ? (
+                        <Select
+                          value={draft[f.key as string] ?? ""}
+                          onValueChange={(v) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: v === "__empty__" ? "" : v }))
+                          }
+                        >
+                          <SelectTrigger id={`field-${f.key as string}`}>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s || "__empty__"} value={s || "__empty__"}>
+                                {s || "— (empty / new)"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : f.type === "date" ? (
+                        <Input
+                          id={`field-${f.key as string}`}
+                          type="date"
+                          value={sheetDateToInput(draft[f.key as string] ?? "")}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: inputDateToSheet(e.target.value) }))
+                          }
+                        />
+                      ) : f.type === "time" ? (
+                        <Input
+                          id={`field-${f.key as string}`}
+                          type="time"
+                          value={sheetTimeToInput(draft[f.key as string] ?? "")}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, [f.key as string]: inputTimeToSheet(e.target.value) }))
+                          }
                         />
                       ) : (
                         <Input
