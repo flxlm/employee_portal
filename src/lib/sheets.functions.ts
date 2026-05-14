@@ -138,6 +138,7 @@ type InquiryRow = {
   end_time: string;
   bar_service: string;
   food_service: string;
+  food_service_time: string;
   dj: string;
   description: string;
   budget: string;
