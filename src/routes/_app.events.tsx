@@ -165,7 +165,11 @@ function EventsPage() {
   const [selected, setSelected] = useState<EventInquiry | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const [bucketFilter, setBucketFilter] = useState<string>("NEW");
+  const search = Route.useSearch();
+  const [bucketFilter, setBucketFilter] = useState<string>(search.status ?? "NEW");
+  useEffect(() => {
+    if (search.status) setBucketFilter(search.status);
+  }, [search.status]);
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("submission-desc");
 
