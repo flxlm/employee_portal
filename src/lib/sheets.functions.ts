@@ -205,7 +205,7 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
     if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
 
     // Fetch headers to map field -> column index
-    const headerRows = await fetchRange("Event Inquiries!A1:Z1");
+    const headerRows = await fetchRange(`${SHEET_RANGE}!A1:AG1`);
     const headers = headerRows[0] ?? [];
 
     // Build per-cell updates
@@ -215,7 +215,7 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
       if (!headerName) continue;
       const colIdx = headers.findIndex((h) => h === headerName);
       if (colIdx < 0) continue;
-      const range = `Event Inquiries!${colLetter(colIdx + 1)}${data.rowNumber}`;
+      const range = `${SHEET_RANGE}!${colLetter(colIdx + 1)}${data.rowNumber}`;
       dataUpdates.push({ range, values: [[value ?? ""]] });
     }
 
