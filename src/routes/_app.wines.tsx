@@ -35,6 +35,10 @@ function WinesPage() {
 
   const filtered = (data ?? []).filter((w) => {
     if (colour !== "all" && w.colour !== colour) return false;
+    if (stock === "in") {
+      const n = Number(String(w.inventory ?? "").replace(/[^0-9.\-]/g, ""));
+      if (!Number.isFinite(n) || n <= 0) return false;
+    }
     if (!q) return true;
     const s = q.toLowerCase();
     return [w.name, w.domaine, w.country, w.year, w.type].some((v) => v.toLowerCase().includes(s));
