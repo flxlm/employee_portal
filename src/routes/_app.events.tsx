@@ -12,8 +12,61 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
+
+const STATUS_OPTIONS = [
+  "",
+  "FORM FILLED",
+  "ESTIMATE SENT",
+  "REMINDER SENT",
+  "AWAITING PAYMENT",
+  "CONFIRMED",
+  "DECLINED",
+  "REFUSED, LOW BUDGET",
+];
+
+// Sheet date format: DD-MM-YYYY <-> HTML date input YYYY-MM-DD
+function sheetDateToInput(s: string): string {
+  if (!s) return "";
+  const m = s.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  const iso = s.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  return "";
+}
+function inputDateToSheet(s: string): string {
+  if (!s) return "";
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+// Sheet time format: "6:00 PM" <-> HTML time input HH:MM (24h)
+function sheetTimeToInput(s: string): string {
+  if (!s) return "";
+  const t = s.trim();
+  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!m) return "";
+  let h = Number(m[1]);
+  const min = m[2];
+  const ampm = m[3]?.toUpperCase();
+  if (ampm === "PM" && h < 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${min}`;
+}
+function inputTimeToSheet(s: string): string {
+  if (!s) return "";
+  const m = s.match(/^(\d{2}):(\d{2})$/);
+  if (!m) return s;
+  let h = Number(m[1]);
+  const min = m[2];
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${ampm}`;
+}
 
 export const Route = createFileRoute("/_app/events")({
   component: EventsPage,
