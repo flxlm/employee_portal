@@ -128,8 +128,7 @@ function OpenClosePage() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-serif mb-1">Open / Close Log</h1>
-      <p className="text-muted-foreground text-sm mb-6">Daily till + checklist sign-off (target: ${TARGET})</p>
+      <h1 className="text-3xl font-serif mb-6">Open / Close Log</h1>
 
       <Tabs defaultValue="new">
         <TabsList className="mb-4">
