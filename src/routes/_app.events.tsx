@@ -123,6 +123,17 @@ function statusVariant(b: EventInquiry["bucket"]) {
   }
 }
 
+function bucketDot(b: string) {
+  switch (b) {
+    case "CONFIRMED": return "bg-emerald-500";
+    case "DECLINED": return "bg-rose-500";
+    case "ONGOING":
+    case "AWAITING PAYMENT": return "bg-amber-500";
+    case "PAST": return "bg-muted-foreground";
+    default: return "bg-sky-500";
+  }
+}
+
 function EventsPage() {
   const fetchFn = useServerFn(getEventInquiries);
   const updateFn = useServerFn(updateEventInquiry);
@@ -207,24 +218,36 @@ function EventsPage() {
         return (
           <>
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {BUCKETS.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.label} ({grouped[b.id]?.length ?? 0})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
+                <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
+                  <SelectTrigger
+                    className={`w-[260px] h-11 font-semibold shadow-sm border-2 transition-colors ${statusVariant(bucketFilter as EventInquiry["bucket"])}`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${bucketDot(bucketFilter)}`} />
+                      <SelectValue />
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BUCKETS.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        <span className="flex items-center gap-2">
+                          <span className={`h-2.5 w-2.5 rounded-full ${bucketDot(b.id)}`} />
+                          <span className="font-medium">{b.label}</span>
+                          <span className="text-muted-foreground">({grouped[b.id]?.length ?? 0})</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {bucketFilter === "ONGOING" && (
-                <>
-                  <span className="text-muted-foreground text-sm">›</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">›</span>
                   <Select value={ongoingSub} onValueChange={setOngoingSub}>
-                    <SelectTrigger className="w-[220px]">
+                    <SelectTrigger className="w-[240px] h-11 border-2 border-amber-300 bg-amber-50 text-amber-900 font-medium shadow-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -241,7 +264,7 @@ function EventsPage() {
                       })}
                     </SelectContent>
                   </Select>
-                </>
+                </div>
               )}
             </div>
 
