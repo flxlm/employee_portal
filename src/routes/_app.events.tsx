@@ -390,15 +390,7 @@ function EventsPage() {
       })()}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && !mutation.isPending && setSelected(null)}>
-        <DialogContent
-          className="sm:max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto"
-          style={{
-            paddingTop: "max(1.5rem, env(safe-area-inset-top))",
-            paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
-            paddingLeft: "max(1.5rem, env(safe-area-inset-left))",
-            paddingRight: "max(1.5rem, env(safe-area-inset-right))",
-          }}
-        >
+        <DialogContent className="sm:max-w-2xl">
           {selected && (
             <>
               <DialogHeader className="pr-8">
