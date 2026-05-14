@@ -37,6 +37,7 @@ export type Database = {
       }
       open_close_logs: {
         Row: {
+          cash_tips: number
           confirmed: boolean
           created_at: string
           id: string
@@ -51,6 +52,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cash_tips?: number
           confirmed?: boolean
           created_at?: string
           id?: string
@@ -65,6 +67,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cash_tips?: number
           confirmed?: boolean
           created_at?: string
           id?: string
