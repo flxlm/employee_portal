@@ -10,7 +10,8 @@ async function fetchRange(range: string): Promise<string[][]> {
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
   if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
 
-  const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueRenderOption=FORMATTED_VALUE`;
+  const encodedRange = range.replace(/ /g, "%20");
+  const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/${encodedRange}?valueRenderOption=FORMATTED_VALUE`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
