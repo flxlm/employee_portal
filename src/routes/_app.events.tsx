@@ -236,10 +236,12 @@ function EventsPage() {
     mutation.mutate({ id: selected.id, updates });
   };
 
-  const grouped = (data ?? []).reduce<Record<string, EventInquiry[]>>((acc, e) => {
-    (acc[e.bucket] ||= []).push(e);
-    return acc;
-  }, {});
+  const grouped = (data ?? [])
+    .filter((e) => e.rawStatus.trim().toUpperCase() !== "DELETED")
+    .reduce<Record<string, EventInquiry[]>>((acc, e) => {
+      (acc[e.bucket] ||= []).push(e);
+      return acc;
+    }, {});
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
