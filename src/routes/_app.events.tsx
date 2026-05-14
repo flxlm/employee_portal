@@ -484,15 +484,20 @@ function EventsPage() {
                   <Field label="Submitted" value={selected.timestamp} />
                   <Field label="Guests" value={selected.guests} />
                   <Field label="Reservation type" value={selected.reservationType} />
+                  <Field label="Wedding sections" value={selected.weddingSections} />
                   <Field label="Start" value={selected.startTime} />
                   <Field label="Guest arrival" value={selected.arrivalTime} />
                   <Field label="End" value={selected.endTime} />
                   <Field label="Bar service" value={selected.barService} />
+                  <Field label="Premium drinks" value={selected.premiumDrinks} />
+                  <Field label="Premium drinks details" value={selected.premiumDrinksDetails} multiline />
                   <Field label="Food service" value={selected.foodService} />
                   <Field label="Food service time" value={selected.foodServiceTime} />
+                  <Field label="Food restrictions" value={selected.foodRestrictions} multiline />
                   <Field label="Other options" value={selected.dj} />
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
+                  <Field label="How they heard about us" value={selected.referralSource} />
                   <Field label="Notes" value={selected.description} multiline />
                   <div className="pt-2 flex flex-wrap gap-2">
                     <Button
