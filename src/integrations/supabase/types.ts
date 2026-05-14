@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       allowed_emails: {
         Row: {
+          as_admin: boolean
           created_at: string
           email: string
           id: string
           invited_by: string | null
         }
         Insert: {
+          as_admin?: boolean
           created_at?: string
           email: string
           id?: string
           invited_by?: string | null
         }
         Update: {
+          as_admin?: boolean
           created_at?: string
           email?: string
           id?: string
