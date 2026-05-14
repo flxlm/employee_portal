@@ -245,6 +245,63 @@ export type Database = {
         }
         Relationships: []
       }
+      wines: {
+        Row: {
+          added_by: string
+          bottle: number
+          colour: string
+          cost: number
+          country: string
+          created_at: string
+          domaine: string
+          glass: number
+          id: string
+          inventory: number
+          markup: number
+          name: string
+          togo: number
+          type: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          added_by?: string
+          bottle?: number
+          colour?: string
+          cost?: number
+          country?: string
+          created_at?: string
+          domaine?: string
+          glass?: number
+          id?: string
+          inventory?: number
+          markup?: number
+          name?: string
+          togo?: number
+          type?: string
+          updated_at?: string
+          year?: string
+        }
+        Update: {
+          added_by?: string
+          bottle?: number
+          colour?: string
+          cost?: number
+          country?: string
+          created_at?: string
+          domaine?: string
+          glass?: number
+          id?: string
+          inventory?: number
+          markup?: number
+          name?: string
+          togo?: number
+          type?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
