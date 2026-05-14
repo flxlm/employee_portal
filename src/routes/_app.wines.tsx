@@ -276,29 +276,29 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
   const [domaine, setDomaine] = useState("");
   const [colour, setColour] = useState("Red");
   const [inventory, setInventory] = useState("1");
-  const [bottle, setBottle] = useState("");
+  const [cost, setCost] = useState("");
   const [markup, setMarkup] = useState("2.3");
   const [togoPct, setTogoPct] = useState("35");
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
 
-  const bottleN = Number(bottle);
+  const costN = Number(cost);
   const markupN = Number(markup);
   const togoPctN = Number(togoPct);
-  const validBottle = Number.isFinite(bottleN) && bottleN > 0;
+  const validCost = Number.isFinite(costN) && costN > 0;
   const validMarkup = Number.isFinite(markupN) && markupN > 0;
   const validPct = Number.isFinite(togoPctN) && togoPctN >= 0 && togoPctN < 100;
-  const cost = validBottle && validMarkup ? bottleN / markupN : null;
-  const togo = validBottle && validPct ? bottleN * (1 - togoPctN / 100) : null;
+  const bottleN = validCost && validMarkup ? costN * markupN : null;
+  const togo = bottleN != null && validPct ? bottleN * (1 - togoPctN / 100) : null;
 
   function reset() {
     setName(""); setDomaine(""); setColour("Red"); setInventory("1");
-    setBottle(""); setMarkup("2.3"); setTogoPct("35"); setYear(""); setCountry("");
+    setCost(""); setMarkup("2.3"); setTogoPct("35"); setYear(""); setCountry("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct) return;
+    if (!name.trim() || !domaine.trim() || !validCost || !validMarkup || !validPct || bottleN == null) return;
     setSubmitting(true);
     try {
       await addFn({ data: {
@@ -366,8 +366,8 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
           <div className="border-t border-border pt-4 space-y-3">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="w-bottle">Bottle price *</Label>
-                <Input id="w-bottle" type="number" min="0" step="0.01" value={bottle} onChange={(e) => setBottle(e.target.value)} placeholder="45.00" required />
+                <Label htmlFor="w-cost">Cost *</Label>
+                <Input id="w-cost" type="number" min="0" step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="20.00" required />
               </div>
               <div>
                 <Label htmlFor="w-markup">Markup ×</Label>
@@ -380,8 +380,8 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm bg-muted/40 rounded-md p-3">
               <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">Cost (bottle ÷ markup)</div>
-                <div className="font-medium tabular-nums">{cost != null ? `$${cost.toFixed(2)}` : "—"}</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Bottle price (cost × markup)</div>
+                <div className="font-medium tabular-nums">{bottleN != null ? `$${bottleN.toFixed(2)}` : "—"}</div>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">To-go price</div>
@@ -392,7 +392,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
-            <Button type="submit" disabled={submitting || !name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct}>
+            <Button type="submit" disabled={submitting || !name.trim() || !domaine.trim() || !validCost || !validMarkup || !validPct}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Add wine
             </Button>
