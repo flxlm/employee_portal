@@ -93,22 +93,28 @@ function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
   return "FORM FILLED";
 }
 
-function parseDate(s: string): string | null {
+function parseDate(s: string): Date | null {
   if (!s) return null;
-  // try MM/DD/YYYY
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (m) {
-    const d = new Date(Number(m[3]), Number(m[1]) - 1, Number(m[2]));
-    return isNaN(d.getTime()) ? null : d.toISOString();
+  // MM/DD/YYYY or M/D/YYYY (Google Sheets default US locale)
+  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mdy) {
+    const d = new Date(Date.UTC(Number(mdy[3]), Number(mdy[1]) - 1, Number(mdy[2])));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // ISO YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
+    return isNaN(d.getTime()) ? null : d;
   }
   const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d.toISOString();
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export const getEventInquiries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async (): Promise<EventInquiry[]> => {
-    const rows = await fetchRange("Event Inquiries!A1:P");
+    const rows = await fetchRange("Event Inquiries!A1:Z");
     const objs = rowsToObjects(rows);
     return objs
       .map((o, idx) => {
