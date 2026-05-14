@@ -230,3 +230,13 @@ function DetailField({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function formatPrice(value: string | undefined | null): string {
+  if (value == null) return "—";
+  const s = String(value).trim();
+  if (!s) return "—";
+  const n = Number(s.replace(/[^0-9.\-]/g, ""));
+  if (!Number.isFinite(n)) return "—";
+  return `$${n.toFixed(2)}`;
+}
+
