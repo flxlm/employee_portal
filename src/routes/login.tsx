@@ -32,7 +32,7 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back");
-    navigate({ to: "/home" });
+    window.location.href = "/home";
   };
 
   return (
