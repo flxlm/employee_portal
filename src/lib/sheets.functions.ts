@@ -296,14 +296,18 @@ export const addWine = createServerFn({ method: "POST" })
     if (!Number.isFinite(data.inventory) || data.inventory < 0) throw new Error("Inventory must be >= 0");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
     const GOOGLE_SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
 
-    const headerRows = await fetchRange("Wine List!A1:L1");
-    const headers = headerRows[0] ?? [];
+    const claims = (context as { claims?: { email?: string } }).claims;
+    const addedBy = claims?.email ?? "";
+    const addedOn = new Date().toISOString().replace("T", " ").slice(0, 19);
+
+    const headerRows = await fetchRange("Wine List!A1:Z1");
+    const headers = [...(headerRows[0] ?? [])];
 
     const cost = data.bottle / data.markup;
     const togo = data.bottle * (1 - data.togoDiscountPct / 100);
@@ -321,7 +325,37 @@ export const addWine = createServerFn({ method: "POST" })
       "Bottle": fmt(data.bottle),
       "Glass": "",
       "To-go price": fmt(togo),
+      "Added On": addedOn,
+      "Added By": addedBy,
     };
+
+    // Ensure "Added On" and "Added By" columns exist; create them if missing
+    const ensureHeader = (name: string) => {
+      if (!headers.includes(name)) headers.push(name);
+    };
+    const hadAddedOn = headers.includes("Added On");
+    const hadAddedBy = headers.includes("Added By");
+    ensureHeader("Added On");
+    ensureHeader("Added By");
+
+    if (!hadAddedOn || !hadAddedBy) {
+      const headerRange = `Wine List!A1:${colLetter(headers.length)}1`;
+      const encodedHeaderRange = headerRange.replace(/ /g, "%20");
+      const headerUrl = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/${encodedHeaderRange}?valueInputOption=USER_ENTERED`;
+      const headerRes = await fetch(headerUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ values: [headers] }),
+      });
+      if (!headerRes.ok) {
+        const body = await headerRes.text();
+        throw new Error(`Sheets API (header) ${headerRes.status}: ${body}`);
+      }
+    }
 
     const row = headers.map((h) => valueByHeader[h] ?? "");
 
@@ -339,7 +373,7 @@ export const addWine = createServerFn({ method: "POST" })
       const body = await res.text();
       throw new Error(`Sheets API ${res.status}: ${body}`);
     }
-    return { added: true };
+    return { added: true, addedOn, addedBy };
   });
 
 export const updateWineStock = createServerFn({ method: "POST" })
