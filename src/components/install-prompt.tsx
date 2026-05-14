@@ -81,7 +81,7 @@ export function InstallPrompt() {
   return (
     <div
       id="install-button"
-      className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-border bg-card p-3 shadow-lg"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm rounded-lg border border-border bg-card p-3 shadow-lg"
       role="dialog"
       aria-label="Install app"
     >
