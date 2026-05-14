@@ -27,6 +27,7 @@ type LogRow = {
   till_amount: number;
   till_status: string;
   till_difference: number;
+  cash_tips: number;
   photo_path: string | null;
   notes: string | null;
   created_at: string;
@@ -37,6 +38,7 @@ function OpenClosePage() {
   const [shift, setShift] = useState<"open" | "close">("open");
   const [tillAmount, setTillAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [cashTips, setCashTips] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -119,6 +121,7 @@ function OpenClosePage() {
         till_amount: amount,
         till_status: status,
         till_difference: diff,
+        cash_tips: shift === "close" ? (parseFloat(cashTips) || 0) : 0,
         photo_path: photoPath,
         confirmed: true,
         notes: notes || null,
@@ -128,6 +131,7 @@ function OpenClosePage() {
       toast.success(`${shift === "open" ? "Opening" : "Closing"} log saved`);
       setTillAmount("");
       setNotes("");
+      setCashTips("");
       setPhotoFile(null);
       setConfirmed(false);
       loadLogs();
@@ -200,6 +204,21 @@ function OpenClosePage() {
                   )}
                 </div>
 
+                {shift === "close" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cash-tips">Cash tips ($)</Label>
+                    <Input
+                      id="cash-tips"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={cashTips}
+                      onChange={(e) => setCashTips(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="photo">Photo of the space</Label>
                   <div className="flex items-center gap-3">
@@ -268,6 +287,9 @@ function OpenClosePage() {
                       <div className={`text-xs ${log.till_status === "over" ? "text-emerald-700" : log.till_status === "under" ? "text-rose-700" : "text-muted-foreground"}`}>
                         {log.till_status === "exact" ? "On target" : `${log.till_status} by $${Math.abs(Number(log.till_difference)).toFixed(2)}`}
                       </div>
+                      {log.shift_type === "close" && Number(log.cash_tips) > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">Tips: ${Number(log.cash_tips).toFixed(2)}</div>
+                      )}
                     </div>
                   </div>
                   {log.notes && <p className="text-sm mt-3 whitespace-pre-wrap">{log.notes}</p>}

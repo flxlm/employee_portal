@@ -1,0 +1,1 @@
+ALTER TABLE public.open_close_logs ADD COLUMN cash_tips numeric NOT NULL DEFAULT 0;
