@@ -27,6 +27,7 @@ type LogRow = {
   till_amount: number;
   till_status: string;
   till_difference: number;
+  cash_tips: number;
   photo_path: string | null;
   notes: string | null;
   created_at: string;
