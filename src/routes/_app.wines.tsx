@@ -403,3 +403,77 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
   );
 }
 
+function StockEditor({ wine }: { wine: WineEntry }) {
+  const updateFn = useServerFn(updateWineStock);
+  const queryClient = useQueryClient();
+  const current = Number(String(wine.inventory ?? "").replace(/[^0-9.\-]/g, "")) || 0;
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(String(current));
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 0) {
+      toast.error("Enter a valid stock number");
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateFn({ data: { rowNumber: wine.rowNumber, inventory: Math.floor(n) } });
+      toast.success(`${wine.name}: stock set to ${Math.floor(n)}`);
+      await queryClient.invalidateQueries({ queryKey: ["wine-list"] });
+      setOpen(false);
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to update stock");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        if (o) setValue(String(current));
+        setOpen(o);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className={`inline-flex items-center justify-center min-w-[2.5rem] h-8 px-2 rounded-md border text-sm font-medium tabular-nums hover:bg-accent hover:text-accent-foreground transition-colors ${
+            current <= 0 ? "border-destructive/40 text-destructive" : "border-border"
+          }`}
+        >
+          {current}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3" onClick={(e) => e.stopPropagation()}>
+        <form onSubmit={handleSave} className="space-y-2">
+          <Label htmlFor={`stock-${wine.id}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+            Set stock
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id={`stock-${wine.id}`}
+              type="number"
+              min="0"
+              step="1"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              autoFocus
+              className="h-8"
+            />
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+            </Button>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
