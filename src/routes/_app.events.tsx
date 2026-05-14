@@ -304,7 +304,7 @@ function EventsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="text-sm space-y-1 text-muted-foreground">
-                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{e.eventDate || "No date"}</div>
+                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{formatSheetDate(e.eventDate) || "No date"}</div>
                       <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />{e.guests || "?"} guests · {e.reservationType || "—"}</div>
                       <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{e.startTime || "—"} → {e.endTime || "—"}</div>
                     </CardContent>
