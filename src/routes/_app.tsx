@@ -101,7 +101,7 @@ function AppLayout() {
       </aside>
 
       {/* Mobile header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-border bg-card">
         <img src={logo} alt="Savsav" className="h-6 w-auto" />
         <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
           <Menu className="h-5 w-5" />
