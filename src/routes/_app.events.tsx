@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_app/events")({
 });
 
 const BUCKETS = [
+  { id: "NEW", label: "New" },
   { id: "FORM FILLED", label: "Form filled" },
   { id: "ESTIMATE SENT", label: "Estimate sent" },
   { id: "REMINDER SENT", label: "Reminder sent" },
