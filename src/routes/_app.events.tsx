@@ -390,19 +390,19 @@ function EventsPage() {
       })()}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && !mutation.isPending && setSelected(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto p-4 sm:p-6">
           {selected && (
             <>
-              <DialogHeader>
-                <div className="flex items-start justify-between gap-3 pr-8">
-                  <DialogTitle className="font-serif text-2xl flex items-center gap-3 flex-wrap">
-                    {selected.email}
-                    <span className={`text-xs px-2 py-0.5 rounded border ${statusVariant(selected.bucket)}`}>
+              <DialogHeader className="pr-8">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                  <DialogTitle className="font-serif text-xl sm:text-2xl flex items-center gap-2 sm:gap-3 flex-wrap break-all">
+                    <span className="break-all">{selected.email}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded border shrink-0 ${statusVariant(selected.bucket)}`}>
                       {selected.status}
                     </span>
                   </DialogTitle>
                   {!editing && (
-                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                    <Button variant="outline" size="sm" className="self-start shrink-0" onClick={() => setEditing(true)}>
                       <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
                     </Button>
                   )}
