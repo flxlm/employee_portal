@@ -101,7 +101,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
 
   const handleAdd = async () => {
     if (!newLabel.trim() || !newCode.trim()) {
-      toast.error("Label and code are required");
+      toast.error("Title and code are required");
       return;
     }
     setBusyId("new");
@@ -211,7 +211,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="pc-label" className="text-xs">
-                  Label
+                  Title
                 </Label>
                 <Input
                   id="pc-label"
