@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, RefreshCw, Loader2, Pencil, Sparkles } from "lucide-react";
+import { Calendar, Users, Clock, RefreshCw, Loader2, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -236,10 +236,12 @@ function EventsPage() {
     mutation.mutate({ id: selected.id, updates });
   };
 
-  const grouped = (data ?? []).reduce<Record<string, EventInquiry[]>>((acc, e) => {
-    (acc[e.bucket] ||= []).push(e);
-    return acc;
-  }, {});
+  const grouped = (data ?? [])
+    .filter((e) => e.rawStatus.trim().toUpperCase() !== "DELETED")
+    .reduce<Record<string, EventInquiry[]>>((acc, e) => {
+      (acc[e.bucket] ||= []).push(e);
+      return acc;
+    }, {});
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -510,6 +512,21 @@ function EventsPage() {
                         <Sparkles className="h-4 w-4 mr-1.5" />
                       )}
                       Send French Estimate
+                    </Button>
+                  </div>
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        if (!selected) return;
+                        if (!confirm("Delete this inquiry? It will be hidden from all views but kept in the database.")) return;
+                        mutation.mutate({ id: selected.id, updates: { rawStatus: "DELETED" } });
+                      }}
+                      disabled={mutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1.5" /> Delete inquiry
                     </Button>
                   </div>
                 </div>
