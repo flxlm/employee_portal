@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AuthStatusScreen } from "@/components/auth-status-screen";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -17,17 +18,6 @@ function AppLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
-        Loading…
-      </div>
-    );
-  }
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
   useEffect(() => {
     if (!user) return;
     supabase
@@ -38,6 +28,18 @@ function AppLayout() {
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  if (loading) {
+    return (
+      <AuthStatusScreen
+        title="Loading your portal"
+        message="Restoring your session and permissions."
+      />
+    );
+  }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   const nav = [
     { to: "/home", label: "Home", icon: Home },
