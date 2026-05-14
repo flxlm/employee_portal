@@ -126,7 +126,9 @@ function WinesPage() {
                     <td className="px-4 py-3 text-muted-foreground">{w.colour}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.togo)}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.bottle)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.inventory || "0"}</td>
+                    <td className="px-4 py-3 text-right">
+                      <StockEditor wine={w} />
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
