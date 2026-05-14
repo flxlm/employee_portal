@@ -42,6 +42,7 @@ function formatRelative(iso: string | null): string {
 
 function FunctionsPage() {
   const [refreshOpen, setRefreshOpen] = useState(false);
+  const [passcodesOpen, setPasscodesOpen] = useState(false);
   const [pending, setPending] = useState<null | MenuKey>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Record<MenuKey, string | null>>({
     main: null,
