@@ -68,13 +68,17 @@ function AppLayout() {
           <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {nav.map((item) => {
-            const active = location.pathname.startsWith(item.to);
+          {nav.map((item, idx) => {
+            const currentStatus = new URLSearchParams(location.search).get("status");
+            const itemStatus = item.search?.status;
+            const pathMatches = location.pathname.startsWith(item.to);
+            const active = pathMatches && (itemStatus ? currentStatus === itemStatus : !currentStatus);
             const Icon = item.icon;
             return (
               <Link
-                key={item.to}
+                key={`${item.to}-${idx}`}
                 to={item.to}
+                search={item.search ?? {}}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
