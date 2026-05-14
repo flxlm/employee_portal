@@ -116,6 +116,54 @@ function WinesPage() {
           </div>
         </Card>
       )}
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-lg">
+          {selected && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                    <WineIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <DialogTitle className="text-xl font-serif leading-tight">{selected.name}</DialogTitle>
+                    <DialogDescription className="text-sm">
+                      {selected.domaine || "—"}
+                    </DialogDescription>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {selected.colour && <Badge variant="secondary">{selected.colour}</Badge>}
+                  {selected.type && <Badge variant="outline">{selected.type}</Badge>}
+                  {selected.year && <Badge variant="outline">{selected.year}</Badge>}
+                  {selected.country && <Badge variant="outline">{selected.country}</Badge>}
+                </div>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <DetailField label="Glass" value={selected.glass} />
+                <DetailField label="Bottle" value={selected.bottle} />
+                <DetailField label="To-go" value={selected.togo} />
+                <DetailField label="In stock" value={selected.inventory || "0"} />
+                <DetailField label="Year" value={selected.year} />
+                <DetailField label="Country" value={selected.country} />
+                <DetailField label="Type" value={selected.type} />
+                <DetailField label="Colour" value={selected.colour} />
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function DetailField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-sm font-medium mt-0.5">{value || "—"}</div>
     </div>
   );
 }
