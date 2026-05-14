@@ -39,6 +39,7 @@ function rowsToObjects(rows: string[][]): Record<string, string>[] {
 }
 
 export type StatusBucket =
+  | "NEW"
   | "FORM FILLED"
   | "ESTIMATE SENT"
   | "REMINDER SENT"
@@ -87,10 +88,10 @@ function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
   todayStart.setHours(0, 0, 0, 0);
   const isPast = eventDate ? eventDate.getTime() < todayStart.getTime() : false;
 
+  if (s === "") return "NEW";
   if (s === "CONFIRMED" && isPast) return "PAST";
   const match = KNOWN_STATUSES.find((k) => k === s);
   if (match) return match;
-  // empty / unknown => FORM FILLED
   return "FORM FILLED";
 }
 
