@@ -84,15 +84,15 @@ const BUCKETS = [
   { id: "PAST", label: "Past" },
 ] as const;
 
-const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" }[] = [
-  { key: "rawStatus", label: "Status", type: "input" },
+const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" | "select" | "date" | "time" }[] = [
+  { key: "rawStatus", label: "Status", type: "select" },
   { key: "email", label: "Email", type: "input" },
-  { key: "eventDate", label: "Event date", type: "input" },
+  { key: "eventDate", label: "Event date", type: "date" },
   { key: "guests", label: "Guests", type: "input" },
   { key: "reservationType", label: "Reservation type", type: "input" },
-  { key: "startTime", label: "Start time", type: "input" },
-  { key: "arrivalTime", label: "Guest arrival", type: "input" },
-  { key: "endTime", label: "End time", type: "input" },
+  { key: "startTime", label: "Start time", type: "time" },
+  { key: "arrivalTime", label: "Guest arrival", type: "time" },
+  { key: "endTime", label: "End time", type: "time" },
   { key: "barService", label: "Bar service", type: "input" },
   { key: "foodService", label: "Food service", type: "input" },
   { key: "dj", label: "DJ", type: "input" },
