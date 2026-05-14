@@ -33,12 +33,19 @@ function AdminPage() {
   const remove = useServerFn(removeAllowedEmail);
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
+  const [asAdmin, setAsAdmin] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ["allowed-emails"], queryFn: () => list() });
 
   const addMut = useMutation({
-    mutationFn: (e: string) => add({ data: { email: e } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["allowed-emails"] }); setEmail(""); toast.success("Email added"); },
+    mutationFn: (vars: { email: string; as_admin: boolean }) =>
+      add({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allowed-emails"] });
+      setEmail("");
+      setAsAdmin(false);
+      toast.success("Email added");
+    },
     onError: (err: Error) => toast.error(err.message),
   });
   const rmMut = useMutation({
@@ -58,13 +65,24 @@ function AdminPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <form
-            onSubmit={(e) => { e.preventDefault(); if (email) addMut.mutate(email); }}
-            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (email) addMut.mutate({ email, as_admin: asAdmin });
+            }}
+            className="space-y-3"
           >
-            <Input type="email" placeholder="employee@savsav.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <Button type="submit" disabled={addMut.isPending}>
-              <UserPlus className="h-4 w-4 mr-2" /> Add
-            </Button>
+            <div className="flex gap-2">
+              <Input type="email" placeholder="employee@savsav.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Button type="submit" disabled={addMut.isPending}>
+                <UserPlus className="h-4 w-4 mr-2" /> Add
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <Label htmlFor="as-admin" className="text-sm font-normal">
+                Make this user an admin on signup
+              </Label>
+              <Switch id="as-admin" checked={asAdmin} onCheckedChange={setAsAdmin} />
+            </div>
           </form>
 
           <div className="border-t border-border">
@@ -76,7 +94,14 @@ function AdminPage() {
               <ul className="divide-y divide-border">
                 {(data ?? []).map((row: any) => (
                   <li key={row.id} className="flex items-center justify-between py-3">
-                    <span className="text-sm">{row.email}</span>
+                    <span className="text-sm flex items-center gap-2">
+                      {row.email}
+                      {row.as_admin && (
+                        <span className="inline-flex items-center gap-1 text-xs text-primary">
+                          <ShieldAlert className="h-3.5 w-3.5" /> admin
+                        </span>
+                      )}
+                    </span>
                     <Button size="icon" variant="ghost" onClick={() => rmMut.mutate(row.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
