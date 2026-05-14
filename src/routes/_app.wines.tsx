@@ -119,44 +119,106 @@ function WinesPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-lg">
-          {selected && (
-            <>
-              <DialogHeader>
-                <div className="flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                    <WineIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <DialogTitle className="text-xl font-serif leading-tight">{selected.name}</DialogTitle>
-                    <DialogDescription className="text-sm">
-                      {selected.domaine || "—"}
-                    </DialogDescription>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {selected.colour && <Badge variant="secondary">{selected.colour}</Badge>}
-                  {selected.type && <Badge variant="outline">{selected.type}</Badge>}
-                  {selected.year && <Badge variant="outline">{selected.year}</Badge>}
-                  {selected.country && <Badge variant="outline">{selected.country}</Badge>}
-                </div>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <DetailField label="Glass" value={selected.glass} />
-                <DetailField label="Bottle" value={selected.bottle} />
-                <DetailField label="To-go" value={selected.togo} />
-                <DetailField label="In stock" value={selected.inventory || "0"} />
-                <DetailField label="Year" value={selected.year} />
-                <DetailField label="Country" value={selected.country} />
-                <DetailField label="Type" value={selected.type} />
-                <DetailField label="Colour" value={selected.colour} />
-              </div>
-            </>
-          )}
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          {selected && <WineDetail wine={selected} />}
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function WineDetail({ wine }: { wine: WineEntry }) {
+  const insightsFn = useServerFn(getWineInsights);
+  const { data: insights, isLoading, error } = useQuery({
+    queryKey: ["wine-insights", wine.id],
+    queryFn: () =>
+      insightsFn({
+        data: {
+          name: wine.name,
+          domaine: wine.domaine,
+          year: wine.year,
+          type: wine.type,
+          colour: wine.colour,
+          country: wine.country,
+        },
+      }),
+    staleTime: 1000 * 60 * 60,
+    retry: 1,
+  });
+
+  return (
+    <>
+      <DialogHeader>
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+            <WineIcon className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-xl font-serif leading-tight">{wine.name}</DialogTitle>
+            <DialogDescription className="text-sm">{wine.domaine || "—"}</DialogDescription>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 pt-2">
+          {wine.colour && <Badge variant="secondary">{wine.colour}</Badge>}
+          {wine.type && <Badge variant="outline">{wine.type}</Badge>}
+          {wine.year && <Badge variant="outline">{wine.year}</Badge>}
+          {wine.country && <Badge variant="outline">{wine.country}</Badge>}
+        </div>
+      </DialogHeader>
+
+      <div className="grid grid-cols-2 gap-4 pt-2">
+        <DetailField label="Glass" value={wine.glass} />
+        <DetailField label="Bottle" value={wine.bottle} />
+        <DetailField label="To-go" value={wine.togo} />
+        <DetailField label="In stock" value={wine.inventory || "0"} />
+      </div>
+
+      <div className="border-t border-border pt-4 mt-2 space-y-4">
+        <section>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            Description
+            {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+          </div>
+          {error ? (
+            <p className="text-sm text-destructive">Couldn't load: {(error as Error).message}</p>
+          ) : isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-11/12" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed">{insights?.description}</p>
+          )}
+        </section>
+
+        <section>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Varietal</div>
+          {isLoading ? (
+            <Skeleton className="h-6 w-40" />
+          ) : insights?.varietals && insights.varietals.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {insights.varietals.map((v) => (
+                <Badge key={v} variant="secondary">{v}</Badge>
+              ))}
+            </div>
+          ) : (
+            !error && <p className="text-sm text-muted-foreground">—</p>
+          )}
+        </section>
+
+        {insights?.sourceUrl && (
+          <a
+            href={insights.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" /> Reference
+          </a>
+        )}
+      </div>
+    </>
   );
 }
 
