@@ -134,6 +134,10 @@ function EventsPage() {
   const [selected, setSelected] = useState<EventInquiry | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [bucketFilter, setBucketFilter] = useState<string>("NEW");
+  const [ongoingSub, setOngoingSub] = useState<string>("ALL");
+
+  const ONGOING_SUBSTATUSES = ["FORM FILLED", "ESTIMATE SENT", "REMINDER SENT"] as const;
 
   useEffect(() => {
     if (selected) {
