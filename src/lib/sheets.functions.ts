@@ -64,9 +64,14 @@ export type EventInquiry = {
   barService: string;
   foodService: string;
   foodServiceTime: string;
+  foodRestrictions: string;
   dj: string;
   description: string;
   budget: string;
+  premiumDrinks: string;
+  premiumDrinksDetails: string;
+  weddingSections: string;
+  referralSource: string;
   prepaid: string;
 };
 
@@ -139,9 +144,14 @@ type InquiryRow = {
   bar_service: string;
   food_service: string;
   food_service_time: string;
+  food_restrictions: string;
   dj: string;
   description: string;
   budget: string;
+  premium_drinks: string;
+  premium_drinks_details: string;
+  wedding_sections: string;
+  referral_source: string;
   prepaid: string;
   status: string;
 };
@@ -167,9 +177,14 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     barService: r.bar_service,
     foodService: r.food_service,
     foodServiceTime: r.food_service_time ?? "",
+    foodRestrictions: r.food_restrictions ?? "",
     dj: r.dj,
     description: r.description,
     budget: r.budget,
+    premiumDrinks: r.premium_drinks ?? "",
+    premiumDrinksDetails: r.premium_drinks_details ?? "",
+    weddingSections: r.wedding_sections ?? "",
+    referralSource: r.referral_source ?? "",
     prepaid: r.prepaid,
   };
 }
@@ -199,9 +214,14 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   barService: "bar_service",
   foodService: "food_service",
   foodServiceTime: "food_service_time",
+  foodRestrictions: "food_restrictions",
   dj: "dj",
   description: "description",
   budget: "budget",
+  premiumDrinks: "premium_drinks",
+  premiumDrinksDetails: "premium_drinks_details",
+  weddingSections: "wedding_sections",
+  referralSource: "referral_source",
   prepaid: "prepaid",
 };
 

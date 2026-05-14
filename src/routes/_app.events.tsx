@@ -122,16 +122,21 @@ const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" |
   { key: "eventDate", label: "Event date", type: "date" },
   { key: "guests", label: "Guests", type: "input" },
   { key: "reservationType", label: "Reservation type", type: "input" },
+  { key: "weddingSections", label: "Wedding sections", type: "input" },
   { key: "startTime", label: "Start time", type: "time" },
   { key: "arrivalTime", label: "Guest arrival", type: "time" },
   { key: "endTime", label: "End time", type: "time" },
   { key: "barService", label: "Bar service", type: "input" },
+  { key: "premiumDrinks", label: "Premium drinks", type: "input" },
+  { key: "premiumDrinksDetails", label: "Premium drinks details", type: "textarea" },
   { key: "foodService", label: "Food service", type: "input" },
   { key: "foodServiceTime", label: "Food service time", type: "time" },
+  { key: "foodRestrictions", label: "Food restrictions", type: "textarea" },
   { key: "dj", label: "Other options", type: "input" },
   { key: "budget", label: "Budget", type: "input" },
   { key: "prepaid", label: "Prepaid bar", type: "input" },
   { key: "description", label: "Notes", type: "textarea" },
+  { key: "referralSource", label: "How they heard about us", type: "input" },
 ];
 
 function statusVariant(b: EventInquiry["bucket"]) {
@@ -479,15 +484,20 @@ function EventsPage() {
                   <Field label="Submitted" value={selected.timestamp} />
                   <Field label="Guests" value={selected.guests} />
                   <Field label="Reservation type" value={selected.reservationType} />
+                  <Field label="Wedding sections" value={selected.weddingSections} />
                   <Field label="Start" value={selected.startTime} />
                   <Field label="Guest arrival" value={selected.arrivalTime} />
                   <Field label="End" value={selected.endTime} />
                   <Field label="Bar service" value={selected.barService} />
+                  <Field label="Premium drinks" value={selected.premiumDrinks} />
+                  <Field label="Premium drinks details" value={selected.premiumDrinksDetails} multiline />
                   <Field label="Food service" value={selected.foodService} />
                   <Field label="Food service time" value={selected.foodServiceTime} />
+                  <Field label="Food restrictions" value={selected.foodRestrictions} multiline />
                   <Field label="Other options" value={selected.dj} />
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
+                  <Field label="How they heard about us" value={selected.referralSource} />
                   <Field label="Notes" value={selected.description} multiline />
                   <div className="pt-2 flex flex-wrap gap-2">
                     <Button
