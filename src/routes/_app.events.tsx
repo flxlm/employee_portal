@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getEventInquiries, updateEventInquiry, importEventInquiriesFromSheet, type EventInquiry } from "@/lib/sheets.functions";
+import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
 import { draftEstimateEmail } from "@/lib/estimate.functions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,21 +241,6 @@ function EventsPage() {
     return acc;
   }, {});
 
-  const importFn = useServerFn(importEventInquiriesFromSheet);
-  const [importing, setImporting] = useState(false);
-  const handleImport = async () => {
-    setImporting(true);
-    try {
-      const r = await importFn();
-      toast.success(`Imported ${r.imported} inquiries from sheet`);
-      qc.invalidateQueries({ queryKey: ["event-inquiries"] });
-    } catch (e) {
-      toast.error(`Import failed: ${(e as Error).message}`);
-    } finally {
-      setImporting(false);
-    }
-  };
-
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6 gap-4">
@@ -263,15 +248,9 @@ function EventsPage() {
           <h1 className="text-3xl font-serif">Event Inquiries</h1>
           <p className="text-muted-foreground text-sm">Stored in the Lovable database</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleImport} disabled={importing}>
-            {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-            Import from Sheet
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Refresh
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+        </Button>
       </div>
 
       {error && (

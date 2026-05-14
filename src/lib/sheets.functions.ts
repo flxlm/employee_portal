@@ -232,67 +232,6 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
     return { updated: Object.keys(patch).length };
   });
 
-// Admin-only: one-time (or re-runnable) import from the Google Sheet into the DB.
-// Upserts by submission_id; falls back to a synthesised key when missing.
-export const importEventInquiriesFromSheet = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) throw new Error("Admin only");
-
-    const rows = await fetchRange(`${SHEET_RANGE}!A1:AG`);
-    const objs = rowsToObjects(rows);
-    const payload = objs
-      .filter((o) => (o["Email"] ?? "").trim() || (o["Submission Date"] ?? "").trim())
-      .map((o) => {
-        const eventDateRaw = o["Date of the event"] ?? "";
-        const newDateRaw = o["New Date"] ?? "";
-        const ed = parseDate(newDateRaw) ?? parseDate(eventDateRaw);
-        const submissionId =
-          (o["Submission ID"] ?? "").trim() ||
-          `legacy:${(o["Submission Date"] ?? "").trim()}|${(o["Email"] ?? "").trim()}`;
-        return {
-          submission_id: submissionId,
-          submission_date: o["Submission Date"] ?? "",
-          email: o["Email"] ?? "",
-          event_date_raw: eventDateRaw,
-          new_date_raw: newDateRaw,
-          event_date: ed ? ed.toISOString().slice(0, 10) : null,
-          guests: o["Number of expect guests"] ?? "",
-          reservation_type: o["What type of event do you want to host?"] ?? "",
-          start_time: o["At what time do you want to start having access to the space?"] ?? "",
-          arrival_time: o["At what time will your guests arrive?"] ?? "",
-          end_time: o["At what time would you like to end your event?"] ?? "",
-          bar_service: o["How would you want the bar service to be handled?"] ?? "",
-          food_service: o["How would you want the food service to be handled?"] ?? "",
-          dj: o["Please select any extras that Savsav can offer you:"] ?? "",
-          description: o["Is there anything else we should know?"] ?? "",
-          budget: o["Budget"] ?? "",
-          prepaid: o["Food Budget (pp)"] ?? "",
-          status: o["Status"] ?? "",
-        };
-      });
-
-    // Chunk to keep request payloads small
-    const CHUNK = 200;
-    let imported = 0;
-    for (let i = 0; i < payload.length; i += CHUNK) {
-      const slice = payload.slice(i, i + CHUNK);
-      const { error } = await supabase
-        .from("event_inquiries")
-        .upsert(slice, { onConflict: "submission_id", ignoreDuplicates: false });
-      if (error) throw new Error(error.message);
-      imported += slice.length;
-    }
-    return { imported };
-  });
-
 export type WineEntry = {
   id: string;
   rowNumber: number;
