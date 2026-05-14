@@ -274,14 +274,14 @@ function RecipeDetail({ recipe, onSaved }: { recipe: Recipe; onSaved: (r: Recipe
       <DialogHeader>
         <DialogTitle className="text-xl leading-tight">{recipe.product}</DialogTitle>
         <DialogDescription>{recipe.category}</DialogDescription>
-        <div className="flex flex-wrap gap-2 pt-2">
-          {recipe.dish_used && <Badge variant="secondary">Served in: {recipe.dish_used}</Badge>}
-          <Badge variant="outline">{steps.length} {steps.length === 1 ? "step" : "steps"}</Badge>
-        </div>
         <div className="pt-2">
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
             <Pencil className="h-3.5 w-3.5" /> Edit
           </Button>
+        </div>
+        <div className="flex flex-wrap gap-2 pt-2">
+          {recipe.dish_used && <Badge variant="secondary">Served in: {recipe.dish_used}</Badge>}
+          <Badge variant="outline">{steps.length} {steps.length === 1 ? "step" : "steps"}</Badge>
         </div>
       </DialogHeader>
 
