@@ -56,6 +56,15 @@ function inputDateToSheet(s: string): string {
   if (!m) return s;
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
+function formatSheetDate(s: string): string {
+  const iso = sheetDateToInput(s);
+  if (!iso) return s || "";
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
 
 // Sheet time format: "6:00 PM" <-> HTML time input HH:MM (24h)
 function sheetTimeToInput(s: string): string {
@@ -295,7 +304,7 @@ function EventsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="text-sm space-y-1 text-muted-foreground">
-                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{e.eventDate || "No date"}</div>
+                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{formatSheetDate(e.eventDate) || "No date"}</div>
                       <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />{e.guests || "?"} guests · {e.reservationType || "—"}</div>
                       <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{e.startTime || "—"} → {e.endTime || "—"}</div>
                     </CardContent>
