@@ -38,6 +38,7 @@ function OpenClosePage() {
   const [shift, setShift] = useState<"open" | "close">("open");
   const [tillAmount, setTillAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [cashTips, setCashTips] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
