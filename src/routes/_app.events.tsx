@@ -101,6 +101,9 @@ function inputTimeToSheet(s: string): string {
 
 export const Route = createFileRoute("/_app/events")({
   component: EventsPage,
+  validateSearch: (search: Record<string, unknown>): { status?: string } => ({
+    status: typeof search.status === "string" ? search.status : undefined,
+  }),
 });
 
 const BUCKETS = [
