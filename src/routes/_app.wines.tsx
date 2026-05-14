@@ -276,24 +276,24 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
   const [domaine, setDomaine] = useState("");
   const [colour, setColour] = useState("Red");
   const [inventory, setInventory] = useState("1");
-  const [bottle, setBottle] = useState("");
+  const [cost, setCost] = useState("");
   const [markup, setMarkup] = useState("2.3");
   const [togoPct, setTogoPct] = useState("35");
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
 
-  const bottleN = Number(bottle);
+  const costN = Number(cost);
   const markupN = Number(markup);
   const togoPctN = Number(togoPct);
-  const validBottle = Number.isFinite(bottleN) && bottleN > 0;
+  const validCost = Number.isFinite(costN) && costN > 0;
   const validMarkup = Number.isFinite(markupN) && markupN > 0;
   const validPct = Number.isFinite(togoPctN) && togoPctN >= 0 && togoPctN < 100;
-  const cost = validBottle && validMarkup ? bottleN / markupN : null;
-  const togo = validBottle && validPct ? bottleN * (1 - togoPctN / 100) : null;
+  const bottleN = validCost && validMarkup ? costN * markupN : null;
+  const togo = bottleN != null && validPct ? bottleN * (1 - togoPctN / 100) : null;
 
   function reset() {
     setName(""); setDomaine(""); setColour("Red"); setInventory("1");
-    setBottle(""); setMarkup("2.3"); setTogoPct("35"); setYear(""); setCountry("");
+    setCost(""); setMarkup("2.3"); setTogoPct("35"); setYear(""); setCountry("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
