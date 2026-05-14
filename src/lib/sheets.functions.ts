@@ -39,6 +39,7 @@ function rowsToObjects(rows: string[][]): Record<string, string>[] {
 
 export type EventInquiry = {
   id: string;
+  rowNumber: number;
   status: string;
   rawStatus: string;
   bucket: "new" | "ongoing" | "confirmed" | "declined" | "past";
