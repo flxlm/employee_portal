@@ -298,7 +298,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct) return;
+    if (!name.trim() || !domaine.trim() || !validCost || !validMarkup || !validPct || bottleN == null) return;
     setSubmitting(true);
     try {
       await addFn({ data: {
