@@ -7,11 +7,96 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Webhook-Secret',
 };
 
+const EVENT_INQUIRY_FORM_ID = '252015118626046';
+
+function pad2(n: number | string): string {
+  const s = String(n);
+  return s.length < 2 ? '0' + s : s;
+}
+
+function dateObjToRaw(o: { month?: string; day?: string; year?: string }): string {
+  if (!o?.month || !o?.day || !o?.year) return '';
+  return `${pad2(o.month)}-${pad2(o.day)}-${o.year}`;
+}
+
+function dateObjToISO(o: { month?: string; day?: string; year?: string }): string | null {
+  if (!o?.month || !o?.day || !o?.year) return null;
+  const d = new Date(Date.UTC(+o.year, +o.month - 1, +o.day));
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
+function timeObjToStr(o: any): string {
+  if (!o) return '';
+  if (typeof o === 'string') return o;
+  if (o.hourSelect && o.minuteSelect) {
+    return `${o.hourSelect}:${o.minuteSelect}${o.ampm ? ' ' + o.ampm : ''}`;
+  }
+  return '';
+}
+
+function strOrJoin(v: any): string {
+  if (v == null) return '';
+  if (Array.isArray(v)) return v.join('\n');
+  if (typeof v === 'string') return v;
+  return JSON.stringify(v);
+}
+
+function formatBudget(o: any): string {
+  if (!o || typeof o !== 'object') return strOrJoin(o);
+  const num = o['number-3'] ?? '';
+  const tax = o['selectbox-4'] ?? '';
+  if (!num) return '';
+  return `$${num}${tax ? ' -    ' + tax + '.' : ''}`;
+}
+
+async function insertEventInquiry(form: FormData) {
+  const submissionId = (form.get('submissionID') || form.get('submission_id') || '').toString().trim();
+  let raw: Record<string, any> = {};
+  try {
+    raw = JSON.parse(form.get('rawRequest')?.toString() || '{}');
+  } catch {
+    /* ignore */
+  }
+
+  const eventDateRaw = dateObjToRaw(raw.q4_dateOf);
+  const eventDateIso = dateObjToISO(raw.q4_dateOf);
+
+  const row = {
+    submission_id: submissionId || `jotform:${Date.now()}`,
+    submission_date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    email: strOrJoin(raw.q3_email),
+    event_date_raw: eventDateRaw,
+    new_date_raw: '',
+    event_date: eventDateIso,
+    guests: strOrJoin(raw.q5_numberOf),
+    reservation_type: strOrJoin(raw.q21_whatType),
+    start_time: timeObjToStr(raw.q6_atWhat),
+    arrival_time: timeObjToStr(raw.q7_time7),
+    end_time: timeObjToStr(raw.q16_time16),
+    bar_service: strOrJoin(raw.q12_typeA12),
+    food_service: strOrJoin(raw.q14_typeA),
+    dj: strOrJoin(raw.q15_pleaseSelect),
+    description: strOrJoin(raw.q18_isThere),
+    budget: formatBudget(raw.q25_input25),
+    prepaid: '',
+    status: 'NEW',
+  };
+
+  const { error } = await supabaseAdmin
+    .from('event_inquiries')
+    .upsert(row, { onConflict: 'submission_id', ignoreDuplicates: false });
+
+  if (error) {
+    console.error('[webhook] event_inquiries upsert failed', error);
+    return { ok: false, error: error.message, submission_id: row.submission_id };
+  }
+  return { ok: true, submission_id: row.submission_id };
+}
+
 export const Route = createFileRoute('/api/public/webhook')({
   server: {
     handlers: {
-      OPTIONS: async () =>
-        new Response(null, { status: 204, headers: corsHeaders }),
+      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
 
       POST: async ({ request }) => {
         // Optional shared-secret check. Set WEBHOOK_SECRET to enable.
@@ -29,13 +114,15 @@ export const Route = createFileRoute('/api/public/webhook')({
         }
 
         const contentType = request.headers.get('content-type') ?? '';
+        let form: FormData | null = null;
         let payload: unknown;
+
         try {
-          if (contentType.includes('application/json')) {
+          if (contentType.includes('form')) {
+            form = await request.formData();
+            payload = Object.fromEntries(form.entries());
+          } else if (contentType.includes('application/json')) {
             payload = await request.json();
-          } else if (contentType.includes('form')) {
-            const fd = await request.formData();
-            payload = Object.fromEntries(fd.entries());
           } else {
             payload = await request.text();
           }
@@ -43,16 +130,21 @@ export const Route = createFileRoute('/api/public/webhook')({
           payload = null;
         }
 
-        console.log('[webhook] received', {
-          contentType,
-          payload,
-        });
+        const formId =
+          (form?.get('formID')?.toString() ??
+            (typeof payload === 'object' && payload && (payload as any).formID)) || '';
 
-        // Example: persist to a table if you create one.
-        // await supabaseAdmin.from('webhook_events').insert({ payload });
-        void supabaseAdmin;
+        console.log('[webhook] received', { contentType, formId });
 
-        return new Response(JSON.stringify({ ok: true }), {
+        if (form && formId === EVENT_INQUIRY_FORM_ID) {
+          const result = await insertEventInquiry(form);
+          return new Response(JSON.stringify(result), {
+            status: result.ok ? 200 : 500,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          });
+        }
+
+        return new Response(JSON.stringify({ ok: true, ignored: true }), {
           status: 200,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         });
