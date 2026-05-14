@@ -156,6 +156,7 @@ function EventsPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [bucketFilter, setBucketFilter] = useState<string>("NEW");
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<string>("submission-desc");
 
   const ONGOING_SUBSTATUSES = ["FORM FILLED", "ESTIMATE SENT", "REMINDER SENT"] as const;
 
@@ -224,6 +225,21 @@ function EventsPage() {
         if (bucketFilter === "ONGOING" && ongoingSub !== "ALL") {
           items = items.filter((e) => e.rawStatus.trim().toUpperCase() === ongoingSub);
         }
+        const toTime = (s: string) => {
+          const iso = sheetDateToInput(s);
+          if (iso) return new Date(iso).getTime();
+          const t = new Date(s).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+        items = [...items].sort((a, b) => {
+          switch (sortBy) {
+            case "submission-asc": return toTime(a.timestamp) - toTime(b.timestamp);
+            case "submission-desc": return toTime(b.timestamp) - toTime(a.timestamp);
+            case "event-asc": return toTime(a.eventDate) - toTime(b.eventDate);
+            case "event-desc": return toTime(b.eventDate) - toTime(a.eventDate);
+            default: return 0;
+          }
+        });
         return (
           <>
             <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -275,6 +291,21 @@ function EventsPage() {
                   </Select>
                 </div>
               )}
+
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sort by</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[240px] h-11 border-2 shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="submission-desc">Submission date (newest first)</SelectItem>
+                    <SelectItem value="submission-asc">Submission date (oldest first)</SelectItem>
+                    <SelectItem value="event-desc">Event date (latest first)</SelectItem>
+                    <SelectItem value="event-asc">Event date (earliest first)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {isLoading ? (
