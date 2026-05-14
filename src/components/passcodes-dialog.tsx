@@ -117,6 +117,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
       setNewLabel("");
       setNewCode("");
       setNewAdminOnly(false);
+      setShowAdd(false);
       toast.success("Passcode added");
       await load();
     } catch (e) {
