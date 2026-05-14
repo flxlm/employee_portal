@@ -246,11 +246,9 @@ function EventsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
                 <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
-                  <SelectTrigger
-                    className={`w-[260px] h-11 font-semibold shadow-sm border-2 transition-colors ${statusVariant(bucketFilter as EventInquiry["bucket"])}`}
-                  >
+                  <SelectTrigger className="w-[220px] h-10 font-medium">
                     <span className="flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 rounded-full ${bucketDot(bucketFilter)}`} />
+                      <span className={`h-2 w-2 rounded-full ${bucketDot(bucketFilter)}`} />
                       <SelectValue />
                     </span>
                   </SelectTrigger>
@@ -272,7 +270,7 @@ function EventsPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">›</span>
                   <Select value={ongoingSub} onValueChange={setOngoingSub}>
-                    <SelectTrigger className="w-[240px] h-11 border-2 border-amber-300 bg-amber-50 text-amber-900 font-medium shadow-sm">
+                    <SelectTrigger className="w-[220px] h-10 font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
