@@ -171,6 +171,7 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   dj: "dj",
   description: "description",
   budget: "budget",
+  foodBudget: "food_budget",
   premiumDrinks: "premium_drinks",
   premiumDrinksDetails: "premium_drinks_details",
   weddingSections: "wedding_sections",
