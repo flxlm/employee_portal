@@ -253,9 +253,9 @@ export const getWineList = createServerFn({ method: "GET" })
     const rows = await fetchRange("Wine List!A1:L");
     const objs = rowsToObjects(rows);
     return objs
-      .filter((o) => (o["Name"] ?? "").trim())
       .map((o, idx) => ({
         id: `${idx}-${o["Name"]}`,
+        rowNumber: idx + 2,
         name: o["Name"] ?? "",
         domaine: o["Domaine"] ?? "",
         year: o["Year"] ?? "",
@@ -267,7 +267,8 @@ export const getWineList = createServerFn({ method: "GET" })
         glass: o["Glass"] ?? "",
         bottle: o["Bottle"] ?? "",
         togo: o["To-go price"] ?? "",
-      }));
+      }))
+      .filter((o) => o.name.trim());
   });
 
 export const addWine = createServerFn({ method: "POST" })
