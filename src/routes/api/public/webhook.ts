@@ -75,6 +75,7 @@ async function insertEventInquiry(form: FormData) {
     end_time: timeObjToStr(raw.q16_time16),
     bar_service: strOrJoin(raw.q12_typeA12),
     food_service: strOrJoin(raw.q14_typeA),
+    food_service_time: timeObjToStr(raw.q8_time8),
     dj: strOrJoin(raw.q15_pleaseSelect),
     description: strOrJoin(raw.q18_isThere),
     budget: formatBudget(raw.q25_input25),
