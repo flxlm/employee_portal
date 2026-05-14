@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/events" });
+    if (data.session) throw redirect({ to: "/home" });
   },
   component: SignupPage,
 });
