@@ -19,6 +19,7 @@ import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as ApiPublicWebhookRouteImport } from './routes/api/public/webhook'
 import { Route as ApiPublicJotformEventInquiryRouteImport } from './routes/api/public/jotform-event-inquiry'
 
 const SignupRoute = SignupRouteImport.update({
@@ -70,6 +71,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicWebhookRoute = ApiPublicWebhookRouteImport.update({
+  id: '/api/public/webhook',
+  path: '/api/public/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJotformEventInquiryRoute =
   ApiPublicJotformEventInquiryRouteImport.update({
     id: '/api/public/jotform-event-inquiry',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/open-close': typeof AppOpenCloseRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/open-close': typeof AppOpenCloseRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_app/open-close': typeof AppOpenCloseRoute
   '/_app/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/open-close'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/open-close'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/webhook'
   id:
     | '__root__'
     | '/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_app/open-close'
     | '/_app/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
+  ApiPublicWebhookRoute: typeof ApiPublicWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/webhook': {
+      id: '/api/public/webhook'
+      path: '/api/public/webhook'
+      fullPath: '/api/public/webhook'
+      preLoaderRoute: typeof ApiPublicWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jotform-event-inquiry': {
       id: '/api/public/jotform-event-inquiry'
       path: '/api/public/jotform-event-inquiry'
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
+  ApiPublicWebhookRoute: ApiPublicWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
