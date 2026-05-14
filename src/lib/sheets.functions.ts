@@ -133,6 +133,7 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     dj: r.dj,
     description: r.description,
     budget: r.budget,
+    foodBudget: r.food_budget == null || r.food_budget === "" ? "" : String(r.food_budget),
     premiumDrinks: r.premium_drinks ?? "",
     premiumDrinksDetails: r.premium_drinks_details ?? "",
     weddingSections: r.wedding_sections ?? "",
