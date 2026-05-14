@@ -50,18 +50,23 @@ export type Database = {
           end_time: string
           event_date: string | null
           event_date_raw: string
+          food_restrictions: string
           food_service: string
           food_service_time: string
           guests: string
           id: string
           new_date_raw: string
+          premium_drinks: string
+          premium_drinks_details: string
           prepaid: string
+          referral_source: string
           reservation_type: string
           start_time: string
           status: string
           submission_date: string
           submission_id: string | null
           updated_at: string
+          wedding_sections: string
         }
         Insert: {
           arrival_time?: string
@@ -74,18 +79,23 @@ export type Database = {
           end_time?: string
           event_date?: string | null
           event_date_raw?: string
+          food_restrictions?: string
           food_service?: string
           food_service_time?: string
           guests?: string
           id?: string
           new_date_raw?: string
+          premium_drinks?: string
+          premium_drinks_details?: string
           prepaid?: string
+          referral_source?: string
           reservation_type?: string
           start_time?: string
           status?: string
           submission_date?: string
           submission_id?: string | null
           updated_at?: string
+          wedding_sections?: string
         }
         Update: {
           arrival_time?: string
@@ -98,18 +108,23 @@ export type Database = {
           end_time?: string
           event_date?: string | null
           event_date_raw?: string
+          food_restrictions?: string
           food_service?: string
           food_service_time?: string
           guests?: string
           id?: string
           new_date_raw?: string
+          premium_drinks?: string
+          premium_drinks_details?: string
           prepaid?: string
+          referral_source?: string
           reservation_type?: string
           start_time?: string
           status?: string
           submission_date?: string
           submission_id?: string | null
           updated_at?: string
+          wedding_sections?: string
         }
         Relationships: []
       }
