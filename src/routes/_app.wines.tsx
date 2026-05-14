@@ -104,8 +104,8 @@ function WinesPage() {
                     <td className="px-4 py-3 text-muted-foreground">{w.country}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.year}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.colour}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.togo || "—"}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.bottle || "—"}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.togo)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.bottle)}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{w.inventory || "0"}</td>
                   </tr>
                 ))}
