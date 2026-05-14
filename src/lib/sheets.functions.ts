@@ -95,72 +95,84 @@ function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
 
 function parseDate(s: string): Date | null {
   if (!s) return null;
-  // MM/DD/YYYY or M/D/YYYY (Google Sheets default US locale)
-  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  const t = s.trim();
+  // DD-MM-YYYY (Jotform format e.g. "08-08-2025")
+  const dmyDash = t.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (dmyDash) {
+    const d = new Date(Date.UTC(Number(dmyDash[3]), Number(dmyDash[2]) - 1, Number(dmyDash[1])));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // MM/DD/YYYY
+  const mdy = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (mdy) {
     const d = new Date(Date.UTC(Number(mdy[3]), Number(mdy[1]) - 1, Number(mdy[2])));
     return isNaN(d.getTime()) ? null : d;
   }
   // ISO YYYY-MM-DD
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) {
     const d = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
     return isNaN(d.getTime()) ? null : d;
   }
-  const d = new Date(s);
+  const d = new Date(t);
   return isNaN(d.getTime()) ? null : d;
 }
+
+const SHEET_NAME = "Event Inquiries (Jotform)";
+const SHEET_RANGE = `'${SHEET_NAME}'`;
 
 export const getEventInquiries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async (): Promise<EventInquiry[]> => {
-    const rows = await fetchRange("Event Inquiries!A1:Z");
+    const rows = await fetchRange(`${SHEET_RANGE}!A1:AG`);
     const objs = rowsToObjects(rows);
     return objs
       .map((o, idx) => {
-        const eventDate = parseDate(o["Date of your event"] ?? "");
+        const eventDateRaw = o["Date of the event"] ?? "";
+        const newDateRaw = o["New Date"] ?? "";
+        const eventDate = parseDate(newDateRaw) ?? parseDate(eventDateRaw);
         const rawStatus = o["Status"] ?? "";
         return {
-          id: `${idx}-${o["Timestamp"] || o["Email Address"]}`,
+          id: `${idx}-${o["Submission ID"] || o["Submission Date"] || o["Email"]}`,
           rowNumber: idx + 2,
           status: rawStatus.trim() || "FORM FILLED",
           rawStatus,
           bucket: bucketFor(rawStatus, eventDate),
-          timestamp: o["Timestamp"] ?? "",
-          email: o["Email Address"] ?? "",
-          eventDate: o["Date of your event"] ?? "",
+          timestamp: o["Submission Date"] ?? "",
+          email: o["Email"] ?? "",
+          eventDate: eventDateRaw,
           eventDateParsed: eventDate ? eventDate.toISOString() : null,
-          guests: o["Number of expected guests"] ?? "",
-          reservationType: o["Type of reservation needed"] ?? "",
-          startTime: o["Start time of your event"] ?? "",
-          arrivalTime: o["Guest arrival time"] ?? "",
-          endTime: o["Event end time"] ?? "",
-          barService: o["What type of bar service do you require?"] ?? "",
-          foodService: o["What type of food service do you require?"] ?? "",
-          dj: o["Do you require a DJ/DJ equipment?"] ?? "",
-          description: o["Anything else we should know? / Event Description"] ?? "",
-          budget: o["Budget?"] ?? "",
-          prepaid: o['If you chose "Prepaid bar", what amount do you want to prepay for drinks per person?'] ?? "",
+          guests: o["Number of expect guests"] ?? "",
+          reservationType: o["What type of event do you want to host?"] ?? "",
+          startTime: o["At what time do you want to start having access to the space?"] ?? "",
+          arrivalTime: o["At what time will your guests arrive?"] ?? "",
+          endTime: o["At what time would you like to end your event?"] ?? "",
+          barService: o["How would you want the bar service to be handled?"] ?? "",
+          foodService: o["How would you want the food service to be handled?"] ?? "",
+          dj: o["Please select any extras that Savsav can offer you:"] ?? "",
+          description: o["Is there anything else we should know?"] ?? "",
+          budget: o["Budget"] ?? "",
+          prepaid: o["Food Budget (pp)"] ?? "",
         };
       })
       .filter((o) => o.email || o.timestamp);
   });
 
 const FIELD_TO_HEADER: Record<string, string> = {
-  timestamp: "Timestamp",
-  email: "Email Address",
-  eventDate: "Date of your event",
-  guests: "Number of expected guests",
-  reservationType: "Type of reservation needed",
-  startTime: "Start time of your event",
-  arrivalTime: "Guest arrival time",
-  endTime: "Event end time",
-  barService: "What type of bar service do you require?",
-  foodService: "What type of food service do you require?",
-  dj: "Do you require a DJ/DJ equipment?",
-  description: "Anything else we should know? / Event Description",
-  budget: "Budget?",
-  prepaid: 'If you chose "Prepaid bar", what amount do you want to prepay for drinks per person?',
+  timestamp: "Submission Date",
+  email: "Email",
+  eventDate: "Date of the event",
+  guests: "Number of expect guests",
+  reservationType: "What type of event do you want to host?",
+  startTime: "At what time do you want to start having access to the space?",
+  arrivalTime: "At what time will your guests arrive?",
+  endTime: "At what time would you like to end your event?",
+  barService: "How would you want the bar service to be handled?",
+  foodService: "How would you want the food service to be handled?",
+  dj: "Please select any extras that Savsav can offer you:",
+  description: "Is there anything else we should know?",
+  budget: "Budget",
+  prepaid: "Food Budget (pp)",
   rawStatus: "Status",
 };
 
