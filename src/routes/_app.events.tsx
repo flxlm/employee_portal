@@ -123,6 +123,17 @@ function statusVariant(b: EventInquiry["bucket"]) {
   }
 }
 
+function bucketDot(b: string) {
+  switch (b) {
+    case "CONFIRMED": return "bg-emerald-500";
+    case "DECLINED": return "bg-rose-500";
+    case "ONGOING":
+    case "AWAITING PAYMENT": return "bg-amber-500";
+    case "PAST": return "bg-muted-foreground";
+    default: return "bg-sky-500";
+  }
+}
+
 function EventsPage() {
   const fetchFn = useServerFn(getEventInquiries);
   const updateFn = useServerFn(updateEventInquiry);
