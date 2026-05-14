@@ -56,6 +56,15 @@ function inputDateToSheet(s: string): string {
   if (!m) return s;
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
+function formatSheetDate(s: string): string {
+  const iso = sheetDateToInput(s);
+  if (!iso) return s || "";
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
 
 // Sheet time format: "6:00 PM" <-> HTML time input HH:MM (24h)
 function sheetTimeToInput(s: string): string {
