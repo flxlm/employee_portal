@@ -14,16 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allowed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+        }
+        Relationships: []
+      }
+      open_close_logs: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          id: string
+          log_date: string
+          notes: string | null
+          photo_path: string | null
+          shift_type: Database["public"]["Enums"]["shift_type"]
+          till_amount: number
+          till_difference: number
+          till_status: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          photo_path?: string | null
+          shift_type: Database["public"]["Enums"]["shift_type"]
+          till_amount: number
+          till_difference?: number
+          till_status: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          photo_path?: string | null
+          shift_type?: Database["public"]["Enums"]["shift_type"]
+          till_amount?: number
+          till_difference?: number
+          till_status?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_email_allowed: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "employee"
+      shift_type: "open" | "close"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +265,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "employee"],
+      shift_type: ["open", "close"],
+    },
   },
 } as const
