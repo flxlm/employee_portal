@@ -49,7 +49,7 @@ function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img src={logo} alt="Savsav" className="h-12 w-auto mx-auto mb-2" />
-          <CardTitle className="text-xl font-serif">Employee Portal</CardTitle>
+          <CardTitle className="text-xl">Employee Portal</CardTitle>
           <CardDescription>Sign in to access the team dashboard</CardDescription>
         </CardHeader>
         <CardContent>

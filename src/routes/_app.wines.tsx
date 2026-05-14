@@ -52,7 +52,7 @@ function WinesPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-serif">Wine List</h1>
+          <h1 className="text-3xl">Wine List</h1>
           <p className="text-muted-foreground text-sm">{filtered.length} wines</p>
         </div>
         <div className="flex gap-2">
@@ -179,7 +179,7 @@ function WineDetail({ wine }: { wine: WineEntry }) {
             <WineIcon className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="min-w-0">
-            <DialogTitle className="text-xl font-serif leading-tight">{wine.name}</DialogTitle>
+            <DialogTitle className="text-xl leading-tight">{wine.name}</DialogTitle>
             <DialogDescription className="text-sm">{wine.domaine || "—"}</DialogDescription>
           </div>
         </div>
@@ -327,7 +327,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
     <Dialog open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl">Add a wine</DialogTitle>
+          <DialogTitle className="text-xl">Add a wine</DialogTitle>
           <DialogDescription>Adds a new wine to the database.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">

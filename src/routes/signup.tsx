@@ -60,7 +60,7 @@ function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-serif">Create account</CardTitle>
+          <CardTitle className="text-3xl">Create account</CardTitle>
           <CardDescription>Invite-only — your email must be on the allowlist</CardDescription>
         </CardHeader>
         <CardContent>

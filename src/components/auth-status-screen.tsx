@@ -26,7 +26,7 @@ export function AuthStatusScreen({
         <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-4">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-        <h2 className="font-serif text-lg text-foreground">{title}</h2>
+        <h2 className="text-lg text-foreground">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
         {hint ? (
           <p className="mt-3 text-xs text-muted-foreground/80">{hint}</p>

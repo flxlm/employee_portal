@@ -255,7 +255,7 @@ function EventsPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Event Inquiries</h1>
+          <h1 className="text-3xl">Event Inquiries</h1>
           <p className="text-muted-foreground text-sm">Stored in the Lovable database</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
@@ -405,7 +405,7 @@ function EventsPage() {
             <>
               <DialogHeader className="pr-8">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
-                  <DialogTitle className="font-serif text-xl sm:text-2xl flex items-center gap-2 sm:gap-3 flex-wrap break-all">
+                  <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 sm:gap-3 flex-wrap break-all">
                     <span className="break-all">{selected.email}</span>
                     <span className={`text-xs px-2 py-0.5 rounded border shrink-0 ${statusVariant(selected.bucket)}`}>
                       {selected.status}
