@@ -233,6 +233,7 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
 
 export type WineEntry = {
   id: string;
+  rowNumber: number;
   name: string;
   domaine: string;
   year: string;
