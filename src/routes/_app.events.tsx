@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getEventInquiries, updateEventInquiry, importEventInquiriesFromSheet, type EventInquiry } from "@/lib/sheets.functions";
+import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
 import { draftEstimateEmail } from "@/lib/estimate.functions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
