@@ -44,6 +44,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
   const [newCode, setNewCode] = useState("");
   const [newAdminOnly, setNewAdminOnly] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -116,6 +117,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
       setNewLabel("");
       setNewCode("");
       setNewAdminOnly(false);
+      setShowAdd(false);
       toast.success("Passcode added");
       await load();
     } catch (e) {
@@ -129,15 +131,80 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-serif flex items-center gap-2">
-            <Lock className="h-5 w-5" /> Passcodes
-          </DialogTitle>
-          <DialogDescription>
-            {isAdmin
-              ? "All passcodes. Toggle admin-only access per passcode."
-              : "Passcodes available to you."}
-          </DialogDescription>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <DialogTitle className="font-serif flex items-center gap-2">
+                <Lock className="h-5 w-5" /> Passcodes
+              </DialogTitle>
+              <DialogDescription>
+                {isAdmin
+                  ? "All passcodes. Toggle admin-only access per passcode."
+                  : "Passcodes available to you."}
+              </DialogDescription>
+            </div>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant={showAdd ? "secondary" : "default"}
+                onClick={() => setShowAdd((v) => !v)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {showAdd ? "Cancel" : "Add"}
+              </Button>
+            )}
+          </div>
         </DialogHeader>
+
+        {isAdmin && showAdd && (
+          <div className="rounded-md border border-border p-3 space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="pc-label" className="text-xs">
+                  Title
+                </Label>
+                <Input
+                  id="pc-label"
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  placeholder="e.g. POS Manager"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="pc-code" className="text-xs">
+                  Code
+                </Label>
+                <Input
+                  id="pc-code"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                  placeholder="1234"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label
+                htmlFor="pc-admin"
+                className="text-xs text-muted-foreground"
+              >
+                Admin only
+              </Label>
+              <Switch
+                id="pc-admin"
+                checked={newAdminOnly}
+                onCheckedChange={setNewAdminOnly}
+              />
+            </div>
+            <Button
+              onClick={handleAdd}
+              disabled={busyId === "new"}
+              className="w-full"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {busyId === "new" ? "Adding..." : "Add passcode"}
+            </Button>
+          </div>
+        )}
 
         <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
           {loading ? (
@@ -205,57 +272,6 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
           )}
         </div>
 
-        {isAdmin && (
-          <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-sm font-medium">Add passcode</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="pc-label" className="text-xs">
-                  Title
-                </Label>
-                <Input
-                  id="pc-label"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="e.g. POS Manager"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="pc-code" className="text-xs">
-                  Code
-                </Label>
-                <Input
-                  id="pc-code"
-                  value={newCode}
-                  onChange={(e) => setNewCode(e.target.value)}
-                  placeholder="1234"
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor="pc-admin"
-                className="text-xs text-muted-foreground"
-              >
-                Admin only
-              </Label>
-              <Switch
-                id="pc-admin"
-                checked={newAdminOnly}
-                onCheckedChange={setNewAdminOnly}
-              />
-            </div>
-            <Button
-              onClick={handleAdd}
-              disabled={busyId === "new"}
-              className="w-full"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              {busyId === "new" ? "Adding..." : "Add passcode"}
-            </Button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
