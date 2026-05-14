@@ -42,6 +42,18 @@ function OpenClosePage() {
   const [submitting, setSubmitting] = useState(false);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const loadLogs = async () => {
     const { data, error } = await supabase
@@ -133,7 +145,7 @@ function OpenClosePage() {
       <Tabs defaultValue="new">
         <TabsList className="mb-4">
           <TabsTrigger value="new">New entry</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          {isAdmin && <TabsTrigger value="history">History</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="new">
@@ -223,7 +235,7 @@ function OpenClosePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
+        {isAdmin && <TabsContent value="history">
           <div className="space-y-3">
             {logs.length === 0 && (
               <Card><CardContent className="py-12 text-center text-muted-foreground">No logs yet.</CardContent></Card>
@@ -258,7 +270,7 @@ function OpenClosePage() {
               </Card>
             ))}
           </div>
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
     </div>
   );
