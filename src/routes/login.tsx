@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { useAuth } from "@/lib/auth-context";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
+import logo from "@/assets/logo.svg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -47,7 +48,8 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-serif">Savsav Portal</CardTitle>
+          <img src={logo} alt="Savsav" className="h-12 w-auto mx-auto mb-2" />
+          <CardTitle className="text-xl font-serif">Employee Portal</CardTitle>
           <CardDescription>Sign in to access the team dashboard</CardDescription>
         </CardHeader>
         <CardContent>
