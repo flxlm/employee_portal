@@ -25,6 +25,7 @@ function WinesPage() {
   });
   const [q, setQ] = useState("");
   const [colour, setColour] = useState("all");
+  const [stock, setStock] = useState<"in" | "all">("in");
   const [selected, setSelected] = useState<WineEntry | null>(null);
 
   const colours = useMemo(
@@ -34,6 +35,10 @@ function WinesPage() {
 
   const filtered = (data ?? []).filter((w) => {
     if (colour !== "all" && w.colour !== colour) return false;
+    if (stock === "in") {
+      const n = Number(String(w.inventory ?? "").replace(/[^0-9.\-]/g, ""));
+      if (!Number.isFinite(n) || n <= 0) return false;
+    }
     if (!q) return true;
     const s = q.toLowerCase();
     return [w.name, w.domaine, w.country, w.year, w.type].some((v) => v.toLowerCase().includes(s));
@@ -61,6 +66,13 @@ function WinesPage() {
           <SelectContent>
             <SelectItem value="all">All colours</SelectItem>
             {colours.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={stock} onValueChange={(v) => setStock(v as "in" | "all")}>
+          <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="in">In stock only</SelectItem>
+            <SelectItem value="all">Show out of stock</SelectItem>
           </SelectContent>
         </Select>
       </div>
