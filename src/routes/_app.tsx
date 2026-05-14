@@ -62,7 +62,8 @@ function AppLayout() {
       {/* Sidebar */}
       <aside className={cn(
         "md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex flex-col",
-        open ? "block" : "hidden md:flex"
+        "overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out",
+        open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0 md:max-h-screen md:opacity-100"
       )}>
         <div className="px-6 py-5 border-b border-border">
           <img src={logo} alt="Savsav" className="h-8 w-auto" />
