@@ -42,9 +42,10 @@ function AppLayout() {
     return <Navigate to="/login" />;
   }
 
-  const nav = [
+  const nav: { to: string; label: string; icon: typeof Home; search?: Record<string, string> }[] = [
     { to: "/home", label: "Home", icon: Home },
     { to: "/events", label: "Event Inquiries", icon: CalendarDays },
+    { to: "/events", label: "Confirmed Events", icon: CalendarDays, search: { status: "CONFIRMED" } },
     { to: "/wines", label: "Wine List", icon: Wine },
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users }] : []),
@@ -67,13 +68,17 @@ function AppLayout() {
           <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {nav.map((item) => {
-            const active = location.pathname.startsWith(item.to);
+          {nav.map((item, idx) => {
+            const currentStatus = new URLSearchParams(location.search).get("status");
+            const itemStatus = item.search?.status;
+            const pathMatches = location.pathname.startsWith(item.to);
+            const active = pathMatches && (itemStatus ? currentStatus === itemStatus : !currentStatus);
             const Icon = item.icon;
             return (
               <Link
-                key={item.to}
+                key={`${item.to}-${idx}`}
                 to={item.to}
+                search={item.search ?? {}}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
