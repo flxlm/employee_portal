@@ -52,6 +52,10 @@ function FunctionsPage() {
 
   useEffect(() => {
     setLastRefreshed(loadTimestamps());
+    if (sessionStorage.getItem("savsav.appRefreshed") === "1") {
+      sessionStorage.removeItem("savsav.appRefreshed");
+      toast.success("App Refresh Success");
+    }
   }, []);
 
   const handleRefresh = async (menu: MenuKey) => {
@@ -92,6 +96,7 @@ function FunctionsPage() {
       // ignore — still reload
     }
     toast.success("Reloading with the latest version...");
+    sessionStorage.setItem("savsav.appRefreshed", "1");
     const url = new URL(window.location.href);
     url.searchParams.set("_r", Date.now().toString());
     window.location.replace(url.toString());
