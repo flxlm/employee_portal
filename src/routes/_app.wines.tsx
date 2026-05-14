@@ -142,7 +142,7 @@ function WinesPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-xl">
           {selected && <WineDetail wine={selected} />}
         </DialogContent>
       </Dialog>
@@ -325,7 +325,7 @@ function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl">Add a wine</DialogTitle>
           <DialogDescription>Appends a new row to the Wine List sheet.</DialogDescription>
