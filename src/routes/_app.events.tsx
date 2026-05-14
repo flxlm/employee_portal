@@ -514,6 +514,21 @@ function EventsPage() {
                       Send French Estimate
                     </Button>
                   </div>
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        if (!selected) return;
+                        if (!confirm("Delete this inquiry? It will be hidden from all views but kept in the database.")) return;
+                        mutation.mutate({ id: selected.id, updates: { rawStatus: "DELETED" } });
+                      }}
+                      disabled={mutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1.5" /> Delete inquiry
+                    </Button>
+                  </div>
                 </div>
               )}
 
