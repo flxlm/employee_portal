@@ -77,19 +77,6 @@ function parseDate(s: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function colLetter(n: number): string {
-  let s = "";
-  let x = n;
-  while (x > 0) {
-    const m = (x - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
-    x = Math.floor((x - 1) / 26);
-  }
-  return s;
-}
-
-const SHEET_NAME = "Event Inquiries (Jotform)";
-const SHEET_RANGE = `'${SHEET_NAME}'`;
 
 type InquiryRow = {
   id: string;
