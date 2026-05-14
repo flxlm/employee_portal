@@ -31,6 +31,7 @@ export type EventInquiry = {
   dj: string;
   description: string;
   budget: string;
+  foodBudget: string;
   premiumDrinks: string;
   premiumDrinksDetails: string;
   weddingSections: string;
