@@ -144,9 +144,14 @@ type InquiryRow = {
   bar_service: string;
   food_service: string;
   food_service_time: string;
+  food_restrictions: string;
   dj: string;
   description: string;
   budget: string;
+  premium_drinks: string;
+  premium_drinks_details: string;
+  wedding_sections: string;
+  referral_source: string;
   prepaid: string;
   status: string;
 };
