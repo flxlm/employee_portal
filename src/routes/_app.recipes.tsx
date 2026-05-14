@@ -185,7 +185,7 @@ function RecipeDetail({ recipe }: { recipe: Recipe }) {
 
       {recipe.special_instructions && (
         <div className="border-t border-border pt-4 mt-2">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Before you start</div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Notes</div>
           <p className="text-sm leading-relaxed bg-muted/50 border border-border rounded-md px-3 py-2 italic">
             {recipe.special_instructions}
           </p>
