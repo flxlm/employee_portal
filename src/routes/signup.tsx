@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { useAuth } from "@/lib/auth-context";
+import { AuthStatusScreen } from "@/components/auth-status-screen";
 
 export const Route = createFileRoute("/signup")({
   component: SignupPage,
@@ -15,12 +16,21 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const { user, loading: authLoading } = useAuth();
-  if (!authLoading && user) return <Navigate to="/home" />;
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (authLoading) {
+    return (
+      <AuthStatusScreen
+        title="Checking your session"
+        message="One moment while we see if you're already signed in."
+      />
+    );
+  }
+  if (user) return <Navigate to="/home" />;
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
