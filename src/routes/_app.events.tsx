@@ -255,6 +255,7 @@ function EventsPage() {
         return (
           <>
             <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex flex-wrap items-center gap-3 mr-auto">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
                 <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
