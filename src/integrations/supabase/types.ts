@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      passcodes: {
+        Row: {
+          admin_only: boolean
+          code: string
+          created_at: string
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          admin_only?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          admin_only?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

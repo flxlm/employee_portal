@@ -11,8 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Monitor, Coffee, RotateCw } from "lucide-react";
+import { RefreshCw, Monitor, Coffee, RotateCw, KeyRound } from "lucide-react";
 import { refreshScreencloudMenu } from "@/lib/screencloud.functions";
+import { PasscodesDialog } from "@/components/passcodes-dialog";
 
 export const Route = createFileRoute("/_app/functions")({
   component: FunctionsPage,
@@ -41,6 +42,7 @@ function formatRelative(iso: string | null): string {
 
 function FunctionsPage() {
   const [refreshOpen, setRefreshOpen] = useState(false);
+  const [passcodesOpen, setPasscodesOpen] = useState(false);
   const [pending, setPending] = useState<null | MenuKey>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Record<MenuKey, string | null>>({
     main: null,
@@ -110,6 +112,13 @@ function FunctionsPage() {
       icon: RotateCw,
       onClick: handleAppRefresh,
     },
+    {
+      key: "passcodes",
+      title: "Passcodes",
+      description: "View shared passcodes available to your account.",
+      icon: KeyRound,
+      onClick: () => setPasscodesOpen(true),
+    },
   ];
 
   return (
@@ -177,6 +186,8 @@ function FunctionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PasscodesDialog open={passcodesOpen} onOpenChange={setPasscodesOpen} />
     </div>
   );
 }
