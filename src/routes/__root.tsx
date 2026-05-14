@@ -84,12 +84,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Internal portal for the Savsav team" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8cf0cfb2-baee-4995-a86d-8fd4efa01f52/id-preview-1418c760--845ee23a-fdb7-48d1-9f75-02b8c64f13c3.lovable.app-1778758073116.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8cf0cfb2-baee-4995-a86d-8fd4efa01f52/id-preview-1418c760--845ee23a-fdb7-48d1-9f75-02b8c64f13c3.lovable.app-1778758073116.png" },
+      { name: "theme-color", content: "#651025" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Savsav" },
+      { name: "mobile-web-app-capable", content: "yes" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192x192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512x512.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -114,6 +120,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/install-prompt";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -123,7 +130,9 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
+        <InstallPrompt />
       </AuthProvider>
     </QueryClientProvider>
   );
 }
+
