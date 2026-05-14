@@ -137,7 +137,7 @@ export const getEventInquiries = createServerFn({ method: "GET" })
         return {
           id: `${idx}-${o["Submission ID"] || o["Submission Date"] || o["Email"]}`,
           rowNumber: idx + 2,
-          status: rawStatus.trim() || "FORM FILLED",
+          status: rawStatus.trim() || "NEW",
           rawStatus,
           bucket: bucketFor(rawStatus, eventDate),
           timestamp: o["Submission Date"] ?? "",
