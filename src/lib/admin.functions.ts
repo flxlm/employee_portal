@@ -20,7 +20,7 @@ export const listAllowedEmails = createServerFn({ method: "GET" })
     await ensureAdmin(supabase, userId);
     const { data, error } = await supabase
       .from("allowed_emails")
-      .select("id, email, created_at")
+      .select("id, email, as_admin, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data;
@@ -28,13 +28,24 @@ export const listAllowedEmails = createServerFn({ method: "GET" })
 
 export const addAllowedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ email: z.string().trim().email().max(255) }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        email: z.string().trim().email().max(255),
+        as_admin: z.boolean().optional().default(false),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await ensureAdmin(supabase, userId);
     const { error } = await supabase
       .from("allowed_emails")
-      .insert({ email: data.email.toLowerCase(), invited_by: userId });
+      .insert({
+        email: data.email.toLowerCase(),
+        as_admin: data.as_admin,
+        invited_by: userId,
+      });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
