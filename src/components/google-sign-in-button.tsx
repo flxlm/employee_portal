@@ -9,7 +9,7 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
   const handle = async () => {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/home`,
+      redirect_uri: window.location.origin,
     });
     if (result.error) {
       setLoading(false);
