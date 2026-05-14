@@ -30,10 +30,24 @@ const STATUS_OPTIONS = [
 // Sheet date format: DD-MM-YYYY <-> HTML date input YYYY-MM-DD
 function sheetDateToInput(s: string): string {
   if (!s) return "";
-  const m = s.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  const t = s.trim();
+  // DD-MM-YYYY or D-M-YYYY
+  let m = t.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
-  const iso = s.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  // YYYY-MM-DD
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  // DD/MM/YYYY or MM/DD/YYYY — assume DD/MM/YYYY (matches Jotform / non-US)
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  // Fallback: let Date parse it (e.g. "Aug 8, 2025")
+  const d = new Date(t);
+  if (!isNaN(d.getTime())) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
   return "";
 }
 function inputDateToSheet(s: string): string {
