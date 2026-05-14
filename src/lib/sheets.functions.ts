@@ -214,8 +214,7 @@ export const updateEventInquiry = createServerFn({ method: "POST" })
       patch["event_date"] = parsed ? parsed.toISOString().slice(0, 10) : null;
     }
     if (Object.keys(patch).length === 0) return { updated: 0 };
-    const { error } = await supabase
-      .from("event_inquiries")
+    const { error } = await (supabase.from("event_inquiries") as any)
       .update(patch)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
