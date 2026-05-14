@@ -174,11 +174,13 @@ function EventsPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const search = Route.useSearch();
   const [bucketFilter, setBucketFilter] = useState<string>(search.status ?? "NEW");
-  useEffect(() => {
-    if (search.status) setBucketFilter(search.status);
-  }, [search.status]);
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("submission-desc");
+  useEffect(() => {
+    setBucketFilter(search.status ?? "NEW");
+    setOngoingSub("ALL");
+    setSortBy("submission-desc");
+  }, [search.status]);
   const draftFn = useServerFn(draftEstimateEmail);
   const [drafting, setDrafting] = useState<null | "english" | "french">(null);
 
