@@ -225,6 +225,21 @@ function EventsPage() {
         if (bucketFilter === "ONGOING" && ongoingSub !== "ALL") {
           items = items.filter((e) => e.rawStatus.trim().toUpperCase() === ongoingSub);
         }
+        const toTime = (s: string) => {
+          const iso = sheetDateToInput(s);
+          if (iso) return new Date(iso).getTime();
+          const t = new Date(s).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+        items = [...items].sort((a, b) => {
+          switch (sortBy) {
+            case "submission-asc": return toTime(a.timestamp) - toTime(b.timestamp);
+            case "submission-desc": return toTime(b.timestamp) - toTime(a.timestamp);
+            case "event-asc": return toTime(a.eventDate) - toTime(b.eventDate);
+            case "event-desc": return toTime(b.eventDate) - toTime(a.eventDate);
+            default: return 0;
+          }
+        });
         return (
           <>
             <div className="flex flex-wrap items-center gap-3 mb-4">
