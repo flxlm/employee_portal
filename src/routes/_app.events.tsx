@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
+import { draftEstimateEmail } from "@/lib/estimate.functions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2, Pencil } from "lucide-react";
+import { Calendar, Users, Clock, RefreshCw, Loader2, Pencil, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -172,6 +173,28 @@ function EventsPage() {
   }, [search.status]);
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("submission-desc");
+  const draftFn = useServerFn(draftEstimateEmail);
+  const [drafting, setDrafting] = useState<null | "english" | "french">(null);
+
+  const handleDraftEstimate = async (language: "english" | "french") => {
+    if (!selected) return;
+    setDrafting(language);
+    try {
+      const inquiry: Record<string, string> = {};
+      for (const f of EDITABLE_FIELDS) {
+        const v = (selected[f.key] as string) ?? "";
+        if (v) inquiry[f.label] = v;
+      }
+      const result = await draftFn({ data: { language, inquiry } });
+      const subject = encodeURIComponent(result.subject || "");
+      const body = encodeURIComponent(result.body || "");
+      window.open(`mailto:${selected.email}?subject=${subject}&body=${body}`, "_blank");
+    } catch (e) {
+      toast.error(`Draft failed: ${(e as Error).message}`);
+    } finally {
+      setDrafting(null);
+    }
+  };
 
   useEffect(() => {
     setSortBy(bucketFilter === "CONFIRMED" ? "event-asc" : "submission-desc");
@@ -462,13 +485,32 @@ function EventsPage() {
                   <Field label="Budget" value={selected.budget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
                   <Field label="Notes" value={selected.description} multiline />
-                  <div className="pt-2">
-                    <a
-                      href={`mailto:${selected.email}`}
-                      className="inline-flex items-center gap-2 text-primary hover:underline"
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleDraftEstimate("english")}
+                      disabled={drafting !== null || !selected.email}
                     >
-                      <Mail className="h-4 w-4" /> Reply by email <ExternalLink className="h-3 w-3" />
-                    </a>
+                      {drafting === "english" ? (
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1.5" />
+                      )}
+                      Send English Estimate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleDraftEstimate("french")}
+                      disabled={drafting !== null || !selected.email}
+                    >
+                      {drafting === "french" ? (
+                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1.5" />
+                      )}
+                      Send French Estimate
+                    </Button>
                   </div>
                 </div>
               )}
