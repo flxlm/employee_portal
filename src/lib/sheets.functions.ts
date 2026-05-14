@@ -64,9 +64,14 @@ export type EventInquiry = {
   barService: string;
   foodService: string;
   foodServiceTime: string;
+  foodRestrictions: string;
   dj: string;
   description: string;
   budget: string;
+  premiumDrinks: string;
+  premiumDrinksDetails: string;
+  weddingSections: string;
+  referralSource: string;
   prepaid: string;
 };
 
