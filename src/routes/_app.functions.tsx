@@ -83,12 +83,6 @@ function FunctionsPage() {
       description: "Force the in-restaurant menu screens to reload their content.",
       icon: RefreshCw,
       onClick: () => setRefreshOpen(true),
-      footer: (
-        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-          <div>Main: {formatRelative(lastRefreshed.main)}</div>
-          <div>Grab & Go: {formatRelative(lastRefreshed.grab_n_go)}</div>
-        </div>
-      ),
     },
   ];
 
