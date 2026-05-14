@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
@@ -33,6 +33,7 @@ function AppLayout() {
   }, [user]);
 
   const nav = [
+    { to: "/home", label: "Home", icon: Home },
     { to: "/events", label: "Event Inquiries", icon: CalendarDays },
     { to: "/wines", label: "Wine List", icon: Wine },
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },

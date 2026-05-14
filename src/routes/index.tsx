@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/events" });
+    if (data.session) throw redirect({ to: "/home" });
     throw redirect({ to: "/login" });
   },
 });

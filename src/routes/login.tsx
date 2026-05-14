@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/events" });
+    if (data.session) throw redirect({ to: "/home" });
   },
   component: LoginPage,
 });
@@ -31,7 +31,7 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back");
-    navigate({ to: "/events" });
+    navigate({ to: "/home" });
   };
 
   return (
