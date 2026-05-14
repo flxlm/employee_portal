@@ -177,9 +177,14 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     barService: r.bar_service,
     foodService: r.food_service,
     foodServiceTime: r.food_service_time ?? "",
+    foodRestrictions: r.food_restrictions ?? "",
     dj: r.dj,
     description: r.description,
     budget: r.budget,
+    premiumDrinks: r.premium_drinks ?? "",
+    premiumDrinksDetails: r.premium_drinks_details ?? "",
+    weddingSections: r.wedding_sections ?? "",
+    referralSource: r.referral_source ?? "",
     prepaid: r.prepaid,
   };
 }
