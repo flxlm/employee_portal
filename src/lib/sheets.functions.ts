@@ -99,6 +99,7 @@ type InquiryRow = {
   dj: string;
   description: string;
   budget: string;
+  food_budget: number | string | null;
   premium_drinks: string;
   premium_drinks_details: string;
   wedding_sections: string;
