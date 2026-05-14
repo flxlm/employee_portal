@@ -83,12 +83,6 @@ function FunctionsPage() {
       description: "Force the in-restaurant menu screens to reload their content.",
       icon: RefreshCw,
       onClick: () => setRefreshOpen(true),
-      footer: (
-        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-          <div>Main: {formatRelative(lastRefreshed.main)}</div>
-          <div>Grab & Go: {formatRelative(lastRefreshed.grab_n_go)}</div>
-        </div>
-      ),
     },
   ];
 
@@ -102,7 +96,7 @@ function FunctionsPage() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {functions.map(({ key, title, description, icon: Icon, onClick, footer }) => (
+        {functions.map(({ key, title, description, icon: Icon, onClick }) => (
           <button key={key} onClick={onClick} className="text-left group">
             <Card className="h-full transition-colors group-hover:border-primary">
               <CardHeader>
@@ -115,7 +109,6 @@ function FunctionsPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>{description}</CardDescription>
-                {footer}
               </CardContent>
             </Card>
           </button>
