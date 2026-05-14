@@ -186,6 +186,8 @@ function FunctionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PasscodesDialog open={passcodesOpen} onOpenChange={setPasscodesOpen} />
     </div>
   );
 }
