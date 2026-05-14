@@ -120,6 +120,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/install-prompt";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -129,7 +130,9 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
+        <InstallPrompt />
       </AuthProvider>
     </QueryClientProvider>
   );
 }
+
