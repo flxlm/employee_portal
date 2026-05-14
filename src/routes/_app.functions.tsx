@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Monitor, Coffee } from "lucide-react";
+import { RefreshCw, Monitor, Coffee, RotateCw } from "lucide-react";
 import { refreshScreencloudMenu } from "@/lib/screencloud.functions";
 
 export const Route = createFileRoute("/_app/functions")({
