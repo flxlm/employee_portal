@@ -38,6 +38,78 @@ export type Database = {
         }
         Relationships: []
       }
+      event_inquiries: {
+        Row: {
+          arrival_time: string
+          bar_service: string
+          budget: string
+          created_at: string
+          description: string
+          dj: string
+          email: string
+          end_time: string
+          event_date: string | null
+          event_date_raw: string
+          food_service: string
+          guests: string
+          id: string
+          new_date_raw: string
+          prepaid: string
+          reservation_type: string
+          start_time: string
+          status: string
+          submission_date: string
+          submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arrival_time?: string
+          bar_service?: string
+          budget?: string
+          created_at?: string
+          description?: string
+          dj?: string
+          email?: string
+          end_time?: string
+          event_date?: string | null
+          event_date_raw?: string
+          food_service?: string
+          guests?: string
+          id?: string
+          new_date_raw?: string
+          prepaid?: string
+          reservation_type?: string
+          start_time?: string
+          status?: string
+          submission_date?: string
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arrival_time?: string
+          bar_service?: string
+          budget?: string
+          created_at?: string
+          description?: string
+          dj?: string
+          email?: string
+          end_time?: string
+          event_date?: string | null
+          event_date_raw?: string
+          food_service?: string
+          guests?: string
+          id?: string
+          new_date_raw?: string
+          prepaid?: string
+          reservation_type?: string
+          start_time?: string
+          status?: string
+          submission_date?: string
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       open_close_logs: {
         Row: {
           cash_tips: number
