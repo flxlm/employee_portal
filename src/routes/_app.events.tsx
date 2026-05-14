@@ -499,6 +499,7 @@ function EventsPage() {
                   <Field label="Food restrictions" value={selected.foodRestrictions} multiline />
                   <Field label="Other options" value={selected.dj} />
                   <Field label="Budget" value={selected.budget} />
+                  <Field label="Food budget" value={selected.foodBudget} />
                   <Field label="Prepaid bar" value={selected.prepaid} />
                   <Field label="How they heard about us" value={selected.referralSource} />
                   <Field label="Notes" value={selected.description} multiline />
