@@ -121,6 +121,7 @@ function OpenClosePage() {
         till_amount: amount,
         till_status: status,
         till_difference: diff,
+        cash_tips: shift === "close" ? (parseFloat(cashTips) || 0) : 0,
         photo_path: photoPath,
         confirmed: true,
         notes: notes || null,
@@ -130,6 +131,7 @@ function OpenClosePage() {
       toast.success(`${shift === "open" ? "Opening" : "Closing"} log saved`);
       setTillAmount("");
       setNotes("");
+      setCashTips("");
       setPhotoFile(null);
       setConfirmed(false);
       loadLogs();
