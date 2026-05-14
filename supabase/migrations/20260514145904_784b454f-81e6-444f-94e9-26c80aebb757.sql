@@ -1,0 +1,1 @@
+ALTER TABLE public.event_inquiries ADD COLUMN IF NOT EXISTS food_budget numeric NOT NULL DEFAULT 0;

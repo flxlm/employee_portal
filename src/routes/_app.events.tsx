@@ -134,6 +134,7 @@ const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" |
   { key: "foodRestrictions", label: "Food restrictions", type: "textarea" },
   { key: "dj", label: "Other options", type: "input" },
   { key: "budget", label: "Budget", type: "input" },
+  { key: "foodBudget", label: "Food budget", type: "input" },
   { key: "prepaid", label: "Prepaid bar", type: "input" },
   { key: "description", label: "Notes", type: "textarea" },
   { key: "referralSource", label: "How they heard about us", type: "input" },

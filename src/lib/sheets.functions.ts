@@ -31,6 +31,7 @@ export type EventInquiry = {
   dj: string;
   description: string;
   budget: string;
+  foodBudget: string;
   premiumDrinks: string;
   premiumDrinksDetails: string;
   weddingSections: string;
@@ -98,6 +99,7 @@ type InquiryRow = {
   dj: string;
   description: string;
   budget: string;
+  food_budget: number | string | null;
   premium_drinks: string;
   premium_drinks_details: string;
   wedding_sections: string;
@@ -131,6 +133,7 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     dj: r.dj,
     description: r.description,
     budget: r.budget,
+    foodBudget: r.food_budget == null || r.food_budget === "" ? "" : String(r.food_budget),
     premiumDrinks: r.premium_drinks ?? "",
     premiumDrinksDetails: r.premium_drinks_details ?? "",
     weddingSections: r.wedding_sections ?? "",
@@ -168,6 +171,7 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   dj: "dj",
   description: "description",
   budget: "budget",
+  foodBudget: "food_budget",
   premiumDrinks: "premium_drinks",
   premiumDrinksDetails: "premium_drinks_details",
   weddingSections: "wedding_sections",
