@@ -24,6 +24,7 @@ function WinesPage() {
   });
   const [q, setQ] = useState("");
   const [colour, setColour] = useState("all");
+  const [selected, setSelected] = useState<WineEntry | null>(null);
 
   const colours = useMemo(
     () => Array.from(new Set((data ?? []).map((w) => w.colour).filter(Boolean))),
@@ -90,7 +91,11 @@ function WinesPage() {
               </thead>
               <tbody>
                 {filtered.map((w) => (
-                  <tr key={w.id} className="border-t border-border hover:bg-muted/40">
+                  <tr
+                    key={w.id}
+                    className="border-t border-border hover:bg-muted/40 cursor-pointer"
+                    onClick={() => setSelected(w)}
+                  >
                     <td className="px-4 py-3">
                       <div className="font-medium">{w.name}</div>
                       <div className="text-xs text-muted-foreground">{w.domaine}</div>
