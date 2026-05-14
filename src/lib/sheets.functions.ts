@@ -198,6 +198,7 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   endTime: "end_time",
   barService: "bar_service",
   foodService: "food_service",
+  foodServiceTime: "food_service_time",
   dj: "dj",
   description: "description",
   budget: "budget",
