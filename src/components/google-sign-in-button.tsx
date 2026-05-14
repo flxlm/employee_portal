@@ -3,13 +3,17 @@ import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleSignInButton({
+  label = "Continue with Google",
+  forceAccountSelection = false,
+}: { label?: string; forceAccountSelection?: boolean }) {
   const [loading, setLoading] = useState(false);
 
   const handle = async () => {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/login`,
+      extraParams: forceAccountSelection ? { prompt: "select_account" } : undefined,
     });
     if (result.error) {
       setLoading(false);
