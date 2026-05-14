@@ -172,7 +172,6 @@ function WineDetail({ wine }: { wine: WineEntry }) {
         <DetailField label="In stock" value={wine.inventory || "0"} />
       </div>
 
-      </div>
 
       <div className="border-t border-border pt-4 mt-2 space-y-4">
         <section>
