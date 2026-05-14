@@ -203,16 +203,26 @@ function OpenClosePage() {
                 <div className="space-y-2">
                   <Label htmlFor="photo">Photo of the space</Label>
                   <div className="flex items-center gap-3">
-                    <Input
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById("photo")?.click()}
+                      className="gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      {photoFile ? "Change photo" : "Add photo"}
+                    </Button>
+                    <input
                       id="photo"
                       type="file"
                       accept="image/*"
-                      capture="environment"
+                      className="hidden"
                       onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
                     />
-                    <Camera className="h-5 w-5 text-muted-foreground" />
+                    {photoFile && (
+                      <span className="text-xs text-muted-foreground truncate">{photoFile.name}</span>
+                    )}
                   </div>
-                  {photoFile && <p className="text-xs text-muted-foreground">{photoFile.name}</p>}
                 </div>
 
                 <div className="space-y-2">
