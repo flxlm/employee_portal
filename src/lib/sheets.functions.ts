@@ -40,13 +40,10 @@ function rowsToObjects(rows: string[][]): Record<string, string>[] {
 
 export type StatusBucket =
   | "NEW"
-  | "FORM FILLED"
-  | "ESTIMATE SENT"
-  | "REMINDER SENT"
+  | "ONGOING"
   | "AWAITING PAYMENT"
   | "CONFIRMED"
   | "DECLINED"
-  | "REFUSED, LOW BUDGET"
   | "PAST";
 
 export type EventInquiry = {
@@ -72,16 +69,6 @@ export type EventInquiry = {
   prepaid: string;
 };
 
-const KNOWN_STATUSES: StatusBucket[] = [
-  "FORM FILLED",
-  "ESTIMATE SENT",
-  "REMINDER SENT",
-  "AWAITING PAYMENT",
-  "CONFIRMED",
-  "DECLINED",
-  "REFUSED, LOW BUDGET",
-];
-
 function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
   const s = (rawStatus || "").trim().toUpperCase();
   const todayStart = new Date();
@@ -89,10 +76,11 @@ function bucketFor(rawStatus: string, eventDate: Date | null): StatusBucket {
   const isPast = eventDate ? eventDate.getTime() < todayStart.getTime() : false;
 
   if (s === "") return "NEW";
-  if (s === "CONFIRMED" && isPast) return "PAST";
-  const match = KNOWN_STATUSES.find((k) => k === s);
-  if (match) return match;
-  return "FORM FILLED";
+  if (s === "CONFIRMED") return isPast ? "PAST" : "CONFIRMED";
+  if (s === "AWAITING PAYMENT") return "AWAITING PAYMENT";
+  if (s === "DECLINED" || s === "REFUSED, LOW BUDGET" || s.startsWith("REFUSED")) return "DECLINED";
+  if (s === "FORM FILLED" || s === "ESTIMATE SENT" || s === "REMINDER SENT") return "ONGOING";
+  return "ONGOING";
 }
 
 function parseDate(s: string): Date | null {
