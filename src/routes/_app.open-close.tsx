@@ -204,6 +204,21 @@ function OpenClosePage() {
                   )}
                 </div>
 
+                {shift === "close" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cash-tips">Cash tips ($)</Label>
+                    <Input
+                      id="cash-tips"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={cashTips}
+                      onChange={(e) => setCashTips(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="photo">Photo of the space</Label>
                   <div className="flex items-center gap-3">
