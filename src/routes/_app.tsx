@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AuthStatusScreen } from "@/components/auth-status-screen";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
