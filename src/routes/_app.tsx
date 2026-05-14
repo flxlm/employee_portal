@@ -33,6 +33,7 @@ function AppLayout() {
   }, [user]);
 
   const nav = [
+    { to: "/home", label: "Home", icon: Home },
     { to: "/events", label: "Event Inquiries", icon: CalendarDays },
     { to: "/wines", label: "Wine List", icon: Wine },
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
