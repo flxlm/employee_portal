@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SPREADSHEET_ID = "1I6quIaAQuMpLk97WVRtDys1mZ53d2Ys5Xj8YI3Zw10A";
+export const SPREADSHEET_ID = "1I6quIaAQuMpLk97WVRtDys1mZ53d2Ys5Xj8YI3Zw10A";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
 async function fetchRange(range: string): Promise<string[][]> {
@@ -108,64 +108,6 @@ function parseDate(s: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-const SHEET_NAME = "Event Inquiries (Jotform)";
-const SHEET_RANGE = `'${SHEET_NAME}'`;
-
-export const getEventInquiries = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async (): Promise<EventInquiry[]> => {
-    const rows = await fetchRange(`${SHEET_RANGE}!A1:AG`);
-    const objs = rowsToObjects(rows);
-    return objs
-      .map((o, idx) => {
-        const eventDateRaw = o["Date of the event"] ?? "";
-        const newDateRaw = o["New Date"] ?? "";
-        const eventDate = parseDate(newDateRaw) ?? parseDate(eventDateRaw);
-        const rawStatus = o["Status"] ?? "";
-        return {
-          id: `${idx}-${o["Submission ID"] || o["Submission Date"] || o["Email"]}`,
-          rowNumber: idx + 2,
-          status: rawStatus.trim() || "NEW",
-          rawStatus,
-          bucket: bucketFor(rawStatus, eventDate),
-          timestamp: o["Submission Date"] ?? "",
-          email: o["Email"] ?? "",
-          eventDate: eventDateRaw,
-          eventDateParsed: eventDate ? eventDate.toISOString() : null,
-          guests: o["Number of expect guests"] ?? "",
-          reservationType: o["What type of event do you want to host?"] ?? "",
-          startTime: o["At what time do you want to start having access to the space?"] ?? "",
-          arrivalTime: o["At what time will your guests arrive?"] ?? "",
-          endTime: o["At what time would you like to end your event?"] ?? "",
-          barService: o["How would you want the bar service to be handled?"] ?? "",
-          foodService: o["How would you want the food service to be handled?"] ?? "",
-          dj: o["Please select any extras that Savsav can offer you:"] ?? "",
-          description: o["Is there anything else we should know?"] ?? "",
-          budget: o["Budget"] ?? "",
-          prepaid: o["Food Budget (pp)"] ?? "",
-        };
-      })
-      .filter((o) => o.email || o.timestamp);
-  });
-
-const FIELD_TO_HEADER: Record<string, string> = {
-  timestamp: "Submission Date",
-  email: "Email",
-  eventDate: "Date of the event",
-  guests: "Number of expect guests",
-  reservationType: "What type of event do you want to host?",
-  startTime: "At what time do you want to start having access to the space?",
-  arrivalTime: "At what time will your guests arrive?",
-  endTime: "At what time would you like to end your event?",
-  barService: "How would you want the bar service to be handled?",
-  foodService: "How would you want the food service to be handled?",
-  dj: "Please select any extras that Savsav can offer you:",
-  description: "Is there anything else we should know?",
-  budget: "Budget",
-  prepaid: "Food Budget (pp)",
-  rawStatus: "Status",
-};
-
 function colLetter(n: number): string {
   let s = "";
   let x = n;
@@ -177,58 +119,178 @@ function colLetter(n: number): string {
   return s;
 }
 
+const SHEET_NAME = "Event Inquiries (Jotform)";
+const SHEET_RANGE = `'${SHEET_NAME}'`;
+
+type InquiryRow = {
+  id: string;
+  submission_id: string | null;
+  submission_date: string;
+  email: string;
+  event_date_raw: string;
+  event_date: string | null;
+  new_date_raw: string;
+  guests: string;
+  reservation_type: string;
+  start_time: string;
+  arrival_time: string;
+  end_time: string;
+  bar_service: string;
+  food_service: string;
+  dj: string;
+  description: string;
+  budget: string;
+  prepaid: string;
+  status: string;
+};
+
+function rowToInquiry(r: InquiryRow): EventInquiry {
+  const eventDate =
+    parseDate(r.new_date_raw) ?? (r.event_date ? new Date(r.event_date) : parseDate(r.event_date_raw));
+  return {
+    id: r.id,
+    rowNumber: 0, // legacy, unused
+    status: (r.status || "").trim() || "NEW",
+    rawStatus: r.status || "",
+    bucket: bucketFor(r.status || "", eventDate),
+    timestamp: r.submission_date,
+    email: r.email,
+    eventDate: r.event_date_raw,
+    eventDateParsed: eventDate ? eventDate.toISOString() : null,
+    guests: r.guests,
+    reservationType: r.reservation_type,
+    startTime: r.start_time,
+    arrivalTime: r.arrival_time,
+    endTime: r.end_time,
+    barService: r.bar_service,
+    foodService: r.food_service,
+    dj: r.dj,
+    description: r.description,
+    budget: r.budget,
+    prepaid: r.prepaid,
+  };
+}
+
+export const getEventInquiries = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<EventInquiry[]> => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("event_inquiries")
+      .select("*")
+      .order("submission_date", { ascending: false })
+      .limit(2000);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => rowToInquiry(r as InquiryRow));
+  });
+
+const FIELD_TO_COLUMN: Record<string, string> = {
+  rawStatus: "status",
+  email: "email",
+  eventDate: "event_date_raw",
+  guests: "guests",
+  reservationType: "reservation_type",
+  startTime: "start_time",
+  arrivalTime: "arrival_time",
+  endTime: "end_time",
+  barService: "bar_service",
+  foodService: "food_service",
+  dj: "dj",
+  description: "description",
+  budget: "budget",
+  prepaid: "prepaid",
+};
+
 export const updateEventInquiry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { rowNumber: number; updates: Record<string, string> }) => {
-    if (!data || typeof data.rowNumber !== "number" || data.rowNumber < 2) {
-      throw new Error("Invalid rowNumber");
-    }
-    if (!data.updates || typeof data.updates !== "object") {
+  .inputValidator((data: { id?: string; rowNumber?: number; updates: Record<string, string> }) => {
+    if (!data || !data.updates || typeof data.updates !== "object") {
       throw new Error("Invalid updates");
     }
-    return data;
+    if (!data.id || typeof data.id !== "string") {
+      throw new Error("Invalid id");
+    }
+    return data as { id: string; updates: Record<string, string> };
   })
-  .handler(async ({ data }) => {
-    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-    const GOOGLE_SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
-    if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
-
-    // Fetch headers to map field -> column index
-    const headerRows = await fetchRange(`${SHEET_RANGE}!A1:AG1`);
-    const headers = headerRows[0] ?? [];
-
-    // Build per-cell updates
-    const dataUpdates: { range: string; values: string[][] }[] = [];
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const patch: Record<string, string | null> = {};
     for (const [field, value] of Object.entries(data.updates)) {
-      const headerName = FIELD_TO_HEADER[field];
-      if (!headerName) continue;
-      const colIdx = headers.findIndex((h) => h === headerName);
-      if (colIdx < 0) continue;
-      const range = `${SHEET_RANGE}!${colLetter(colIdx + 1)}${data.rowNumber}`;
-      dataUpdates.push({ range, values: [[value ?? ""]] });
+      const col = FIELD_TO_COLUMN[field];
+      if (!col) continue;
+      patch[col] = value ?? "";
     }
-
-    if (dataUpdates.length === 0) return { updated: 0 };
-
-    const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        valueInputOption: "USER_ENTERED",
-        data: dataUpdates,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Sheets API ${res.status}: ${body}`);
+    if (data.updates["eventDate"] != null) {
+      const parsed = parseDate(data.updates["eventDate"]);
+      patch["event_date"] = parsed ? parsed.toISOString().slice(0, 10) : null;
     }
-    return { updated: dataUpdates.length };
+    if (Object.keys(patch).length === 0) return { updated: 0 };
+    const { error } = await (supabase.from("event_inquiries") as any)
+      .update(patch)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { updated: Object.keys(patch).length };
+  });
+
+// Admin-only: one-time (or re-runnable) import from the Google Sheet into the DB.
+// Upserts by submission_id; falls back to a synthesised key when missing.
+export const importEventInquiriesFromSheet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Admin only");
+
+    const rows = await fetchRange(`${SHEET_RANGE}!A1:AG`);
+    const objs = rowsToObjects(rows);
+    const payload = objs
+      .filter((o) => (o["Email"] ?? "").trim() || (o["Submission Date"] ?? "").trim())
+      .map((o) => {
+        const eventDateRaw = o["Date of the event"] ?? "";
+        const newDateRaw = o["New Date"] ?? "";
+        const ed = parseDate(newDateRaw) ?? parseDate(eventDateRaw);
+        const submissionId =
+          (o["Submission ID"] ?? "").trim() ||
+          `legacy:${(o["Submission Date"] ?? "").trim()}|${(o["Email"] ?? "").trim()}`;
+        return {
+          submission_id: submissionId,
+          submission_date: o["Submission Date"] ?? "",
+          email: o["Email"] ?? "",
+          event_date_raw: eventDateRaw,
+          new_date_raw: newDateRaw,
+          event_date: ed ? ed.toISOString().slice(0, 10) : null,
+          guests: o["Number of expect guests"] ?? "",
+          reservation_type: o["What type of event do you want to host?"] ?? "",
+          start_time: o["At what time do you want to start having access to the space?"] ?? "",
+          arrival_time: o["At what time will your guests arrive?"] ?? "",
+          end_time: o["At what time would you like to end your event?"] ?? "",
+          bar_service: o["How would you want the bar service to be handled?"] ?? "",
+          food_service: o["How would you want the food service to be handled?"] ?? "",
+          dj: o["Please select any extras that Savsav can offer you:"] ?? "",
+          description: o["Is there anything else we should know?"] ?? "",
+          budget: o["Budget"] ?? "",
+          prepaid: o["Food Budget (pp)"] ?? "",
+          status: o["Status"] ?? "",
+        };
+      });
+
+    // Chunk to keep request payloads small
+    const CHUNK = 200;
+    let imported = 0;
+    for (let i = 0; i < payload.length; i += CHUNK) {
+      const slice = payload.slice(i, i + CHUNK);
+      const { error } = await supabase
+        .from("event_inquiries")
+        .upsert(slice, { onConflict: "submission_id", ignoreDuplicates: false });
+      if (error) throw new Error(error.message);
+      imported += slice.length;
+    }
+    return { imported };
   });
 
 export type WineEntry = {
