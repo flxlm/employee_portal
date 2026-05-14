@@ -1,15 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { getEventInquiries, type EventInquiry } from "@/lib/sheets.functions";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Mail, Calendar, Users, Clock, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/events")({
   component: EventsPage,
@@ -23,6 +27,23 @@ const BUCKETS = [
   { id: "past", label: "Past" },
 ] as const;
 
+const EDITABLE_FIELDS: { key: keyof EventInquiry; label: string; type: "input" | "textarea" }[] = [
+  { key: "rawStatus", label: "Status", type: "input" },
+  { key: "email", label: "Email", type: "input" },
+  { key: "eventDate", label: "Event date", type: "input" },
+  { key: "guests", label: "Guests", type: "input" },
+  { key: "reservationType", label: "Reservation type", type: "input" },
+  { key: "startTime", label: "Start time", type: "input" },
+  { key: "arrivalTime", label: "Guest arrival", type: "input" },
+  { key: "endTime", label: "End time", type: "input" },
+  { key: "barService", label: "Bar service", type: "input" },
+  { key: "foodService", label: "Food service", type: "input" },
+  { key: "dj", label: "DJ", type: "input" },
+  { key: "budget", label: "Budget", type: "input" },
+  { key: "prepaid", label: "Prepaid bar", type: "input" },
+  { key: "description", label: "Notes", type: "textarea" },
+];
+
 function statusVariant(b: EventInquiry["bucket"]) {
   switch (b) {
     case "confirmed": return "bg-emerald-100 text-emerald-900 border-emerald-300";
@@ -35,11 +56,47 @@ function statusVariant(b: EventInquiry["bucket"]) {
 
 function EventsPage() {
   const fetchFn = useServerFn(getEventInquiries);
+  const updateFn = useServerFn(updateEventInquiry);
+  const qc = useQueryClient();
   const { data, isLoading, refetch, isFetching, error } = useQuery({
     queryKey: ["event-inquiries"],
     queryFn: () => fetchFn(),
   });
   const [selected, setSelected] = useState<EventInquiry | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (selected) {
+      const d: Record<string, string> = {};
+      for (const f of EDITABLE_FIELDS) d[f.key as string] = (selected[f.key] as string) ?? "";
+      setDraft(d);
+    }
+  }, [selected]);
+
+  const mutation = useMutation({
+    mutationFn: async (vars: { rowNumber: number; updates: Record<string, string> }) =>
+      updateFn({ data: vars }),
+    onSuccess: () => {
+      toast.success("Inquiry updated");
+      qc.invalidateQueries({ queryKey: ["event-inquiries"] });
+      setSelected(null);
+    },
+    onError: (e: Error) => toast.error(`Update failed: ${e.message}`),
+  });
+
+  const handleSave = () => {
+    if (!selected) return;
+    const updates: Record<string, string> = {};
+    for (const f of EDITABLE_FIELDS) {
+      const k = f.key as string;
+      if (draft[k] !== ((selected[f.key] as string) ?? "")) updates[k] = draft[k];
+    }
+    if (Object.keys(updates).length === 0) {
+      setSelected(null);
+      return;
+    }
+    mutation.mutate({ rowNumber: selected.rowNumber, updates });
+  };
 
   const grouped = (data ?? []).reduce<Record<string, EventInquiry[]>>((acc, e) => {
     (acc[e.bucket] ||= []).push(e);
@@ -119,55 +176,65 @@ function EventsPage() {
         ))}
       </Tabs>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+      <Dialog open={!!selected} onOpenChange={(o) => !o && !mutation.isPending && setSelected(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {selected && (
             <>
               <DialogHeader>
                 <DialogTitle className="font-serif text-2xl flex items-center gap-3">
-                  {selected.email}
+                  Edit inquiry
                   <span className={`text-xs px-2 py-0.5 rounded border ${statusVariant(selected.bucket)}`}>
                     {selected.status}
                   </span>
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-3 text-sm">
-                <Field label="Event date" value={selected.eventDate} />
-                <Field label="Submitted" value={selected.timestamp} />
-                <Field label="Guests" value={selected.guests} />
-                <Field label="Reservation type" value={selected.reservationType} />
-                <Field label="Start" value={selected.startTime} />
-                <Field label="Guest arrival" value={selected.arrivalTime} />
-                <Field label="End" value={selected.endTime} />
-                <Field label="Bar service" value={selected.barService} />
-                <Field label="Food service" value={selected.foodService} />
-                <Field label="DJ" value={selected.dj} />
-                <Field label="Budget" value={selected.budget} />
-                <Field label="Prepaid bar" value={selected.prepaid} />
-                <Field label="Notes" value={selected.description} multiline />
+                <div className="text-xs text-muted-foreground">
+                  Submitted: {selected.timestamp || "—"}
+                </div>
+                {EDITABLE_FIELDS.map((f) => (
+                  <div key={f.key as string} className="space-y-1">
+                    <Label htmlFor={`field-${f.key as string}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {f.label}
+                    </Label>
+                    {f.type === "textarea" ? (
+                      <Textarea
+                        id={`field-${f.key as string}`}
+                        value={draft[f.key as string] ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
+                        rows={4}
+                      />
+                    ) : (
+                      <Input
+                        id={`field-${f.key as string}`}
+                        value={draft[f.key as string] ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, [f.key as string]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                ))}
                 <div className="pt-2">
                   <a
                     href={`mailto:${selected.email}`}
-                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                    className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
                   >
                     <Mail className="h-4 w-4" /> Reply by email <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
               </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelected(null)} disabled={mutation.isPending}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={mutation.isPending}>
+                  {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save changes
+                </Button>
+              </DialogFooter>
             </>
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function Field({ label, value, multiline }: { label: string; value: string; multiline?: boolean }) {
-  if (!value) return null;
-  return (
-    <div className={multiline ? "" : "flex gap-3"}>
-      <div className="text-muted-foreground text-xs uppercase tracking-wide w-32 shrink-0 pt-0.5">{label}</div>
-      <div className={multiline ? "mt-1 whitespace-pre-wrap" : "flex-1"}>{value}</div>
     </div>
   );
 }
