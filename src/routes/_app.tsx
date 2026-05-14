@@ -18,17 +18,6 @@ function AppLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
-        Loading…
-      </div>
-    );
-  }
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
   useEffect(() => {
     if (!user) return;
     supabase
@@ -39,6 +28,18 @@ function AppLayout() {
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  if (loading) {
+    return (
+      <AuthStatusScreen
+        title="Loading your portal"
+        message="Restoring your session and permissions."
+      />
+    );
+  }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   const nav = [
     { to: "/home", label: "Home", icon: Home },
