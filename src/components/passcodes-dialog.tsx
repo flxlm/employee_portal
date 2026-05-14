@@ -136,10 +136,8 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
               <DialogTitle className="flex items-center gap-2">
                 <Lock className="h-5 w-5" /> Passcodes
               </DialogTitle>
-              <DialogDescription>
-                {isAdmin
-                  ? "All passcodes. Toggle admin-only access per passcode."
-                  : "Passcodes available to you."}
+              <DialogDescription className="sr-only">
+                Manage passcodes
               </DialogDescription>
             </div>
             {isAdmin && (
