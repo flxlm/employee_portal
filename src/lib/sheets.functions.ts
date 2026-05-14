@@ -268,3 +268,75 @@ export const getWineList = createServerFn({ method: "GET" })
         togo: o["To-go price"] ?? "",
       }));
   });
+
+export const addWine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    name: string;
+    domaine: string;
+    colour: string;
+    inventory: number;
+    bottle: number;
+    markup: number;
+    togoDiscountPct: number;
+    year?: string;
+    type?: string;
+    country?: string;
+  }) => {
+    if (!data.name?.trim()) throw new Error("Name is required");
+    if (!data.domaine?.trim()) throw new Error("Domaine is required");
+    if (!data.colour?.trim()) throw new Error("Colour is required");
+    if (!Number.isFinite(data.bottle) || data.bottle <= 0) throw new Error("Bottle price must be > 0");
+    if (!Number.isFinite(data.markup) || data.markup <= 0) throw new Error("Markup must be > 0");
+    if (!Number.isFinite(data.togoDiscountPct) || data.togoDiscountPct < 0 || data.togoDiscountPct >= 100) {
+      throw new Error("To-go discount must be 0-99");
+    }
+    if (!Number.isFinite(data.inventory) || data.inventory < 0) throw new Error("Inventory must be >= 0");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+    const GOOGLE_SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    if (!GOOGLE_SHEETS_API_KEY) throw new Error("GOOGLE_SHEETS_API_KEY missing");
+
+    const headerRows = await fetchRange("Wine List!A1:L1");
+    const headers = headerRows[0] ?? [];
+
+    const cost = data.bottle / data.markup;
+    const togo = data.bottle * (1 - data.togoDiscountPct / 100);
+    const fmt = (n: number) => `$${n.toFixed(2)}`;
+
+    const valueByHeader: Record<string, string> = {
+      "Name": data.name.trim(),
+      "Domaine": data.domaine.trim(),
+      "Year": data.year?.trim() ?? "",
+      "Type": data.type?.trim() ?? "",
+      "Country": data.country?.trim() ?? "",
+      "Inventory": String(data.inventory),
+      "Colour": data.colour.trim(),
+      "Cost": fmt(cost),
+      "Bottle": fmt(data.bottle),
+      "Glass": "",
+      "To-go price": fmt(togo),
+    };
+
+    const row = headers.map((h) => valueByHeader[h] ?? "");
+
+    const url = `${GATEWAY_URL}/spreadsheets/${SPREADSHEET_ID}/values/Wine%20List!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values: [row] }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Sheets API ${res.status}: ${body}`);
+    }
+    return { added: true };
+  });
+
