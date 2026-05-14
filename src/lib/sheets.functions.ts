@@ -166,6 +166,7 @@ function rowToInquiry(r: InquiryRow): EventInquiry {
     endTime: r.end_time,
     barService: r.bar_service,
     foodService: r.food_service,
+    foodServiceTime: r.food_service_time ?? "",
     dj: r.dj,
     description: r.description,
     budget: r.budget,
