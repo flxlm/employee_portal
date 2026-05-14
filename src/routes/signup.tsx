@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
