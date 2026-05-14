@@ -156,6 +156,7 @@ function EventsPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [bucketFilter, setBucketFilter] = useState<string>("NEW");
   const [ongoingSub, setOngoingSub] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<string>("submission-desc");
 
   const ONGOING_SUBSTATUSES = ["FORM FILLED", "ESTIMATE SENT", "REMINDER SENT"] as const;
 
