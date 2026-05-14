@@ -214,9 +214,14 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   barService: "bar_service",
   foodService: "food_service",
   foodServiceTime: "food_service_time",
+  foodRestrictions: "food_restrictions",
   dj: "dj",
   description: "description",
   budget: "budget",
+  premiumDrinks: "premium_drinks",
+  premiumDrinksDetails: "premium_drinks_details",
+  weddingSections: "wedding_sections",
+  referralSource: "referral_source",
   prepaid: "prepaid",
 };
 
