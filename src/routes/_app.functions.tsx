@@ -112,6 +112,13 @@ function FunctionsPage() {
       icon: RotateCw,
       onClick: handleAppRefresh,
     },
+    {
+      key: "passcodes",
+      title: "Passcodes",
+      description: "View shared passcodes available to your account.",
+      icon: KeyRound,
+      onClick: () => setPasscodesOpen(true),
+    },
   ];
 
   return (
