@@ -7,6 +7,7 @@ import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, Zap } fr
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -59,59 +60,94 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      {/* Sidebar */}
-      <aside className={cn(
-        "md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex flex-col",
-        "overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out",
-        open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0 md:max-h-screen md:opacity-100"
-      )}>
-        <div className="px-6 py-5 border-b border-border">
-          <img src={logo} alt="Savsav" className="h-8 w-auto" />
-          <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {nav.map((item, idx) => {
-            const currentStatus = new URLSearchParams(location.search).get("status");
-            const itemStatus = item.search?.status;
-            const pathMatches = location.pathname.startsWith(item.to);
-            const active = pathMatches && (itemStatus ? currentStatus === itemStatus : !currentStatus);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={`${item.to}-${idx}`}
-                to={item.to}
-                search={item.search ?? {}}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="p-3 border-t border-border">
-          <p className="px-3 py-1 text-xs text-muted-foreground truncate">{user?.email}</p>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="w-full justify-start">
-            <LogOut className="h-4 w-4 mr-2" /> Sign out
-          </Button>
-        </div>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex-col">
+        <NavContent
+          nav={nav}
+          location={location}
+          email={user?.email}
+          onSignOut={handleSignOut}
+          onNavigate={() => {}}
+        />
       </aside>
 
-      {/* Mobile header */}
+      {/* Mobile sticky header */}
       <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-border bg-card">
         <img src={logo} alt="Savsav" className="h-6 w-auto" />
-        <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
+        <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
           <Menu className="h-5 w-5" />
         </Button>
       </div>
+
+      {/* Mobile right-side overlay */}
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="p-0 w-72 bg-card flex flex-col">
+          <NavContent
+            nav={nav}
+            location={location}
+            email={user?.email}
+            onSignOut={handleSignOut}
+            onNavigate={() => setOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
 
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
     </div>
+  );
+}
+
+function NavContent({
+  nav,
+  location,
+  email,
+  onSignOut,
+  onNavigate,
+}: {
+  nav: { to: string; label: string; icon: typeof Home; search?: Record<string, string> }[];
+  location: ReturnType<typeof useLocation>;
+  email?: string;
+  onSignOut: () => void;
+  onNavigate: () => void;
+}) {
+  return (
+    <>
+      <div className="px-6 py-5 border-b border-border">
+        <img src={logo} alt="Savsav" className="h-8 w-auto" />
+        <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
+      </div>
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {nav.map((item, idx) => {
+          const currentStatus = new URLSearchParams(location.search).get("status");
+          const itemStatus = item.search?.status;
+          const pathMatches = location.pathname.startsWith(item.to);
+          const active = pathMatches && (itemStatus ? currentStatus === itemStatus : !currentStatus);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={`${item.to}-${idx}`}
+              to={item.to}
+              search={item.search ?? {}}
+              onClick={onNavigate}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-3 border-t border-border">
+        <p className="px-3 py-1 text-xs text-muted-foreground truncate">{email}</p>
+        <Button variant="ghost" size="sm" onClick={onSignOut} className="w-full justify-start">
+          <LogOut className="h-4 w-4 mr-2" /> Sign out
+        </Button>
+      </div>
+    </>
   );
 }
