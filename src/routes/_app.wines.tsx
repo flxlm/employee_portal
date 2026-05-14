@@ -167,10 +167,14 @@ function WineDetail({ wine }: { wine: WineEntry }) {
       </DialogHeader>
 
       <div className="grid grid-cols-2 gap-4 pt-2">
-        <DetailField label="Glass" value={wine.glass} />
-        <DetailField label="Bottle" value={wine.bottle} />
-        <DetailField label="To-go" value={wine.togo} />
+        <DetailField label="Bottle" value={formatPrice(wine.bottle)} />
+        <DetailField label="To-go" value={formatPrice(wine.togo)} />
         <DetailField label="In stock" value={wine.inventory || "0"} />
+      </div>
+
+      {/* spacer */}
+      <div className="hidden">
+        <DetailField label="Glass" value={wine.glass} />
       </div>
 
       <div className="border-t border-border pt-4 mt-2 space-y-4">
