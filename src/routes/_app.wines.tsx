@@ -104,8 +104,8 @@ function WinesPage() {
                     <td className="px-4 py-3 text-muted-foreground">{w.country}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.year}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.colour}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.togo || "—"}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{w.bottle || "—"}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.togo)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{formatPrice(w.bottle)}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{w.inventory || "0"}</td>
                   </tr>
                 ))}
@@ -167,11 +167,11 @@ function WineDetail({ wine }: { wine: WineEntry }) {
       </DialogHeader>
 
       <div className="grid grid-cols-2 gap-4 pt-2">
-        <DetailField label="Glass" value={wine.glass} />
-        <DetailField label="Bottle" value={wine.bottle} />
-        <DetailField label="To-go" value={wine.togo} />
+        <DetailField label="Bottle" value={formatPrice(wine.bottle)} />
+        <DetailField label="To-go" value={formatPrice(wine.togo)} />
         <DetailField label="In stock" value={wine.inventory || "0"} />
       </div>
+
 
       <div className="border-t border-border pt-4 mt-2 space-y-4">
         <section>
@@ -230,3 +230,13 @@ function DetailField({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function formatPrice(value: string | undefined | null): string {
+  if (value == null) return "—";
+  const s = String(value).trim();
+  if (!s) return "—";
+  const n = Number(s.replace(/[^0-9.\-]/g, ""));
+  if (!Number.isFinite(n)) return "—";
+  return `$${n.toFixed(2)}`;
+}
+
