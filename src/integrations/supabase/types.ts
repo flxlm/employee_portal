@@ -228,6 +228,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          dish_used: string
           id: string
           product: string
           recipe: string
@@ -237,6 +238,7 @@ export type Database = {
         Insert: {
           category?: string
           created_at?: string
+          dish_used?: string
           id?: string
           product?: string
           recipe?: string
@@ -246,6 +248,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          dish_used?: string
           id?: string
           product?: string
           recipe?: string
