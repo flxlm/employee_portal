@@ -302,8 +302,9 @@ function EventsPage() {
                   </Select>
                 </div>
               )}
+              </div>
 
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-[240px] h-11 border-2 shadow-sm">
