@@ -346,3 +346,43 @@ export const updateWineStock = createServerFn({ method: "POST" })
     return { updated: true };
   });
 
+export const updateWine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    id: string;
+    name?: string;
+    domaine?: string;
+    year?: string;
+    type?: string;
+    country?: string;
+    colour?: string;
+    inventory?: number;
+    bottle?: number;
+    togo?: number;
+  }) => {
+    if (!data.id || typeof data.id !== "string") throw new Error("Invalid id");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const patch: Record<string, unknown> = {};
+    if (data.name !== undefined) patch.name = data.name.trim();
+    if (data.domaine !== undefined) patch.domaine = data.domaine.trim();
+    if (data.year !== undefined) patch.year = data.year.trim();
+    if (data.type !== undefined) patch.type = data.type.trim();
+    if (data.country !== undefined) patch.country = data.country.trim();
+    if (data.colour !== undefined) patch.colour = data.colour.trim();
+    if (data.inventory !== undefined && Number.isFinite(data.inventory) && data.inventory >= 0) {
+      patch.inventory = Math.floor(data.inventory);
+    }
+    if (data.bottle !== undefined && Number.isFinite(data.bottle) && data.bottle >= 0) {
+      patch.bottle = data.bottle;
+    }
+    if (data.togo !== undefined && Number.isFinite(data.togo) && data.togo >= 0) {
+      patch.togo = data.togo;
+    }
+    const { error } = await (supabase.from("wines") as any).update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { updated: true };
+  });
+
