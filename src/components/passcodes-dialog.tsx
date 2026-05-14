@@ -133,7 +133,7 @@ export function PasscodesDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <DialogTitle className="font-serif flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2">
                 <Lock className="h-5 w-5" /> Passcodes
               </DialogTitle>
               <DialogDescription>

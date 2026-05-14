@@ -124,7 +124,7 @@ function FunctionsPage() {
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-serif">Functions</h1>
+        <h1 className="text-3xl md:text-4xl">Functions</h1>
         <p className="text-muted-foreground mt-1">
           Quick actions for day-to-day restaurant operations.
         </p>
@@ -139,7 +139,7 @@ function FunctionsPage() {
                   <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <CardTitle className="font-serif">{title}</CardTitle>
+                  <CardTitle className="">{title}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -153,7 +153,7 @@ function FunctionsPage() {
       <Dialog open={refreshOpen} onOpenChange={setRefreshOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-serif">Refresh which menu?</DialogTitle>
+            <DialogTitle className="">Refresh which menu?</DialogTitle>
             <DialogDescription>
               This will reload the selected screen so it picks up the latest menu content.
             </DialogDescription>
