@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { getWineList, type WineEntry } from "@/lib/sheets.functions";
+import { getWineList, addWine, type WineEntry } from "@/lib/sheets.functions";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Search, Wine as WineIcon, ExternalLink, Loader2 } from "lucide-react";
+import { RefreshCw, Search, Wine as WineIcon, ExternalLink, Loader2, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { getWineInsights } from "@/lib/wine-insights.functions";
 
 export const Route = createFileRoute("/_app/wines")({
@@ -27,6 +29,7 @@ function WinesPage() {
   const [colour, setColour] = useState("all");
   const [stock, setStock] = useState<"in" | "all">("in");
   const [selected, setSelected] = useState<WineEntry | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const colours = useMemo(
     () => Array.from(new Set((data ?? []).map((w) => w.colour).filter(Boolean))),
@@ -51,9 +54,14 @@ function WinesPage() {
           <h1 className="text-3xl font-serif">Wine List</h1>
           <p className="text-muted-foreground text-sm">{filtered.length} wines · live from Google Sheets</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add wine
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -135,6 +143,8 @@ function WinesPage() {
           {selected && <WineDetail wine={selected} />}
         </DialogContent>
       </Dialog>
+
+      <AddWineDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }
@@ -250,5 +260,143 @@ function formatPrice(value: string | undefined | null): string {
   const n = Number(s.replace(/[^0-9.\-]/g, ""));
   if (!Number.isFinite(n)) return "—";
   return `$${n.toFixed(2)}`;
+}
+
+const COLOUR_OPTIONS = ["Red", "White", "Rosé", "Sparkling", "Orange", "Dessert"];
+
+function AddWineDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const addFn = useServerFn(addWine);
+  const queryClient = useQueryClient();
+  const [submitting, setSubmitting] = useState(false);
+
+  const [name, setName] = useState("");
+  const [domaine, setDomaine] = useState("");
+  const [colour, setColour] = useState("Red");
+  const [inventory, setInventory] = useState("1");
+  const [bottle, setBottle] = useState("");
+  const [markup, setMarkup] = useState("2.3");
+  const [togoPct, setTogoPct] = useState("35");
+  const [year, setYear] = useState("");
+  const [country, setCountry] = useState("");
+
+  const bottleN = Number(bottle);
+  const markupN = Number(markup);
+  const togoPctN = Number(togoPct);
+  const validBottle = Number.isFinite(bottleN) && bottleN > 0;
+  const validMarkup = Number.isFinite(markupN) && markupN > 0;
+  const validPct = Number.isFinite(togoPctN) && togoPctN >= 0 && togoPctN < 100;
+  const cost = validBottle && validMarkup ? bottleN / markupN : null;
+  const togo = validBottle && validPct ? bottleN * (1 - togoPctN / 100) : null;
+
+  function reset() {
+    setName(""); setDomaine(""); setColour("Red"); setInventory("1");
+    setBottle(""); setMarkup("2.3"); setTogoPct("35"); setYear(""); setCountry("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct) return;
+    setSubmitting(true);
+    try {
+      await addFn({ data: {
+        name: name.trim(),
+        domaine: domaine.trim(),
+        colour,
+        inventory: Number(inventory) || 0,
+        bottle: bottleN,
+        markup: markupN,
+        togoDiscountPct: togoPctN,
+        year: year.trim(),
+        country: country.trim(),
+      }});
+      toast.success(`Added ${name.trim()}`);
+      await queryClient.invalidateQueries({ queryKey: ["wine-list"] });
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to add wine");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-xl">Add a wine</DialogTitle>
+          <DialogDescription>Appends a new row to the Wine List sheet.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label htmlFor="w-name">Wine name *</Label>
+              <Input id="w-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="w-dom">Producer / Domaine *</Label>
+              <Input id="w-dom" value={domaine} onChange={(e) => setDomaine(e.target.value)} required />
+            </div>
+            <div>
+              <Label>Colour *</Label>
+              <Select value={colour} onValueChange={setColour}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COLOUR_OPTIONS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="w-stock">Stock *</Label>
+              <Input id="w-stock" type="number" min="0" step="1" value={inventory} onChange={(e) => setInventory(e.target.value)} required />
+            </div>
+            <div>
+              <Label htmlFor="w-year">Year</Label>
+              <Input id="w-year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2021" />
+            </div>
+            <div>
+              <Label htmlFor="w-country">Country</Label>
+              <Input id="w-country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" />
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="w-bottle">Bottle price *</Label>
+                <Input id="w-bottle" type="number" min="0" step="0.01" value={bottle} onChange={(e) => setBottle(e.target.value)} placeholder="45.00" required />
+              </div>
+              <div>
+                <Label htmlFor="w-markup">Markup ×</Label>
+                <Input id="w-markup" type="number" min="0.1" step="0.1" value={markup} onChange={(e) => setMarkup(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="w-pct">To-go discount %</Label>
+                <Input id="w-pct" type="number" min="0" max="99" step="1" value={togoPct} onChange={(e) => setTogoPct(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm bg-muted/40 rounded-md p-3">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Cost (bottle ÷ markup)</div>
+                <div className="font-medium tabular-nums">{cost != null ? `$${cost.toFixed(2)}` : "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">To-go price</div>
+                <div className="font-medium tabular-nums">{togo != null ? `$${togo.toFixed(2)}` : "—"}</div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
+            <Button type="submit" disabled={submitting || !name.trim() || !domaine.trim() || !validBottle || !validMarkup || !validPct}>
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Add wine
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
