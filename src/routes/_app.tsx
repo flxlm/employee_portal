@@ -1,0 +1,99 @@
+import { createFileRoute, Outlet, redirect, Link, useRouter, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_app")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
+  },
+  component: AppLayout,
+});
+
+function AppLayout() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
+
+  const nav = [
+    { to: "/events", label: "Event Inquiries", icon: CalendarDays },
+    { to: "/wines", label: "Wine List", icon: Wine },
+    { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
+    ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users }] : []),
+  ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.navigate({ to: "/login" });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-background">
+      {/* Sidebar */}
+      <aside className={cn(
+        "md:w-64 md:min-h-screen border-r border-border bg-card flex flex-col",
+        open ? "block" : "hidden md:flex"
+      )}>
+        <div className="px-6 py-5 border-b border-border">
+          <h1 className="text-xl font-serif font-semibold">Savsav</h1>
+          <p className="text-xs text-muted-foreground">Employee Portal</p>
+        </div>
+        <nav className="flex-1 p-3 space-y-1">
+          {nav.map((item) => {
+            const active = location.pathname.startsWith(item.to);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t border-border">
+          <p className="px-3 py-1 text-xs text-muted-foreground truncate">{user?.email}</p>
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="w-full justify-start">
+            <LogOut className="h-4 w-4 mr-2" /> Sign out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Mobile header */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <h1 className="font-serif text-lg">Savsav</h1>
+        <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <main className="flex-1 min-w-0">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
