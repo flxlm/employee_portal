@@ -59,7 +59,7 @@ function AppLayout() {
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       {/* Sidebar */}
       <aside className={cn(
-        "md:w-64 md:min-h-screen border-r border-border bg-card flex flex-col",
+        "md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex flex-col",
         open ? "block" : "hidden md:flex"
       )}>
         <div className="px-6 py-5 border-b border-border">
