@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Search, Wine as WineIcon } from "lucide-react";
+import { RefreshCw, Search, Wine as WineIcon, ExternalLink, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { getWineInsights } from "@/lib/wine-insights.functions";
 
 export const Route = createFileRoute("/_app/wines")({
   component: WinesPage,
