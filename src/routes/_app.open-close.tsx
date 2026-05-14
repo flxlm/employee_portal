@@ -145,7 +145,7 @@ function OpenClosePage() {
       <Tabs defaultValue="new">
         <TabsList className="mb-4">
           <TabsTrigger value="new">New entry</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          {isAdmin && <TabsTrigger value="history">History</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="new">
