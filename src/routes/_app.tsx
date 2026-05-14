@@ -42,9 +42,10 @@ function AppLayout() {
     return <Navigate to="/login" />;
   }
 
-  const nav = [
+  const nav: { to: string; label: string; icon: typeof Home; search?: Record<string, string> }[] = [
     { to: "/home", label: "Home", icon: Home },
     { to: "/events", label: "Event Inquiries", icon: CalendarDays },
+    { to: "/events", label: "Confirmed Events", icon: CalendarDays, search: { status: "CONFIRMED" } },
     { to: "/wines", label: "Wine List", icon: Wine },
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users }] : []),
