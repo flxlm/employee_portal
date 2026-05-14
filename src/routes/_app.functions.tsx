@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Monitor, Coffee, RotateCw, KeyRound, BookOpen } from "lucide-react";
+import { RefreshCw, Monitor, Coffee, RotateCw, KeyRound } from "lucide-react";
 import { refreshScreencloudMenu } from "@/lib/screencloud.functions";
 import { PasscodesDialog } from "@/components/passcodes-dialog";
 
@@ -41,7 +41,6 @@ function formatRelative(iso: string | null): string {
 }
 
 function FunctionsPage() {
-  const navigate = useNavigate();
   const [refreshOpen, setRefreshOpen] = useState(false);
   const [passcodesOpen, setPasscodesOpen] = useState(false);
   const [pending, setPending] = useState<null | MenuKey>(null);
@@ -117,13 +116,6 @@ function FunctionsPage() {
       description: "Clear cached files and reload to get the latest version of the portal.",
       icon: RotateCw,
       onClick: handleAppRefresh,
-    },
-    {
-      key: "recipes",
-      title: "Recipes",
-      description: "Browse drink recipes for FOH staff.",
-      icon: BookOpen,
-      onClick: () => navigate({ to: "/recipes" }),
     },
     {
       key: "passcodes",
