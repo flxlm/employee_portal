@@ -287,6 +287,9 @@ function OpenClosePage() {
                       <div className={`text-xs ${log.till_status === "over" ? "text-emerald-700" : log.till_status === "under" ? "text-rose-700" : "text-muted-foreground"}`}>
                         {log.till_status === "exact" ? "On target" : `${log.till_status} by $${Math.abs(Number(log.till_difference)).toFixed(2)}`}
                       </div>
+                      {log.shift_type === "close" && Number(log.cash_tips) > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">Tips: ${Number(log.cash_tips).toFixed(2)}</div>
+                      )}
                     </div>
                   </div>
                   {log.notes && <p className="text-sm mt-3 whitespace-pre-wrap">{log.notes}</p>}
