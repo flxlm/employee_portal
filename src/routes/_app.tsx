@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
 
 export const Route = createFileRoute("/_app")({
@@ -62,8 +63,8 @@ function AppLayout() {
         open ? "block" : "hidden md:flex"
       )}>
         <div className="px-6 py-5 border-b border-border">
-          <h1 className="text-xl font-serif font-semibold">Savsav</h1>
-          <p className="text-xs text-muted-foreground">Employee Portal</p>
+          <img src={logo} alt="Savsav" className="h-8 w-auto" />
+          <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map((item) => {
@@ -95,7 +96,7 @@ function AppLayout() {
 
       {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-        <h1 className="font-serif text-lg">Savsav</h1>
+        <img src={logo} alt="Savsav" className="h-6 w-auto" />
         <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
           <Menu className="h-5 w-5" />
         </Button>
