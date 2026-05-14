@@ -235,7 +235,7 @@ function OpenClosePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
+        {isAdmin && <TabsContent value="history">
           <div className="space-y-3">
             {logs.length === 0 && (
               <Card><CardContent className="py-12 text-center text-muted-foreground">No logs yet.</CardContent></Card>
