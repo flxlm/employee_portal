@@ -90,17 +90,19 @@ function Price({ price }: { price: number }) {
       {sign}
       {dollars}
       {cents > 0 && (
-        <sup
+        <span
           style={{
-            fontSize: "0.6em",
+            fontSize: "0.55em",
             fontWeight: 700,
-            verticalAlign: "super",
-            lineHeight: 0,
-            marginLeft: "0.05em",
+            display: "inline-block",
+            verticalAlign: "baseline",
+            position: "relative",
+            top: "-0.5em",
+            marginLeft: "0.08em",
           }}
         >
           {cents.toString().padStart(2, "0")}
-        </sup>
+        </span>
       )}
     </span>
   );
@@ -290,7 +292,7 @@ const COLUMN_CSS = `
   text-transform: uppercase;
   letter-spacing: 0.01em;
   font-size: 0.95rem;
-  line-height: 1.15;
+  line-height: 1.4;
 }
 .menu-item-name { flex: 1; }
 .menu-item-price { white-space: nowrap; font-weight: 700; }
