@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMenuFormatting,
@@ -183,6 +183,7 @@ const COLUMN_CSS = `
   column-fill: auto;
   height: calc(100vh - 3rem);
   overflow: hidden;
+  position: relative;
 }
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
@@ -237,21 +238,26 @@ const COLUMN_CSS = `
   page-break-before: avoid;
 }
 .trailing-block {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 55%;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(100vh - 3rem);
+  height: auto;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-top: 0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0;
   box-sizing: border-box;
 }
 .trailing-asterisk {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   width: 100%;
-  min-height: 8vh;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,7 +276,7 @@ const COLUMN_CSS = `
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 12vh;
+  height: clamp(4rem, 12vh, 7rem);
   padding-bottom: 0;
   overflow: visible;
 }
