@@ -369,7 +369,7 @@ function DisplayPage() {
               {item.description && (
                 <p
                   style={styleFor("itemDescription", {
-                    margin: "0.25vw 0 0 0",
+                    margin: "0.1vw 0 0 0",
                   })}
                 >
                   {item.description}
