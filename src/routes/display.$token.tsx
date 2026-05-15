@@ -234,7 +234,6 @@ function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
-  const [activeSection, setActiveSection] = useState<SectionName>("LUNCH");
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
@@ -248,11 +247,6 @@ function DisplayPage() {
     };
     return merged.fontFamily;
   }, [formatting]);
-
-  const visibleSections = useMemo(
-    () => menu.filter((s) => sectionFor(s.section) === activeSection),
-    [activeSection],
-  );
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
@@ -275,7 +269,8 @@ function DisplayPage() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#fff",
         color: "#000",
         fontFamily: globalFontFamily,
@@ -284,90 +279,58 @@ function DisplayPage() {
         boxSizing: "border-box",
       }}
     >
+      <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
-          marginBottom: "1.25rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <video
-            key={activeSection}
-            src={MENU_ANIMATION_SRC}
-            autoPlay
-            muted
-            playsInline
-            loop={false}
-            controls={false}
-            preload="metadata"
-            onError={(e) => {
-              (e.currentTarget as HTMLVideoElement).style.display = "none";
-            }}
-            style={{
-              height: "1em",
-              width: "auto",
-              fontSize: "2.5rem",
-              background: "transparent",
-              display: "block",
-            }}
-          />
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "2.5rem",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "0.02em",
-              lineHeight: 1,
-            }}
-          >
-            {activeSection}
-          </h1>
-        </div>
-        <nav style={{ display: "flex", gap: "0.5rem" }}>
-          {SECTION_NAMES.map((name) => {
-            const active = name === activeSection;
-            return (
-              <button
-                key={name}
-                type="button"
-                onClick={() => setActiveSection(name)}
-                style={{
-                  background: active ? "#000" : "transparent",
-                  color: active ? "#fff" : "#000",
-                  border: "1px solid #000",
-                  padding: "0.35rem 0.8rem",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                {name}
-              </button>
-            );
-          })}
-        </nav>
-      </header>
+      {menus.map((menu) => (
+        <div key={menu.section} style={{ marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
+            <video
+              key={menu.section}
+              src={MENU_ANIMATION_SRC}
+              autoPlay
+              muted
+              playsInline
+              loop={false}
+              controls={false}
+              preload="metadata"
+              onError={(e) => {
+                (e.currentTarget as HTMLVideoElement).style.display = "none";
+              }}
+              style={{
+                height: "1em",
+                width: "auto",
+                fontSize: "2.5rem",
+                background: "transparent",
+                display: "block",
+              }}
+            />
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "2.5rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.02em",
+                lineHeight: 1,
+              }}
+            >
+              {menu.section}
+            </h1>
+          </div>
 
-      <div className="menu-flow">
-        {visibleSections.map((sec, si) => (
-          <section key={`${activeSection}-${si}`}>
-            <h2 className="menu-section-title">{sec.section}</h2>
-            {sec.items.map((item, ii) => (
-              <div key={ii}>{renderItem(item)}</div>
+          <div className="menu-flow">
+            {menu.subsections.map((sub, si) => (
+              <section key={si}>
+                <h2 className="menu-section-title">{sub.subsection}</h2>
+                {sub.items.map((item, ii) => (
+                  <div key={ii}>{renderItem(item)}</div>
+                ))}
+              </section>
             ))}
-          </section>
-        ))}
-      </div>
-
+          </div>
+        </div>
+      ))}
 
       {debug && (
         <div
@@ -384,7 +347,7 @@ function DisplayPage() {
             fontFamily: "monospace",
           }}
         >
-          {menu.length} sections
+          {menus.length} sections
         </div>
       )}
 
