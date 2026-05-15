@@ -93,7 +93,25 @@ function StyleEditor({
         return (
           <div key={f.field} className="space-y-1">
             <Label className="text-xs">{f.label}</Label>
-            {f.type === "select" ? (
+            {f.field === "fontFamily" ? (
+              <select
+                className="w-full h-9 rounded-md border bg-background px-2 text-sm"
+                value={current === undefined ? "" : String(current)}
+                onChange={(e) => update(f.field, e.target.value)}
+                style={{ fontFamily: current ? String(current) : undefined }}
+              >
+                <option value="">— inherit —</option>
+                {FONT_OPTIONS.map((opt) => (
+                  <option
+                    key={opt.value}
+                    value={opt.value}
+                    style={{ fontFamily: opt.value }}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : f.type === "select" ? (
               <select
                 className="w-full h-9 rounded-md border bg-background px-2 text-sm"
                 value={current === undefined ? "" : String(current)}
