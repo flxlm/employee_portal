@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,11 +146,13 @@ function MenuToggles({
 function RowSettingsMenu({
   hidden,
   onToggleHidden,
+  onDuplicate,
   onDelete,
   size = "md",
 }: {
   hidden: boolean;
   onToggleHidden: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   size?: "sm" | "md";
 }) {
@@ -170,6 +172,9 @@ function RowSettingsMenu({
           ) : (
             <><EyeOff className="h-4 w-4" /> Hide on live menu</>
           )}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onDuplicate(); }}>
+          <Copy className="h-4 w-4" /> Duplicate
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
