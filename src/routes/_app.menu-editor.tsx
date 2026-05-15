@@ -1057,10 +1057,16 @@ function MenuEditorPage() {
                           <RowSettingsMenu
                             size="sm"
                             hidden={item.is_hidden}
+                            soldOut={isSoldOutToday(item.sold_out_date)}
                             onToggleHidden={() => {
                               const next = !item.is_hidden;
                               patchItem(sec.id, sub.id, item.id, { is_hidden: next });
                               queueEdit("menu_items", item.id, item.version, { is_hidden: next });
+                            }}
+                            onToggleSoldOut={() => {
+                              const next = isSoldOutToday(item.sold_out_date) ? null : todayISO();
+                              patchItem(sec.id, sub.id, item.id, { sold_out_date: next });
+                              queueEdit("menu_items", item.id, item.version, { sold_out_date: next });
                             }}
                             onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}
