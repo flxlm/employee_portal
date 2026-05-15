@@ -57,13 +57,19 @@ function DisplayPage() {
   const { token } = Route.useParams();
   const { menu: menuFilter } = Route.useSearch();
   const fetchMenu = useServerFn(getDisplayMenu);
+  const fetchFormatting = useServerFn(getMenuFormatting);
   const [menu, setMenu] = useState<DisplayMenu | null>(null);
+  const [formatting, setFormatting] = useState<MenuFormatting>({});
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
     try {
-      const res = await fetchMenu({ data: { token } });
-      setMenu(res);
+      const [m, f] = await Promise.all([
+        fetchMenu({ data: { token } }),
+        fetchFormatting({}).catch(() => ({})),
+      ]);
+      setMenu(m);
+      setFormatting(f || {});
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load menu");
@@ -86,13 +92,40 @@ function DisplayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const styleFor = useMemo(() => {
+    return (key: FormattingKey, extra?: React.CSSProperties): React.CSSProperties => {
+      const merged: TextStyle = {
+        ...DEFAULT_FORMATTING.global,
+        ...DEFAULT_FORMATTING[key],
+        ...formatting.global,
+        ...formatting[key],
+      };
+      return {
+        fontFamily: merged.fontFamily,
+        fontSize: merged.fontSize,
+        fontWeight: merged.fontWeight as React.CSSProperties["fontWeight"],
+        letterSpacing: merged.letterSpacing,
+        lineHeight: merged.lineHeight as React.CSSProperties["lineHeight"],
+        textTransform: merged.textTransform,
+        color: merged.color,
+        fontStyle: merged.fontStyle,
+        ...extra,
+      };
+    };
+  }, [formatting]);
+
+  const globalMerged: TextStyle = {
+    ...DEFAULT_FORMATTING.global,
+    ...formatting.global,
+  };
+
   const baseShell: React.CSSProperties = {
     minHeight: "100vh",
     background: "#fff",
-    color: "#000",
-    fontFamily: FONT_STACK,
-    textTransform: "uppercase",
-    fontWeight: 500,
+    color: globalMerged.color,
+    fontFamily: globalMerged.fontFamily,
+    textTransform: globalMerged.textTransform,
+    fontWeight: globalMerged.fontWeight as React.CSSProperties["fontWeight"],
   };
 
   const filteredSections = useMemo(() => {
