@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,11 +146,13 @@ function MenuToggles({
 function RowSettingsMenu({
   hidden,
   onToggleHidden,
+  onDuplicate,
   onDelete,
   size = "md",
 }: {
   hidden: boolean;
   onToggleHidden: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   size?: "sm" | "md";
 }) {
@@ -170,6 +172,9 @@ function RowSettingsMenu({
           ) : (
             <><EyeOff className="h-4 w-4" /> Hide on live menu</>
           )}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onDuplicate(); }}>
+          <Copy className="h-4 w-4" /> Duplicate
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -387,9 +392,189 @@ function MenuEditorPage() {
     triggerRefresh();
   };
 
+  const duplicateSection = async (sectionId: string) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    if (!sec) return;
+    try {
+      const { row: newSecRow } = await insert({
+        data: {
+          table: "menu_sections" as never,
+          values: {
+            name: sec.name,
+            description: sec.description,
+            is_hidden: sec.is_hidden,
+            visible_menus: sec.visible_menus,
+            display_order: sections.length + 1,
+          } as never,
+        },
+      });
+      const newSecId = (newSecRow as { id: string }).id;
+      for (const sub of sec.subsections) {
+        const { row: newSubRow } = await insert({
+          data: {
+            table: "menu_subsections" as never,
+            values: {
+              section_id: newSecId,
+              name: sub.name,
+              description: sub.description,
+              is_hidden: sub.is_hidden,
+              visible_menus: sub.visible_menus,
+              display_order: sub.display_order,
+            } as never,
+          },
+        });
+        const newSubId = (newSubRow as { id: string }).id;
+        for (const item of sub.items) {
+          const { row: newItemRow } = await insert({
+            data: {
+              table: "menu_items" as never,
+              values: {
+                subsection_id: newSubId,
+                title: item.title,
+                description: item.description,
+                base_price_cents: item.base_price_cents,
+                is_hidden: item.is_hidden,
+                display_order: item.display_order,
+              } as never,
+            },
+          });
+          const newItemId = (newItemRow as { id: string }).id;
+          for (const m of item.modifications) {
+            await insert({
+              data: {
+                table: "item_modifications" as never,
+                values: {
+                  item_id: newItemId,
+                  modification_name: m.modification_name,
+                  price_modifier_cents: m.price_modifier_cents,
+                  display_order: m.display_order,
+                } as never,
+              },
+            });
+          }
+        }
+      }
+      const ids = sections.map((s) => s.id);
+      const fromIdx = ids.indexOf(sectionId);
+      const newOrder = [...ids];
+      newOrder.splice(fromIdx + 1, 0, newSecId);
+      await reorder({ data: { table: "menu_sections" as never, orderedIds: newOrder } });
+      await reload();
+      triggerRefresh();
+      toast.success("Section duplicated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to duplicate section");
+    }
+  };
+
+  const duplicateSubsection = async (sectionId: string, subId: string) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    const sub = sec?.subsections.find((ss) => ss.id === subId);
+    if (!sec || !sub) return;
+    try {
+      const { row: newSubRow } = await insert({
+        data: {
+          table: "menu_subsections" as never,
+          values: {
+            section_id: sectionId,
+            name: sub.name,
+            description: sub.description,
+            is_hidden: sub.is_hidden,
+            visible_menus: sub.visible_menus,
+            display_order: sec.subsections.length + 1,
+          } as never,
+        },
+      });
+      const newSubId = (newSubRow as { id: string }).id;
+      for (const item of sub.items) {
+        const { row: newItemRow } = await insert({
+          data: {
+            table: "menu_items" as never,
+            values: {
+              subsection_id: newSubId,
+              title: item.title,
+              description: item.description,
+              base_price_cents: item.base_price_cents,
+              is_hidden: item.is_hidden,
+              display_order: item.display_order,
+            } as never,
+          },
+        });
+        const newItemId = (newItemRow as { id: string }).id;
+        for (const m of item.modifications) {
+          await insert({
+            data: {
+              table: "item_modifications" as never,
+              values: {
+                item_id: newItemId,
+                modification_name: m.modification_name,
+                price_modifier_cents: m.price_modifier_cents,
+                display_order: m.display_order,
+              } as never,
+            },
+          });
+        }
+      }
+      const ids = sec.subsections.map((s) => s.id);
+      const fromIdx = ids.indexOf(subId);
+      const newOrder = [...ids];
+      newOrder.splice(fromIdx + 1, 0, newSubId);
+      await reorder({ data: { table: "menu_subsections" as never, orderedIds: newOrder } });
+      await reload();
+      triggerRefresh();
+      toast.success("Subsection duplicated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to duplicate subsection");
+    }
+  };
+
+  const duplicateItem = async (sectionId: string, subId: string, itemId: string) => {
+    const sub = sections.find((s) => s.id === sectionId)?.subsections.find((ss) => ss.id === subId);
+    const item = sub?.items.find((i) => i.id === itemId);
+    if (!sub || !item) return;
+    try {
+      const { row: newItemRow } = await insert({
+        data: {
+          table: "menu_items" as never,
+          values: {
+            subsection_id: subId,
+            title: item.title,
+            description: item.description,
+            base_price_cents: item.base_price_cents,
+            is_hidden: item.is_hidden,
+            display_order: sub.items.length + 1,
+          } as never,
+        },
+      });
+      const newItemId = (newItemRow as { id: string }).id;
+      for (const m of item.modifications) {
+        await insert({
+          data: {
+            table: "item_modifications" as never,
+            values: {
+              item_id: newItemId,
+              modification_name: m.modification_name,
+              price_modifier_cents: m.price_modifier_cents,
+              display_order: m.display_order,
+            } as never,
+          },
+        });
+      }
+      const ids = sub.items.map((i) => i.id);
+      const fromIdx = ids.indexOf(itemId);
+      const newOrder = [...ids];
+      newOrder.splice(fromIdx + 1, 0, newItemId);
+      await reorder({ data: { table: "menu_items" as never, orderedIds: newOrder } });
+      await reload();
+      triggerRefresh();
+      toast.success("Item duplicated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to duplicate item");
+    }
+  };
+
   const removeRow = async (table: string, id: string) => {
     try {
-      await del({ data: { table: table as never, id } });
       await reload();
       triggerRefresh();
       const label =
@@ -662,6 +847,7 @@ function MenuEditorPage() {
                     patchSection(sec.id, { is_hidden: next });
                     queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next });
                   }}
+                  onDuplicate={() => duplicateSection(sec.id)}
                   onDelete={() => removeRow("menu_sections", sec.id)}
                 />
                 <Button
@@ -731,6 +917,7 @@ function MenuEditorPage() {
                         patchSubsection(sec.id, sub.id, { is_hidden: next });
                         queueEdit("menu_subsections", sub.id, sub.version, { is_hidden: next });
                       }}
+                      onDuplicate={() => duplicateSubsection(sec.id, sub.id)}
                       onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
                     />
                     <Button
@@ -806,6 +993,7 @@ function MenuEditorPage() {
                               patchItem(sec.id, sub.id, item.id, { is_hidden: next });
                               queueEdit("menu_items", item.id, item.version, { is_hidden: next });
                             }}
+                            onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}
                           />
                         </div>
