@@ -14,6 +14,11 @@ export const FONT_OPTIONS: FontOption[] = [
     value:
       '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
   },
+  { label: "PP Neue Montreal Mono Light", value: '"PP Neue Montreal Mono Light", ui-monospace, monospace' },
+  { label: "PP Neue Montreal Mono Book", value: '"PP Neue Montreal Mono Book", ui-monospace, monospace' },
+  { label: "PP Neue Montreal Mono Regular", value: '"PP Neue Montreal Mono Regular", ui-monospace, monospace' },
+  { label: "PP Neue Montreal Mono Medium", value: '"PP Neue Montreal Mono Medium", ui-monospace, monospace' },
+  { label: "PP Neue Montreal Mono Bold", value: '"PP Neue Montreal Mono Bold", ui-monospace, monospace' },
   { label: "System sans-serif", value: "system-ui, -apple-system, sans-serif" },
   { label: "System serif", value: 'Georgia, "Times New Roman", serif' },
   { label: "System monospace", value: "ui-monospace, SFMono-Regular, Menlo, monospace" },
