@@ -389,11 +389,11 @@ function MenuEditorPage() {
               {sec.subsections.map((sub, ssIdx) => (
                 <div key={sub.id} className="rounded-md border p-3 space-y-3">
                   <div className="flex items-start gap-2">
-                    <div className="flex flex-col">
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)}>
+                    <div className="flex flex-col rounded-md border bg-background shrink-0">
+                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
                         <ChevronUp className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1)}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={ssIdx === sec.subsections.length - 1} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1)} aria-label="Move subsection down">
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </div>
