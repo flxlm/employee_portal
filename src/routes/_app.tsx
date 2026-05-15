@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, Zap, ChevronDown, BookOpen } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, Zap, ChevronDown, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
@@ -19,6 +19,15 @@ function AppLayout() {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("sidebar:collapsed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sidebar:collapsed", collapsed ? "1" : "0");
+    }
+  }, [collapsed]);
 
   useEffect(() => {
     if (!user) return;
@@ -73,13 +82,20 @@ function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex-col">
+      <aside
+        className={cn(
+          "hidden md:flex md:sticky md:top-0 md:h-screen border-r border-border bg-card flex-col transition-[width] duration-200",
+          collapsed ? "md:w-14" : "md:w-64"
+        )}
+      >
         <NavContent
           nav={nav}
           location={location}
           email={user?.email}
           onSignOut={handleSignOut}
           onNavigate={() => {}}
+          collapsed={collapsed}
+          onToggleCollapsed={() => setCollapsed((c) => !c)}
         />
       </aside>
 
@@ -100,6 +116,7 @@ function AppLayout() {
             email={user?.email}
             onSignOut={handleSignOut}
             onNavigate={() => setOpen(false)}
+            collapsed={false}
           />
         </SheetContent>
       </Sheet>
@@ -123,12 +140,16 @@ function NavContent({
   email,
   onSignOut,
   onNavigate,
+  collapsed = false,
+  onToggleCollapsed,
 }: {
   nav: NavItem[];
   location: ReturnType<typeof useLocation>;
   email?: string;
   onSignOut: () => void;
   onNavigate: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }) {
   const currentStatus = new URLSearchParams(location.search).get("status");
   const isChildActive = (c: NavChild) =>
@@ -145,17 +166,59 @@ function NavContent({
 
   return (
     <>
-      <div className="px-6 py-5 border-b border-border">
-        <img src={logo} alt="Savsav" className="h-8 w-auto" />
-        <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
+      <div
+        className={cn(
+          "border-b border-border flex items-center",
+          collapsed ? "px-2 py-3 justify-center" : "px-6 py-5 justify-between"
+        )}
+      >
+        {!collapsed && (
+          <div>
+            <img src={logo} alt="Savsav" className="h-8 w-auto" />
+            <p className="text-xs text-muted-foreground mt-2">Employee Portal</p>
+          </div>
+        )}
+        {onToggleCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapsed}
+            className="h-8 w-8"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className={cn("flex-1 space-y-1 overflow-y-auto", collapsed ? "p-2" : "p-3")}>
         {nav.map((item) => {
           const Icon = item.icon;
 
           if (item.children) {
             const groupOpen = openGroups[item.label] ?? false;
             const groupActive = item.children.some(isChildActive);
+
+            if (collapsed) {
+              // In collapsed mode, navigate to the first child instead of expanding
+              const first = item.children[0];
+              return (
+                <Link
+                  key={item.label}
+                  to={first.to}
+                  search={first.search ?? {}}
+                  onClick={onNavigate}
+                  title={item.label}
+                  className={cn(
+                    "flex items-center justify-center rounded-md p-2 text-sm transition-colors",
+                    groupActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </Link>
+              );
+            }
+
             return (
               <div key={item.label}>
                 <button
@@ -213,21 +276,33 @@ function NavContent({
               to={item.to}
               search={item.search ?? {}}
               onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center rounded-md text-sm transition-colors",
+                collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
                 active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
               )}
             >
               <Icon className="h-4 w-4" />
-              {item.label}
+              {!collapsed && item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-3 border-t border-border">
-        <p className="px-3 py-1 text-xs text-muted-foreground truncate">{email}</p>
-        <Button variant="ghost" size="sm" onClick={onSignOut} className="w-full justify-start">
-          <LogOut className="h-4 w-4 mr-2" /> Sign out
+      <div className={cn("border-t border-border", collapsed ? "p-2" : "p-3")}>
+        {!collapsed && (
+          <p className="px-3 py-1 text-xs text-muted-foreground truncate">{email}</p>
+        )}
+        <Button
+          variant="ghost"
+          size={collapsed ? "icon" : "sm"}
+          onClick={onSignOut}
+          className={cn(collapsed ? "w-full" : "w-full justify-start")}
+          title={collapsed ? "Sign out" : undefined}
+          aria-label="Sign out"
+        >
+          <LogOut className={cn("h-4 w-4", !collapsed && "mr-2")} />
+          {!collapsed && "Sign out"}
         </Button>
       </div>
     </>
