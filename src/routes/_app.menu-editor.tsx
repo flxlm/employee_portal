@@ -94,9 +94,17 @@ function MenuEditorPage() {
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
   const toggleCollapsed = (id: string) =>
     setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleCollapsedSub = (id: string) =>
+    setCollapsedSubs((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -426,8 +434,18 @@ function MenuEditorPage() {
                     <Button size="icon" variant="ghost" onClick={() => removeRow("menu_subsections", sub.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => toggleCollapsedSub(sub.id)}
+                      aria-label={collapsedSubs.has(sub.id) ? "Expand subsection" : "Collapse subsection"}
+                    >
+                      {collapsedSubs.has(sub.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
                   </div>
 
+                  {!collapsedSubs.has(sub.id) && (
                   <div className="space-y-2 pl-8">
                     {sub.items.map((item, iIdx) => (
                       <div key={item.id} className="rounded border bg-muted/30 p-2 space-y-2">
@@ -529,6 +547,7 @@ function MenuEditorPage() {
                       <Plus className="h-3 w-3" /> Add item
                     </Button>
                   </div>
+                  )}
                 </div>
               ))}
               <Button size="sm" variant="outline" onClick={() => addSubsection(sec.id)}>
