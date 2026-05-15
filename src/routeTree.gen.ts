@@ -17,6 +17,7 @@ import { Route as DisplayTokenRouteImport } from './routes/display.$token'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
+import { Route as AppMenuFormattingRouteImport } from './routes/_app.menu-formatting'
 import { Route as AppMenuEditorRouteImport } from './routes/_app.menu-editor'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
@@ -63,6 +64,11 @@ const AppRecipesRoute = AppRecipesRouteImport.update({
 const AppOpenCloseRoute = AppOpenCloseRouteImport.update({
   id: '/open-close',
   path: '/open-close',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMenuFormattingRoute = AppMenuFormattingRouteImport.update({
+  id: '/menu-formatting',
+  path: '/menu-formatting',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMenuEditorRoute = AppMenuEditorRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/menu-editor': typeof AppMenuEditorRoute
+  '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/menu-editor': typeof AppMenuEditorRoute
+  '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/menu-editor': typeof AppMenuEditorRoute
+  '/_app/menu-formatting': typeof AppMenuFormattingRoute
   '/_app/open-close': typeof AppOpenCloseRoute
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/functions'
     | '/home'
     | '/menu-editor'
+    | '/menu-formatting'
     | '/open-close'
     | '/recipes'
     | '/wines'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/functions'
     | '/home'
     | '/menu-editor'
+    | '/menu-formatting'
     | '/open-close'
     | '/recipes'
     | '/wines'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/_app/functions'
     | '/_app/home'
     | '/_app/menu-editor'
+    | '/_app/menu-formatting'
     | '/_app/open-close'
     | '/_app/recipes'
     | '/_app/wines'
@@ -284,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpenCloseRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/menu-formatting': {
+      id: '/_app/menu-formatting'
+      path: '/menu-formatting'
+      fullPath: '/menu-formatting'
+      preLoaderRoute: typeof AppMenuFormattingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/menu-editor': {
       id: '/_app/menu-editor'
       path: '/menu-editor'
@@ -349,6 +368,7 @@ interface AppRouteChildren {
   AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppMenuEditorRoute: typeof AppMenuEditorRoute
+  AppMenuFormattingRoute: typeof AppMenuFormattingRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
   AppRecipesRoute: typeof AppRecipesRoute
   AppWinesRoute: typeof AppWinesRoute
@@ -360,6 +380,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
   AppMenuEditorRoute: AppMenuEditorRoute,
+  AppMenuFormattingRoute: AppMenuFormattingRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
   AppRecipesRoute: AppRecipesRoute,
   AppWinesRoute: AppWinesRoute,

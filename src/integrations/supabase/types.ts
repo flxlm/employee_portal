@@ -182,6 +182,24 @@ export type Database = {
           },
         ]
       }
+      menu_formatting: {
+        Row: {
+          id: string
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           base_price_cents: number
