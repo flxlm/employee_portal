@@ -238,15 +238,11 @@ const COLUMN_CSS = `
   page-break-before: avoid;
 }
 .trailing-block {
-  position: absolute;
-  left: var(--trailing-left, 0px);
-  bottom: 0;
-  top: var(--trailing-top, 55%);
-  z-index: 3;
   display: flex;
   flex-direction: column;
-  width: var(--trailing-width, 100%);
-  height: auto;
+  width: 100%;
+  height: var(--trailing-height, 35vh);
+  min-height: clamp(8rem, 28vh, 18rem);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   gap: 0.5rem;
