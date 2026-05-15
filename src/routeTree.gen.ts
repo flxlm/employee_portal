@@ -13,9 +13,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DisplayTokenRouteImport } from './routes/display.$token'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
+import { Route as AppMenuEditorRouteImport } from './routes/_app.menu-editor'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
@@ -43,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DisplayTokenRoute = DisplayTokenRouteImport.update({
+  id: '/display/$token',
+  path: '/display/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppWinesRoute = AppWinesRouteImport.update({
   id: '/wines',
   path: '/wines',
@@ -56,6 +63,11 @@ const AppRecipesRoute = AppRecipesRouteImport.update({
 const AppOpenCloseRoute = AppOpenCloseRouteImport.update({
   id: '/open-close',
   path: '/open-close',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMenuEditorRoute = AppMenuEditorRouteImport.update({
+  id: '/menu-editor',
+  path: '/menu-editor',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
@@ -103,9 +115,11 @@ export interface FileRoutesByFullPath {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/menu-editor': typeof AppMenuEditorRoute
   '/open-close': typeof AppOpenCloseRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
+  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -118,9 +132,11 @@ export interface FileRoutesByTo {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/menu-editor': typeof AppMenuEditorRoute
   '/open-close': typeof AppOpenCloseRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
+  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -135,9 +151,11 @@ export interface FileRoutesById {
   '/_app/events': typeof AppEventsRoute
   '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/menu-editor': typeof AppMenuEditorRoute
   '/_app/open-close': typeof AppOpenCloseRoute
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
+  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
@@ -152,9 +170,11 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/menu-editor'
     | '/open-close'
     | '/recipes'
     | '/wines'
+    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
@@ -167,9 +187,11 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/menu-editor'
     | '/open-close'
     | '/recipes'
     | '/wines'
+    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
@@ -183,9 +205,11 @@ export interface FileRouteTypes {
     | '/_app/events'
     | '/_app/functions'
     | '/_app/home'
+    | '/_app/menu-editor'
     | '/_app/open-close'
     | '/_app/recipes'
     | '/_app/wines'
+    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
@@ -196,6 +220,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  DisplayTokenRoute: typeof DisplayTokenRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
   ApiPublicMenuRefreshRoute: typeof ApiPublicMenuRefreshRoute
   ApiPublicWebhookRoute: typeof ApiPublicWebhookRoute
@@ -231,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/display/$token': {
+      id: '/display/$token'
+      path: '/display/$token'
+      fullPath: '/display/$token'
+      preLoaderRoute: typeof DisplayTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/wines': {
       id: '/_app/wines'
       path: '/wines'
@@ -250,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/open-close'
       fullPath: '/open-close'
       preLoaderRoute: typeof AppOpenCloseRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/menu-editor': {
+      id: '/_app/menu-editor'
+      path: '/menu-editor'
+      fullPath: '/menu-editor'
+      preLoaderRoute: typeof AppMenuEditorRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/home': {
@@ -309,6 +348,7 @@ interface AppRouteChildren {
   AppEventsRoute: typeof AppEventsRoute
   AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppMenuEditorRoute: typeof AppMenuEditorRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
   AppRecipesRoute: typeof AppRecipesRoute
   AppWinesRoute: typeof AppWinesRoute
@@ -319,6 +359,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventsRoute: AppEventsRoute,
   AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
+  AppMenuEditorRoute: AppMenuEditorRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
   AppRecipesRoute: AppRecipesRoute,
   AppWinesRoute: AppWinesRoute,
@@ -331,6 +372,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  DisplayTokenRoute: DisplayTokenRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
   ApiPublicMenuRefreshRoute: ApiPublicMenuRefreshRoute,
   ApiPublicWebhookRoute: ApiPublicWebhookRoute,
@@ -338,3 +380,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
