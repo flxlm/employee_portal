@@ -650,14 +650,26 @@ function MenuEditorPage() {
                             </Button>
                           </div>
                           <div className="flex-1 grid gap-2 sm:grid-cols-[1fr_120px]">
-                            <Input
-                              value={item.title}
-                              onChange={(e) => {
-                                patchItem(sec.id, sub.id, item.id, { title: e.target.value });
-                                queueEdit("menu_items", item.id, item.version, { title: e.target.value });
-                              }}
-                              placeholder="Item title"
-                            />
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={item.title}
+                                onChange={(e) => {
+                                  patchItem(sec.id, sub.id, item.id, { title: e.target.value });
+                                  queueEdit("menu_items", item.id, item.version, { title: e.target.value });
+                                }}
+                                placeholder="Item title"
+                              />
+                              {!hasDesc(item.id, item.description) && (
+                                <button
+                                  type="button"
+                                  onClick={() => revealDesc(item.id)}
+                                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                                  aria-label="Add description"
+                                >
+                                  <Plus className="h-3 w-3" /> description
+                                </button>
+                              )}
+                            </div>
                             <Input
                               type="number"
                               min={0}
@@ -670,16 +682,18 @@ function MenuEditorPage() {
                                 queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
                               }}
                             />
-                            <Textarea
-                              className="sm:col-span-2"
-                              rows={1}
-                              value={item.description}
-                              onChange={(e) => {
-                                patchItem(sec.id, sub.id, item.id, { description: e.target.value });
-                                queueEdit("menu_items", item.id, item.version, { description: e.target.value });
-                              }}
-                              placeholder="Item description"
-                            />
+                            {hasDesc(item.id, item.description) && (
+                              <Textarea
+                                className="sm:col-span-2"
+                                rows={1}
+                                value={item.description}
+                                onChange={(e) => {
+                                  patchItem(sec.id, sub.id, item.id, { description: e.target.value });
+                                  queueEdit("menu_items", item.id, item.version, { description: e.target.value });
+                                }}
+                                placeholder="Item description"
+                              />
+                            )}
                           </div>
                           <Button size="icon" variant="ghost" onClick={() => removeRow("menu_items", item.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
