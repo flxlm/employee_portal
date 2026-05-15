@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMenuFormatting,
@@ -183,6 +183,7 @@ const COLUMN_CSS = `
   column-fill: auto;
   height: calc(100vh - 3rem);
   overflow: hidden;
+  position: relative;
 }
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
@@ -240,18 +241,19 @@ const COLUMN_CSS = `
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(100vh - 3rem);
+  height: var(--trailing-height, 35vh);
+  min-height: clamp(8rem, 28vh, 18rem);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-top: 0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0;
   box-sizing: border-box;
 }
 .trailing-asterisk {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   width: 100%;
-  min-height: 8vh;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,7 +272,7 @@ const COLUMN_CSS = `
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 12vh;
+  height: clamp(3.5rem, 11vh, 6.5rem);
   padding-bottom: 0;
   overflow: visible;
 }
@@ -372,12 +374,34 @@ const COLUMN_CSS = `
 function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
+  const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
   }, [fetchFormatting]);
+
+  useEffect(() => {
+    const updateTrailingColumn = () => {
+      const flow = flowRef.current;
+      if (!flow) return;
+
+      const flowRect = flow.getBoundingClientRect();
+      const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
+      const lastSection = sections.at(-1);
+      const lastSectionRect = lastSection?.getBoundingClientRect();
+      const remainingHeight = lastSectionRect
+        ? Math.max(128, flowRect.bottom - lastSectionRect.bottom - 16)
+        : flowRect.height * 0.35;
+
+      flow.style.setProperty("--trailing-height", `${remainingHeight}px`);
+    };
+
+    updateTrailingColumn();
+    window.addEventListener("resize", updateTrailingColumn);
+    return () => window.removeEventListener("resize", updateTrailingColumn);
+  }, [formatting]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
@@ -452,7 +476,7 @@ function DisplayPage() {
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <div className="menu-flow">
+      <div className="menu-flow" ref={flowRef}>
         {menus.map((menu) => (
           <Fragment key={menu.section}>
             <div className="menu-section-block" aria-label={menu.section}>
