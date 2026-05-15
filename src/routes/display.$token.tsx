@@ -28,6 +28,21 @@ export const Route = createFileRoute("/display/$token")({
 
 const NUM_COLUMNS = 4;
 
+const SECTION_NAMES = ["LUNCH", "DRINKS"] as const;
+type SectionName = (typeof SECTION_NAMES)[number];
+
+const DRINK_SUBSECTIONS = new Set([
+  "BIÈRES EN FÛT",
+  "COCKTAILS",
+  "VINS AU VERRE",
+  "CLASSIQUES",
+  "SPÉCIALITÉS",
+]);
+
+function sectionFor(subsection: string): SectionName {
+  return DRINK_SUBSECTIONS.has(subsection) ? "DRINKS" : "LUNCH";
+}
+
 // ----------------------------------------------------------------------------
 // Single source of truth for menu content
 // ----------------------------------------------------------------------------
