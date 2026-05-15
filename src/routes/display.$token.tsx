@@ -393,6 +393,29 @@ function DisplayPage() {
   );
 
   const SOLD_OUT_COLOR = "#e5e5e5";
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const eventName = "fullscreenchange" in document ? "fullscreenchange" : "webkitfullscreenchange";
+    const onChange = () => {
+      setIsFullscreen(!!document.fullscreenElement || !!(document as any).webkitFullscreenElement);
+    };
+    document.addEventListener(eventName, onChange);
+    return () => document.removeEventListener(eventName, onChange);
+  }, []);
+
+  const enterFullscreen = async () => {
+    const el = document.documentElement as any;
+    try {
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+      } else if (el.webkitRequestFullscreen) {
+        await el.webkitRequestFullscreen();
+      }
+    } catch {
+      // silently ignore if fullscreen is blocked or unsupported
+    }
+  };
 
   const renderItem = (item: MenuItem, soldOut: boolean) => (
     <div className="menu-item" style={{ ...(item.hidden ? { opacity: 0.35 } : {}), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
@@ -507,6 +530,28 @@ function DisplayPage() {
         >
           {menus.length} sections
         </div>
+      )}
+      {!isFullscreen && (
+        <button
+          onClick={enterFullscreen}
+          style={{
+            position: "fixed",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 100,
+            background: "#fff",
+            color: "#000",
+            border: "1px solid #000",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: "0.75rem",
+            padding: "0.5rem 1rem",
+            cursor: "pointer",
+            fontFamily: globalFontFamily,
+          }}
+        >
+          Play Fullscreen
+        </button>
       )}
     </div>
   );
