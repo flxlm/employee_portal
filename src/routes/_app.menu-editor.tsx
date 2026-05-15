@@ -922,6 +922,8 @@ function MenuEditorPage() {
                   }}
                   onDuplicate={() => duplicateSection(sec.id)}
                   onDelete={() => removeRow("menu_sections", sec.id)}
+                  onAddDescription={() => revealDesc(sec.id)}
+                  canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
                 />
                 <Button
                   size="icon"
