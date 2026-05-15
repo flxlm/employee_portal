@@ -845,7 +845,7 @@ function MenuEditorPage() {
 
       <div className="space-y-6">
         {sections.map((sec, sIdx) => (
-          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""}`}>
+          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sec.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""}`}>
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
                 <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
