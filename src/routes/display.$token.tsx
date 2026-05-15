@@ -452,6 +452,9 @@ function DisplayPage() {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
               />
+              <h2 className="section-title-text" style={styleFor("section")}>
+                {menu.section}
+              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
