@@ -425,6 +425,10 @@ function DisplayPage() {
     };
 
     fit();
+    // Re-fit once webfonts finish loading (Safari first-load: layout measured with fallback metrics)
+    if (typeof document !== "undefined" && (document as any).fonts?.ready) {
+      (document as any).fonts.ready.then(() => fit()).catch(() => {});
+    }
 
     const onResize = () => {
       if (timer) window.clearTimeout(timer);
