@@ -342,11 +342,11 @@ function MenuEditorPage() {
                 >
                   {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
-                <div className="flex flex-col">
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)}>
+                <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={sIdx === 0} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)} aria-label="Move section up">
                     <ChevronUp className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1)}>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={sIdx === sections.length - 1} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1)} aria-label="Move section down">
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
