@@ -398,9 +398,10 @@ function DisplayPage() {
         : flowRect.height * 0.65;
       const top = Math.max(0, Math.min(measuredTop, flowRect.height - 128));
 
-      flow.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
-      flow.style.setProperty("--trailing-width", `${columnWidth}px`);
-      flow.style.setProperty("--trailing-top", `${top}px`);
+      const styleTarget = flow.parentElement ?? flow;
+      styleTarget.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
+      styleTarget.style.setProperty("--trailing-width", `${columnWidth}px`);
+      styleTarget.style.setProperty("--trailing-top", `${top}px`);
     };
     const scheduleUpdate = () => {
       frameIds.forEach((id) => cancelAnimationFrame(id));
