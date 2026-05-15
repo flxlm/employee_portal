@@ -394,6 +394,57 @@ function DisplayPage() {
 
   const SOLD_OUT_COLOR = "#e5e5e5";
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [hiddenCount, setHiddenCount] = useState(0);
+
+  useEffect(() => {
+    const MIN_SCALE = 0.75;
+    const STEP = 0.02;
+    let raf: number | null = null;
+    let timer: number | null = null;
+
+    const overflows = () => document.documentElement.scrollHeight > window.innerHeight + 2;
+
+    const fit = () => {
+      document.documentElement.style.setProperty("--menu-scale", "1");
+      let scale = 1;
+      const tick = () => {
+        if (!overflows() || scale <= MIN_SCALE) {
+          const stillOverflows = overflows();
+          if (stillOverflows && scale <= MIN_SCALE + 0.0001) {
+            const overflowPx = document.documentElement.scrollHeight - window.innerHeight;
+            const est = Math.max(1, Math.ceil(overflowPx / 60));
+            setIsOverflowing(true);
+            setHiddenCount(est);
+            if (import.meta.env.DEV) {
+              console.warn("[Menu] Content overflows viewport. Scale floor reached.");
+            }
+          } else {
+            setIsOverflowing(false);
+            setHiddenCount(0);
+          }
+          return;
+        }
+        scale = Math.max(MIN_SCALE, scale - STEP);
+        document.documentElement.style.setProperty("--menu-scale", String(scale));
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+
+    fit();
+
+    const onResize = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(fit, 150);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (raf) cancelAnimationFrame(raf);
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [menus]);
 
   useEffect(() => {
     const onChange = () => {
