@@ -392,6 +392,13 @@ function MenuEditorPage() {
                         }}
                         placeholder="Subsection description"
                       />
+                      <MenuToggles
+                        value={sub.visible_menus}
+                        onChange={(next) => {
+                          patchSubsection(sec.id, sub.id, { visible_menus: next });
+                          queueEdit("menu_subsections", sub.id, sub.version, { visible_menus: next });
+                        }}
+                      />
                     </div>
                     <Button size="icon" variant="ghost" onClick={() => removeRow("menu_subsections", sub.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
