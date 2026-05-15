@@ -265,6 +265,7 @@ function MenuEditorPage() {
     const order = sections.length + 1;
     const { row } = await insert({ data: { table: "menu_sections" as never, values: { name: "New section", display_order: order } as never } });
     setSections((s) => [...s, { ...(row as unknown as MenuSection), subsections: [] }]);
+    triggerRefresh();
   };
   const addSubsection = async (sectionId: string) => {
     const sec = sections.find((s) => s.id === sectionId);
@@ -274,6 +275,7 @@ function MenuEditorPage() {
       data: { table: "menu_subsections" as never, values: { section_id: sectionId, name: "New subsection", display_order: order } as never },
     });
     patchSection(sectionId, { subsections: [...sec.subsections, { ...(row as unknown as MenuSubsection), items: [] }] });
+    triggerRefresh();
   };
   const addItem = async (sectionId: string, subId: string) => {
     const sub = sections.find((s) => s.id === sectionId)?.subsections.find((ss) => ss.id === subId);
@@ -283,6 +285,7 @@ function MenuEditorPage() {
       data: { table: "menu_items" as never, values: { subsection_id: subId, title: "New item", base_price_cents: 0, display_order: order } as never },
     });
     patchSubsection(sectionId, subId, { items: [...sub.items, { ...(row as unknown as MenuItem), modifications: [] }] });
+    triggerRefresh();
   };
   const addMod = async (sectionId: string, subId: string, itemId: string) => {
     const item = sections
@@ -295,6 +298,7 @@ function MenuEditorPage() {
       data: { table: "item_modifications" as never, values: { item_id: itemId, modification_name: "Modification", price_modifier_cents: 0, display_order: order } as never },
     });
     patchItem(sectionId, subId, itemId, { modifications: [...item.modifications, row as unknown as MenuModification] });
+    triggerRefresh();
   };
 
   const removeRow = async (table: string, id: string) => {
