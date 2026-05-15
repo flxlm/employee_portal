@@ -229,26 +229,22 @@ const COLUMN_CSS = `
   display: block;
   border: none;
 }
-.menu-flow > .trailing-block {
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
-  break-before: avoid;
-  -webkit-column-break-before: avoid;
-  page-break-before: avoid;
-}
 .trailing-block {
+  position: absolute;
+  left: var(--trailing-left, 0px);
+  top: var(--trailing-top, 65%);
+  bottom: 0;
+  z-index: 4;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: var(--trailing-height, 35vh);
-  min-height: clamp(8rem, 28vh, 18rem);
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
+  width: var(--trailing-width, 100%);
+  height: auto;
+  min-height: 0;
   gap: 0.5rem;
   margin-top: 0;
   padding-bottom: 0;
   box-sizing: border-box;
+  pointer-events: none;
 }
 .trailing-asterisk {
   flex: 1 1 0;
