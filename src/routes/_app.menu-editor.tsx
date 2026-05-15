@@ -780,15 +780,19 @@ function MenuEditorPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {[
-                { key: "all", label: "Full menu", qs: "" },
-                { key: "breakfast", label: "Breakfast", qs: "?menu=breakfast" },
-                { key: "lunch", label: "Lunch", qs: "?menu=lunch" },
-                { key: "dinner", label: "Dinner", qs: "?menu=dinner" },
-              ].map((opt) => (
+              <DropdownMenuItem asChild>
+                <a
+                  href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Full menu
+                </a>
+              </DropdownMenuItem>
+              {menus.map((opt) => (
                 <DropdownMenuItem key={opt.key} asChild>
                   <a
-                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU${opt.qs}`}
+                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=${encodeURIComponent(opt.key)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -801,9 +805,22 @@ function MenuEditorPage() {
           <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
             {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
           </Button>
-          <Button onClick={addSection} size="sm">
-            <Plus className="h-4 w-4" /> Section
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4" /> Add
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); addSection(); }}>
+                <Plus className="h-4 w-4" /> New section
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setNewMenuLabel(""); setAddMenuOpen(true); }}>
+                <Plus className="h-4 w-4" /> New menu
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
