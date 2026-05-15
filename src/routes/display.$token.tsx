@@ -177,10 +177,7 @@ function DisplayPage() {
         height: "100vh",
         overflow: "hidden",
         background: "#fff",
-        color: "#000",
-        fontFamily: FONT_STACK,
-        textTransform: "uppercase",
-        fontWeight: 500,
+        ...styleFor("global"),
         position: "relative",
         display: "grid",
         gridTemplateColumns: `repeat(${NUM_COLUMNS}, 1fr)`,
@@ -203,7 +200,7 @@ function DisplayPage() {
           {col.map((section) => (
             <section key={section.id}>
               <h2
-                style={{
+                style={styleFor("section", {
                   position: "relative",
                   aspectRatio: "1 / 1",
                   width: "75%",
@@ -211,18 +208,13 @@ function DisplayPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "1.8vw",
-                  fontWeight: 700,
-                  letterSpacing: "-0.01em",
-                  color: "#fff",
                   textAlign: "center",
-                  margin: "0 0 1vw 0",
-                  lineHeight: 1,
+                  margin: "0 auto 1vw auto",
                   padding: "0.6vw",
                   overflow: "hidden",
                   isolation: "isolate",
                   boxSizing: "border-box",
-                }}
+                })}
               >
                 <video
                   src={MENU_ANIMATION_SRC}
@@ -253,26 +245,21 @@ function DisplayPage() {
                     {si > 0 && <div style={{ height: "1vw" }} />}
                     {sub.name && (
                       <h3
-                        style={{
-                          fontSize: "1.05vw",
-                          fontWeight: 700,
+                        style={styleFor("subsection", {
                           margin: "0 0 0.6vw 0",
-                          lineHeight: 1.1,
-                        }}
+                        })}
                       >
                         {sub.name}
                       </h3>
                     )}
                     {compact ? (
                       <ul
-                        style={{
+                        style={styleFor("itemTitle", {
                           listStyle: "none",
                           padding: 0,
                           margin: 0,
-                          fontSize: "0.9vw",
                           lineHeight: 1.6,
-                          fontWeight: 500,
-                        }}
+                        })}
                       >
                         {sub.items.map((item) => (
                           <li key={item.id}>
@@ -284,38 +271,26 @@ function DisplayPage() {
                     ) : (
                       sub.items.map((item) => (
                         <div key={item.id} style={{ marginBottom: "0.8vw" }}>
-                          <div
-                            style={{
-                              fontSize: "1vw",
-                              fontWeight: 700,
-                              lineHeight: 1.2,
-                            }}
-                          >
+                          <div style={styleFor("itemTitle")}>
                             {item.title}{" "}
                             <FormattedPrice cents={item.base_price_cents} />
                           </div>
                           {item.description && (
                             <p
-                              style={{
-                                fontSize: "0.75vw",
-                                fontWeight: 400,
+                              style={styleFor("itemDescription", {
                                 margin: "0.25vw 0 0 0",
-                                lineHeight: 1.4,
-                              }}
+                              })}
                             >
                               {item.description}
                             </p>
                           )}
                           {item.modifications.length > 0 && (
                             <ul
-                              style={{
+                              style={styleFor("modification", {
                                 listStyle: "none",
                                 padding: 0,
                                 margin: "0.3vw 0 0 0",
-                                fontSize: "0.7vw",
-                                fontWeight: 400,
-                                lineHeight: 1.4,
-                              }}
+                              })}
                             >
                               {item.modifications.map((m) => (
                                 <li
@@ -357,14 +332,10 @@ function DisplayPage() {
           alignItems: "flex-end",
           gap: "0.3vw",
           lineHeight: 1,
-          color: "#000",
-          fontFamily: FONT_STACK,
         }}
       >
-        <span style={{ fontSize: "2.4vw", fontWeight: 700 }}>✱</span>
-        <span style={{ fontSize: "1.6vw", fontWeight: 700, fontStyle: "italic" }}>
-          Savsav
-        </span>
+        <span style={styleFor("brand", { fontSize: "2.4vw", fontStyle: "normal" })}>✱</span>
+        <span style={styleFor("brand")}>Savsav</span>
       </div>
     </div>
   );
