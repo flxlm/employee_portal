@@ -235,6 +235,15 @@ function MenuEditorPage() {
           ) : (
             <span className="text-xs text-muted-foreground">All changes saved</span>
           )}
+          <Button asChild size="sm" variant="outline">
+            <a
+              href="/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4" /> Live menu
+            </a>
+          </Button>
           <Button onClick={addSection} size="sm">
             <Plus className="h-4 w-4" /> Section
           </Button>
