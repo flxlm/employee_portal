@@ -30,9 +30,6 @@ export const Route = createFileRoute("/display/$token")({
   component: DisplayPage,
 });
 
-const FONT_STACK =
-  '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-
 const NUM_COLUMNS = 4;
 
 function FormattedPrice({ cents }: { cents: number }) {
