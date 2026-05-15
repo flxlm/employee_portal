@@ -232,7 +232,7 @@ const COLUMN_CSS = `
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 50vh;
+  min-height: calc(100vh - 3rem);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   gap: 1rem;
