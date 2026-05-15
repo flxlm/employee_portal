@@ -143,41 +143,6 @@ function DisplayPage() {
               gap: "1.6vw",
             }}
           >
-            {ci === 0 && (
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  aspectRatio: "1 / 1",
-                  marginBottom: "0.4vw",
-                }}
-              >
-                <Lottie
-                  animationData={menuAnimation}
-                  loop
-                  autoplay
-                  style={{ width: "100%", height: "100%" }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: "3.2vw",
-                    letterSpacing: "-0.01em",
-                    textAlign: "center",
-                    lineHeight: 1,
-                    pointerEvents: "none",
-                  }}
-                >
-                  {(menuFilter ?? "Full Menu").toUpperCase()}
-                </div>
-              </div>
-            )}
             {col.map((section) => (
               <section key={section.id}>
                 <h2
