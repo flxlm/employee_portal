@@ -413,22 +413,15 @@ function DisplayPage() {
             )
           : 0;
         const est = Math.max(1, Math.ceil(overflowPx / 60));
-            setIsOverflowing(true);
-            setHiddenCount(est);
-            if (import.meta.env.DEV) {
-              console.warn("[Menu] Content overflows viewport. Scale floor reached.");
-            }
-          } else {
-            setIsOverflowing(false);
-            setHiddenCount(0);
-          }
-          return;
+        setIsOverflowing(true);
+        setHiddenCount(est);
+        if (import.meta.env.DEV) {
+          console.warn("[Menu] Content overflows viewport. Scale floor reached.");
         }
-        scale = Math.max(MIN_SCALE, scale - STEP);
-        document.documentElement.style.setProperty("--menu-scale", String(scale));
-        raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
+      } else {
+        setIsOverflowing(false);
+        setHiddenCount(0);
+      }
     };
 
     fit();
