@@ -67,14 +67,22 @@ type Atom =
       key: string;
       sectionId: string;
       section: DisplaySection;
-      continued?: boolean;
     }
   | {
-      kind: "subsection";
+      kind: "subsection-header";
       key: string;
       sectionId: string;
-      section: DisplaySection;
+      subId: string;
       sub: DisplaySubsection;
+    }
+  | {
+      kind: "item";
+      key: string;
+      sectionId: string;
+      subId: string;
+      item: DisplaySubsection["items"][number];
+      compact: boolean;
+      isFirstInSub: boolean;
     };
 
 function DisplayPage() {
@@ -184,12 +192,30 @@ function DisplayPage() {
         section: sec,
       });
       sec.subsections.forEach((sub) => {
-        out.push({
-          kind: "subsection",
-          key: `s-${sub.id}`,
-          sectionId: sec.id,
-          section: sec,
-          sub,
+        const compact =
+          sub.items.length >= 3 &&
+          sub.items.every(
+            (it) => !it.description && it.modifications.length === 0,
+          );
+        if (sub.name) {
+          out.push({
+            kind: "subsection-header",
+            key: `sh-${sub.id}`,
+            sectionId: sec.id,
+            subId: sub.id,
+            sub,
+          });
+        }
+        sub.items.forEach((item, idx) => {
+          out.push({
+            kind: "item",
+            key: `i-${item.id}`,
+            sectionId: sec.id,
+            subId: sub.id,
+            item,
+            compact,
+            isFirstInSub: idx === 0,
+          });
         });
       });
     });
@@ -277,7 +303,6 @@ function DisplayPage() {
   // ---------- block renderers ----------
   const renderSectionHeader = (
     section: DisplaySection,
-    continued?: boolean,
     measuring?: boolean,
   ) => (
     <h2
@@ -315,84 +340,73 @@ function DisplayPage() {
           }}
         />
       )}
-      <span style={{ position: "relative" }}>
-        {continued ? `${section.name} (CONT.)` : section.name}
-      </span>
+      <span style={{ position: "relative" }}>{section.name}</span>
     </h2>
   );
 
-  const renderSubsection = (sub: DisplaySubsection, withTopGap: boolean) => {
-    const compact =
-      sub.items.length >= 3 &&
-      sub.items.every(
-        (it) => !it.description && it.modifications.length === 0,
+  const renderSubsectionHeader = (
+    sub: DisplaySubsection,
+    withTopGap: boolean,
+  ) => (
+    <div style={{ marginBottom: "0.15vw" }}>
+      {withTopGap && <div style={{ height: "0.35vw" }} />}
+      <h3 style={styleFor("subsection", { margin: "0 0 0.2vw 0" })}>
+        {sub.name}
+      </h3>
+    </div>
+  );
+
+  const renderItem = (
+    item: DisplaySubsection["items"][number],
+    compact: boolean,
+  ) => {
+    if (compact) {
+      return (
+        <div
+          style={styleFor("itemTitle", {
+            lineHeight: 1.35,
+            marginBottom: "0.05vw",
+          })}
+        >
+          {item.title} <FormattedPrice cents={item.base_price_cents} />
+        </div>
       );
+    }
     return (
-      <div style={{ marginBottom: "0.5vw" }}>
-        {withTopGap && <div style={{ height: "0.4vw" }} />}
-        {sub.name && (
-          <h3 style={styleFor("subsection", { margin: "0 0 0.25vw 0" })}>
-            {sub.name}
-          </h3>
+      <div style={{ marginBottom: "0.3vw" }}>
+        <div style={styleFor("itemTitle")}>
+          {item.title} <FormattedPrice cents={item.base_price_cents} />
+        </div>
+        {item.description && (
+          <p style={styleFor("itemDescription", { margin: "0.1vw 0 0 0" })}>
+            {item.description}
+          </p>
         )}
-        {compact ? (
+        {item.modifications.length > 0 && (
           <ul
-            style={styleFor("itemTitle", {
+            style={styleFor("modification", {
               listStyle: "none",
               padding: 0,
-              margin: 0,
-              lineHeight: 1.35,
+              margin: "0.15vw 0 0 0",
             })}
           >
-            {sub.items.map((item) => (
-              <li key={item.id}>
-                {item.title} <FormattedPrice cents={item.base_price_cents} />
+            {item.modifications.map((m) => (
+              <li
+                key={m.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.4vw",
+                }}
+              >
+                <span>+ {m.name}</span>
+                <span>
+                  {m.price_modifier_cents >= 0 ? "+" : ""}
+                  <FormattedPrice cents={m.price_modifier_cents} />
+                </span>
               </li>
             ))}
           </ul>
-        ) : (
-          sub.items.map((item) => (
-            <div key={item.id} style={{ marginBottom: "0.3vw" }}>
-              <div style={styleFor("itemTitle")}>
-                {item.title} <FormattedPrice cents={item.base_price_cents} />
-              </div>
-              {item.description && (
-                <p
-                  style={styleFor("itemDescription", {
-                    margin: "0.1vw 0 0 0",
-                  })}
-                >
-                  {item.description}
-                </p>
-              )}
-              {item.modifications.length > 0 && (
-                <ul
-                  style={styleFor("modification", {
-                    listStyle: "none",
-                    padding: 0,
-                    margin: "0.15vw 0 0 0",
-                  })}
-                >
-                  {item.modifications.map((m) => (
-                    <li
-                      key={m.id}
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: "0.4vw",
-                      }}
-                    >
-                      <span>+ {m.name}</span>
-                      <span>
-                        {m.price_modifier_cents >= 0 ? "+" : ""}
-                        <FormattedPrice cents={m.price_modifier_cents} />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))
         )}
       </div>
     );
@@ -443,31 +457,27 @@ function DisplayPage() {
           pointerEvents: "none",
         }}
       >
-        {atoms.map((atom) =>
-          atom.kind === "section-header" ? (
-            <div key={atom.key} data-measure-key={atom.key}>
-              {renderSectionHeader(atom.section, false, true)}
-            </div>
-          ) : (
-            <div key={atom.key} data-measure-key={atom.key}>
-              {renderSubsection(atom.sub, false)}
-            </div>
-          ),
-        )}
+        {atoms.map((atom) => (
+          <div key={atom.key} data-measure-key={atom.key}>
+            {atom.kind === "section-header"
+              ? renderSectionHeader(atom.section, true)
+              : atom.kind === "subsection-header"
+                ? renderSubsectionHeader(atom.sub, false)
+                : renderItem(atom.item, atom.compact)}
+          </div>
+        ))}
       </div>
 
       {(packed?.cols ?? Array.from({ length: NUM_COLUMNS }, () => ({ items: [] as Atom[] }))).map(
         (col, ci) => {
-          // Track which section we're currently inside to decide subsection top-gap
-          let currentSectionId: string | null = null;
-          let subIndexInSection = 0;
+          let currentSubId: string | null = null;
           return (
             <div
               key={ci}
               style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 height: "100%",
                 paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
                 overflow: "hidden",
@@ -475,24 +485,28 @@ function DisplayPage() {
             >
               {col.items.map((atom) => {
                 if (atom.kind === "section-header") {
-                  currentSectionId = atom.sectionId;
-                  subIndexInSection = 0;
+                  currentSubId = null;
                   return (
                     <section key={atom.key}>
-                      {renderSectionHeader(atom.section, atom.continued)}
+                      {renderSectionHeader(atom.section)}
                     </section>
                   );
                 }
-                const withTopGap =
-                  atom.sectionId === currentSectionId && subIndexInSection > 0;
-                if (atom.sectionId === currentSectionId) {
-                  subIndexInSection += 1;
-                } else {
-                  currentSectionId = atom.sectionId;
-                  subIndexInSection = 1;
+                if (atom.kind === "subsection-header") {
+                  const withTopGap = currentSubId !== null;
+                  currentSubId = atom.subId;
+                  return (
+                    <div key={atom.key}>
+                      {renderSubsectionHeader(atom.sub, withTopGap)}
+                    </div>
+                  );
+                }
+                // item
+                if (currentSubId !== atom.subId) {
+                  currentSubId = atom.subId;
                 }
                 return (
-                  <div key={atom.key}>{renderSubsection(atom.sub, withTopGap)}</div>
+                  <div key={atom.key}>{renderItem(atom.item, atom.compact)}</div>
                 );
               })}
             </div>
