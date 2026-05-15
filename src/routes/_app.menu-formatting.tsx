@@ -218,6 +218,7 @@ function StyleEditor({
 function MenuFormattingPage() {
   const fetchSettings = useServerFn(getMenuFormatting);
   const save = useServerFn(saveMenuFormatting);
+  const refreshDisplay = useServerFn(refreshDisplayMenu);
   const [settings, setSettings] = useState<MenuFormatting>({});
   const [savedSettings, setSavedSettings] = useState<MenuFormatting>({});
   const [loading, setLoading] = useState(true);
