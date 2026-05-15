@@ -207,15 +207,7 @@ function DisplayPage() {
                   );
                 return (
                   <div key={sub.id} style={{ marginBottom: "1.2vw" }}>
-                    {si > 0 && (
-                      <hr
-                        style={{
-                          border: "none",
-                          borderTop: "0.05vw solid #000",
-                          margin: "1vw 0",
-                        }}
-                      />
-                    )}
+                    {si > 0 && <div style={{ height: "1vw" }} />}
                     {sub.name && (
                       <h3
                         style={{
