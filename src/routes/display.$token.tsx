@@ -9,6 +9,7 @@ import {
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
+import savsavLogoSvg from "@/assets/logo.svg";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
 const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
@@ -222,6 +223,50 @@ const COLUMN_CSS = `
   display: block;
   border: none;
 }
+.menu-flow > .trailing-block {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+.trailing-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 50vh;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  gap: 1rem;
+}
+.trailing-asterisk {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 25vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.trailing-asterisk video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+.trailing-logo {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.trailing-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
 .menu-section-block {
   position: relative;
   width: 100%;
@@ -421,21 +466,33 @@ function DisplayPage() {
             ))}
           </Fragment>
         ))}
-        <div className="menu-footer-block">
-          <video
-            src={MENU_FOOTER_ANIMATION_SRC}
-            autoPlay
-            muted
-            playsInline
-            loop
-            controls={false}
-            preload="metadata"
-            aria-hidden="true"
-            onError={(e) => {
-              const c = (e.currentTarget as HTMLVideoElement).parentElement;
-              if (c) c.style.display = "none";
-            }}
-          />
+        <div className="trailing-block">
+          <div className="trailing-asterisk">
+            <video
+              src={MENU_FOOTER_ANIMATION_SRC}
+              autoPlay
+              muted
+              playsInline
+              loop
+              controls={false}
+              preload="metadata"
+              aria-hidden="true"
+              onError={(e) => {
+                const c = (e.currentTarget as HTMLVideoElement).parentElement;
+                if (c) c.style.display = "none";
+              }}
+            />
+          </div>
+          <div className="trailing-logo">
+            <img
+              src={savsavLogoSvg}
+              alt="SAVSAV"
+              onError={(e) => {
+                const c = (e.currentTarget as HTMLImageElement).parentElement;
+                if (c) c.style.display = "none";
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -457,21 +514,6 @@ function DisplayPage() {
           {menus.length} sections
         </div>
       )}
-
-      <div
-        style={{
-          position: "fixed",
-          bottom: "1rem",
-          right: "1.25rem",
-          display: "flex",
-          alignItems: "baseline",
-          gap: "0.4rem",
-          ...styleFor("brand"),
-        }}
-      >
-        <span style={{ lineHeight: 1 }}>✱</span>
-        <span>Savsav</span>
-      </div>
     </div>
   );
 }
