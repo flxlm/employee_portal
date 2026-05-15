@@ -776,26 +776,27 @@ function MenuEditorPage() {
           </div>
         </div>
       )}
-      <header className="mb-6 flex items-center justify-between gap-4">
-        <div>
+      <header className="mb-6 space-y-3 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:space-y-0">
+        <div className="min-w-0">
           <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
             <ArrowLeft className="h-4 w-4" /> Back to Functions
           </Link>
-          <h1 className="text-3xl md:text-4xl">Menu Editor</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl">Menu Editor</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             {sections.length} sections · {totalItems} items
+            {savingCount > 0 && (
+              <span className="ml-2 inline-flex items-center gap-1 text-xs">
+                <Save className="h-3 w-3 animate-pulse" /> Saving…
+              </span>
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {savingCount > 0 && (
-            <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              <Save className="h-3 w-3 animate-pulse" /> Saving…
-            </span>
-          )}
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">
-                <ExternalLink className="h-4 w-4" /> Live menu
+              <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
+                <ExternalLink className="h-4 w-4" />
+                <span className="hidden xs:inline sm:inline">Live menu</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -822,12 +823,12 @@ function MenuEditorPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
+          <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
             {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" className="flex-1 sm:flex-none min-w-0">
                 <Plus className="h-4 w-4" /> Add
                 <ChevronDown className="h-4 w-4" />
               </Button>
