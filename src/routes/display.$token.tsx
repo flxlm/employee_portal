@@ -457,31 +457,27 @@ function DisplayPage() {
           pointerEvents: "none",
         }}
       >
-        {atoms.map((atom) =>
-          atom.kind === "section-header" ? (
-            <div key={atom.key} data-measure-key={atom.key}>
-              {renderSectionHeader(atom.section, false, true)}
-            </div>
-          ) : (
-            <div key={atom.key} data-measure-key={atom.key}>
-              {renderSubsection(atom.sub, false)}
-            </div>
-          ),
-        )}
+        {atoms.map((atom) => (
+          <div key={atom.key} data-measure-key={atom.key}>
+            {atom.kind === "section-header"
+              ? renderSectionHeader(atom.section, true)
+              : atom.kind === "subsection-header"
+                ? renderSubsectionHeader(atom.sub, false)
+                : renderItem(atom.item, atom.compact)}
+          </div>
+        ))}
       </div>
 
       {(packed?.cols ?? Array.from({ length: NUM_COLUMNS }, () => ({ items: [] as Atom[] }))).map(
         (col, ci) => {
-          // Track which section we're currently inside to decide subsection top-gap
-          let currentSectionId: string | null = null;
-          let subIndexInSection = 0;
+          let currentSubId: string | null = null;
           return (
             <div
               key={ci}
               style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 height: "100%",
                 paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
                 overflow: "hidden",
@@ -489,24 +485,28 @@ function DisplayPage() {
             >
               {col.items.map((atom) => {
                 if (atom.kind === "section-header") {
-                  currentSectionId = atom.sectionId;
-                  subIndexInSection = 0;
+                  currentSubId = null;
                   return (
                     <section key={atom.key}>
-                      {renderSectionHeader(atom.section, atom.continued)}
+                      {renderSectionHeader(atom.section)}
                     </section>
                   );
                 }
-                const withTopGap =
-                  atom.sectionId === currentSectionId && subIndexInSection > 0;
-                if (atom.sectionId === currentSectionId) {
-                  subIndexInSection += 1;
-                } else {
-                  currentSectionId = atom.sectionId;
-                  subIndexInSection = 1;
+                if (atom.kind === "subsection-header") {
+                  const withTopGap = currentSubId !== null;
+                  currentSubId = atom.subId;
+                  return (
+                    <div key={atom.key}>
+                      {renderSubsectionHeader(atom.sub, withTopGap)}
+                    </div>
+                  );
+                }
+                // item
+                if (currentSubId !== atom.subId) {
+                  currentSubId = atom.subId;
                 }
                 return (
-                  <div key={atom.key}>{renderSubsection(atom.sub, withTopGap)}</div>
+                  <div key={atom.key}>{renderItem(atom.item, atom.compact)}</div>
                 );
               })}
             </div>
