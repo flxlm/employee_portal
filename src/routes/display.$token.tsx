@@ -182,30 +182,22 @@ const COLUMN_CSS = `
   border: none;
 }
 .trailing-block {
-  position: absolute;
-  left: var(--trailing-left, 0px);
-  top: var(--trailing-top, 65%);
-  bottom: 0;
-  z-index: 4;
+  break-inside: avoid;
   display: flex;
   flex-direction: column;
-  width: var(--trailing-width, 100%);
-  height: auto;
-  min-height: 0;
+  width: 100%;
   gap: 0.5rem;
-  margin-top: 0;
-  padding-bottom: 0;
+  margin-top: 1rem;
   box-sizing: border-box;
-  pointer-events: none;
 }
 .trailing-asterisk {
-  flex: 1 1 0;
   width: 100%;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  aspect-ratio: 1 / 1;
 }
 .trailing-asterisk video {
   width: 100%;
@@ -519,33 +511,33 @@ function DisplayPage() {
             })}
           </Fragment>
         ))}
-      </div>
-      <div className="trailing-block">
-        <div className="trailing-asterisk">
-          <video
-            src={MENU_FOOTER_ANIMATION_SRC}
-            autoPlay
-            muted
-            playsInline
-            loop
-            controls={false}
-            preload="metadata"
-            aria-hidden="true"
-            onError={(e) => {
-              const c = (e.currentTarget as HTMLVideoElement).parentElement;
-              if (c) c.style.display = "none";
-            }}
-          />
-        </div>
-        <div className="trailing-logo">
-          <img
-            src={savsavLogoSvg}
-            alt="SAVSAV"
-            onError={(e) => {
-              const c = (e.currentTarget as HTMLImageElement).parentElement;
-              if (c) c.style.display = "none";
-            }}
-          />
+        <div className="trailing-block">
+          <div className="trailing-asterisk">
+            <video
+              src={MENU_FOOTER_ANIMATION_SRC}
+              autoPlay
+              muted
+              playsInline
+              loop
+              controls={false}
+              preload="metadata"
+              aria-hidden="true"
+              onError={(e) => {
+                const c = (e.currentTarget as HTMLVideoElement).parentElement;
+                if (c) c.style.display = "none";
+              }}
+            />
+          </div>
+          <div className="trailing-logo">
+            <img
+              src={savsavLogoSvg}
+              alt="SAVSAV"
+              onError={(e) => {
+                const c = (e.currentTarget as HTMLImageElement).parentElement;
+                if (c) c.style.display = "none";
+              }}
+            />
+          </div>
         </div>
       </div>
 
