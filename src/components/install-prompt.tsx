@@ -18,7 +18,7 @@ export function InstallPrompt() {
     if (typeof window === "undefined") return;
 
     // Already dismissed this session/recently?
-    if (sessionStorage.getItem(DISMISS_KEY)) {
+    if (localStorage.getItem(DISMISS_KEY) || sessionStorage.getItem(DISMISS_KEY)) {
       setDismissed(true);
       return;
     }
@@ -71,7 +71,7 @@ export function InstallPrompt() {
   };
 
   const onDismiss = () => {
-    sessionStorage.setItem(DISMISS_KEY, "1");
+    localStorage.setItem(DISMISS_KEY, "1");
     setDismissed(true);
   };
 
