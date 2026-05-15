@@ -44,6 +44,7 @@ function FormattedPrice({ cents }: { cents: number }) {
 
 function DisplayPage() {
   const { token } = Route.useParams();
+  const { menu: menuFilter } = Route.useSearch();
   const fetchMenu = useServerFn(getDisplayMenu);
   const [menu, setMenu] = useState<DisplayMenu | null>(null);
   const [error, setError] = useState<string | null>(null);
