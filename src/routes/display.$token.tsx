@@ -300,8 +300,8 @@ function DisplayPage() {
         alignItems: "center",
         justifyContent: "center",
         textAlign: "center",
-        margin: "0 auto 1vw auto",
-        padding: "0.6vw",
+        margin: "0 auto 0.4vw auto",
+        padding: "0.3vw",
         overflow: "hidden",
         isolation: "isolate",
         boxSizing: "border-box",
@@ -338,10 +338,10 @@ function DisplayPage() {
         (it) => !it.description && it.modifications.length === 0,
       );
     return (
-      <div style={{ marginBottom: "1.2vw" }}>
-        {withTopGap && <div style={{ height: "1vw" }} />}
+      <div style={{ marginBottom: "0.5vw" }}>
+        {withTopGap && <div style={{ height: "0.4vw" }} />}
         {sub.name && (
-          <h3 style={styleFor("subsection", { margin: "0 0 0.6vw 0" })}>
+          <h3 style={styleFor("subsection", { margin: "0 0 0.25vw 0" })}>
             {sub.name}
           </h3>
         )}
@@ -351,7 +351,7 @@ function DisplayPage() {
               listStyle: "none",
               padding: 0,
               margin: 0,
-              lineHeight: 1.6,
+              lineHeight: 1.35,
             })}
           >
             {sub.items.map((item) => (
@@ -362,14 +362,14 @@ function DisplayPage() {
           </ul>
         ) : (
           sub.items.map((item) => (
-            <div key={item.id} style={{ marginBottom: "0.8vw" }}>
+            <div key={item.id} style={{ marginBottom: "0.3vw" }}>
               <div style={styleFor("itemTitle")}>
                 {item.title} <FormattedPrice cents={item.base_price_cents} />
               </div>
               {item.description && (
                 <p
                   style={styleFor("itemDescription", {
-                    margin: "0.25vw 0 0 0",
+                    margin: "0.1vw 0 0 0",
                   })}
                 >
                   {item.description}
@@ -380,7 +380,7 @@ function DisplayPage() {
                   style={styleFor("modification", {
                     listStyle: "none",
                     padding: 0,
-                    margin: "0.3vw 0 0 0",
+                    margin: "0.15vw 0 0 0",
                   })}
                 >
                   {item.modifications.map((m) => (
@@ -435,8 +435,8 @@ function DisplayPage() {
         position: "relative",
         display: "grid",
         gridTemplateColumns: `repeat(${NUM_COLUMNS}, 1fr)`,
-        padding: "2vw 1.6vw 7vw 1.6vw",
-        gap: "1.6vw",
+        padding: "0.8vw 0.8vw 3vw 0.8vw",
+        gap: "0.8vw",
         boxSizing: "border-box",
       }}
     >
@@ -479,7 +479,7 @@ function DisplayPage() {
                 flexDirection: "column",
                 justifyContent: "space-between",
                 height: "100%",
-                paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
+                paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
                 overflow: "hidden",
               }}
             >
@@ -562,8 +562,8 @@ function DisplayPage() {
       <div
         style={{
           position: "fixed",
-          bottom: "1.6vw",
-          right: "1.8vw",
+          bottom: "0.6vw",
+          right: "0.8vw",
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
