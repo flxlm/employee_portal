@@ -268,21 +268,40 @@ const COLUMN_CSS = `
   display: block;
 }
 .menu-section-block {
+  position: relative;
   width: 75%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: transparent;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 0;
   margin-right: auto;
 }
 .section-title-video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: left center;
   display: block;
   border: none;
+  z-index: 1;
+}
+.section-title-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 5rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .menu-section-title {
@@ -433,6 +452,9 @@ function DisplayPage() {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
               />
+              <h2 className="section-title-text" style={styleFor("section")}>
+                {menu.section}
+              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
