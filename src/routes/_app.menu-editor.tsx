@@ -531,15 +531,25 @@ function MenuEditorPage() {
                     placeholder="Section name"
                   />
                   {!collapsed.has(sec.id) && (
-                    <Textarea
-                      rows={1}
-                      value={sec.description}
-                      onChange={(e) => {
-                        patchSection(sec.id, { description: e.target.value });
-                        queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
-                      }}
-                      placeholder="Section description"
-                    />
+                    hasDesc(sec.id, sec.description) ? (
+                      <Textarea
+                        rows={1}
+                        value={sec.description}
+                        onChange={(e) => {
+                          patchSection(sec.id, { description: e.target.value });
+                          queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                        }}
+                        placeholder="Section description"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => revealDesc(sec.id)}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        <Plus className="h-3 w-3" /> Add description
+                      </button>
+                    )
                   )}
                   <MenuToggles
                     value={sec.visible_menus}
