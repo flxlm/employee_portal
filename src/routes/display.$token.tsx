@@ -4,7 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { supabase } from "@/integrations/supabase/client";
 
+type MenuType = "breakfast" | "lunch" | "dinner";
+const MENU_TYPES: MenuType[] = ["breakfast", "lunch", "dinner"];
+
 export const Route = createFileRoute("/display/$token")({
+  validateSearch: (s: Record<string, unknown>): { menu?: MenuType } => {
+    const m = typeof s.menu === "string" ? s.menu.toLowerCase() : "";
+    return MENU_TYPES.includes(m as MenuType) ? { menu: m as MenuType } : {};
+  },
   head: () => ({
     meta: [
       { title: "Menu Display" },
