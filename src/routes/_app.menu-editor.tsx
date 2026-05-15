@@ -55,6 +55,14 @@ type MenuOptionLite = { key: string; label: string };
 
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
 
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function isSoldOutToday(d?: string | null): boolean {
+  return !!d && d === todayISO();
+}
+
 function formatPrice(cents: number) {
   return (cents / 100).toFixed(2);
 }
