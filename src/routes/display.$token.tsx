@@ -9,6 +9,7 @@ import {
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
+import savsavLogoSvg from "@/assets/logo.svg";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
 const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
