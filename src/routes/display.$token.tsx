@@ -247,12 +247,13 @@ const COLUMN_CSS = `
   margin-top: 0.5rem;
 }
 .trailing-asterisk {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   width: 100%;
-  height: 13vh;
+  min-height: 8vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .trailing-asterisk video {
   width: 100%;
@@ -262,12 +263,12 @@ const COLUMN_CSS = `
   display: block;
 }
 .trailing-logo {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: 8vh;
+  height: 12vh;
   padding-bottom: 0;
 }
 .trailing-logo img {
