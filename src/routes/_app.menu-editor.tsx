@@ -296,6 +296,9 @@ function MenuEditorPage() {
               <ExternalLink className="h-4 w-4" /> Live menu
             </a>
           </Button>
+          <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
+            {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
+          </Button>
           <Button onClick={addSection} size="sm">
             <Plus className="h-4 w-4" /> Section
           </Button>
