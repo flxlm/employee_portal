@@ -608,6 +608,7 @@ function MenuEditorPage() {
 
   const removeRow = async (table: string, id: string) => {
     try {
+      await del({ data: { table: table as never, id } });
       await reload();
       triggerRefresh();
       const label =
