@@ -104,6 +104,9 @@ function RecipesPage() {
           <h1 className="text-3xl">Recipes</h1>
           <p className="text-muted-foreground text-sm">{filtered.length} recipes</p>
         </div>
+        <Button onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" /> Add recipe
+        </Button>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
