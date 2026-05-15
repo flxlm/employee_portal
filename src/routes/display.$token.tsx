@@ -138,6 +138,9 @@ function PriceLabel({ label }: { label: string }) {
 }
 
 const COLUMN_CSS = `
+:root { --menu-scale: 1; }
+body { font-size: calc(16px * var(--menu-scale)); }
+
 .menu-flow {
   column-count: 1;
   column-gap: 2.5rem;
@@ -394,6 +397,57 @@ function DisplayPage() {
 
   const SOLD_OUT_COLOR = "#e5e5e5";
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [hiddenCount, setHiddenCount] = useState(0);
+
+  useEffect(() => {
+    const MIN_SCALE = 0.75;
+    const STEP = 0.02;
+    let raf: number | null = null;
+    let timer: number | null = null;
+
+    const overflows = () => document.documentElement.scrollHeight > window.innerHeight + 2;
+
+    const fit = () => {
+      document.documentElement.style.setProperty("--menu-scale", "1");
+      let scale = 1;
+      const tick = () => {
+        if (!overflows() || scale <= MIN_SCALE) {
+          const stillOverflows = overflows();
+          if (stillOverflows && scale <= MIN_SCALE + 0.0001) {
+            const overflowPx = document.documentElement.scrollHeight - window.innerHeight;
+            const est = Math.max(1, Math.ceil(overflowPx / 60));
+            setIsOverflowing(true);
+            setHiddenCount(est);
+            if (import.meta.env.DEV) {
+              console.warn("[Menu] Content overflows viewport. Scale floor reached.");
+            }
+          } else {
+            setIsOverflowing(false);
+            setHiddenCount(0);
+          }
+          return;
+        }
+        scale = Math.max(MIN_SCALE, scale - STEP);
+        document.documentElement.style.setProperty("--menu-scale", String(scale));
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+
+    fit();
+
+    const onResize = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(fit, 150);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (raf) cancelAnimationFrame(raf);
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [menus]);
 
   useEffect(() => {
     const onChange = () => {
@@ -564,6 +618,27 @@ function DisplayPage() {
         >
           Play Fullscreen
         </button>
+      )}
+      {import.meta.env.DEV && isOverflowing && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            background: "#d00",
+            color: "#fff",
+            padding: "0.5rem 1rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: "0.875rem",
+            letterSpacing: "0.05em",
+            zIndex: 9999,
+            textAlign: "center",
+          }}
+        >
+          ⚠ Menu content is overflowing — {hiddenCount} item{hiddenCount === 1 ? "" : "s"} may be hidden. Remove items or increase viewport size.
+        </div>
       )}
     </div>
   );
