@@ -223,6 +223,50 @@ const COLUMN_CSS = `
   display: block;
   border: none;
 }
+.menu-flow > .trailing-block {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+.trailing-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 50vh;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  gap: 1rem;
+}
+.trailing-asterisk {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 25vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.trailing-asterisk video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+.trailing-logo {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.trailing-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
 .menu-section-block {
   position: relative;
   width: 100%;
