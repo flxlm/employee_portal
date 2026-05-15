@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import Lottie from "lottie-react";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { supabase } from "@/integrations/supabase/client";
+import menuAnimation from "@/assets/menu-animation.json";
 
 type MenuType = "breakfast" | "lunch" | "dinner";
 const MENU_TYPES: MenuType[] = ["breakfast", "lunch", "dinner"];
