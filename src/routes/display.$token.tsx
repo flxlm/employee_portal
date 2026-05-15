@@ -551,6 +551,7 @@ function DisplayPage() {
             padding: "0.5rem 1rem",
             cursor: "pointer",
             fontFamily: globalFontFamily,
+            boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
           }}
         >
           Play Fullscreen
