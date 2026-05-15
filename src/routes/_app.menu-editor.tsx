@@ -51,11 +51,7 @@ export const Route = createFileRoute("/_app/menu-editor")({
 
 
 
-const MENU_OPTIONS = [
-  { key: "breakfast", label: "Breakfast" },
-  { key: "lunch", label: "Lunch" },
-  { key: "dinner", label: "Dinner" },
-] as const;
+type MenuOptionLite = { key: string; label: string };
 
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
 
