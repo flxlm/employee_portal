@@ -41,6 +41,7 @@ import {
   type MenuItem,
   type MenuModification,
 } from "@/lib/menu.functions";
+import { refreshDisplayMenu } from "@/lib/menu-display.functions";
 
 export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
