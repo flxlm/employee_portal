@@ -712,14 +712,9 @@ function MenuEditorPage() {
                                 </button>
                               )}
                             </div>
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={formatPrice(item.base_price_cents)}
-                              onChange={(e) => {
-                                const cents = parsePrice(e.target.value);
-                                if (cents === null) return;
+                            <PriceInput
+                              cents={item.base_price_cents}
+                              onCommit={(cents) => {
                                 patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
                                 queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
                               }}
