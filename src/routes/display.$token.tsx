@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -8,6 +9,7 @@ import {
   type TextStyle,
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
+import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
@@ -15,9 +17,10 @@ const MENU_ANIMATION_SRC = "/menu-animation.webm";
 const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
 
 export const Route = createFileRoute("/display/$token")({
-  validateSearch: (s: Record<string, unknown>): { debug?: boolean } => {
+  validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
-    return debug ? { debug: true } : {};
+    const menu = isMenuFilter(s.menu) ? s.menu : undefined;
+    return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
   },
   head: () => ({
     meta: [
@@ -312,15 +315,35 @@ const COLUMN_CSS = `
 `;
 
 function DisplayPage() {
-  const { debug } = Route.useSearch();
+  const { token } = Route.useParams();
+  const { debug, menu } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
+  const fetchDisplayMenu = useServerFn(getDisplayMenu);
   const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
+  const [displayMenu, setDisplayMenu] = useState<DisplayMenu | null>(null);
+  const [refreshKey, setRefreshKey] = useState(() => Date.now());
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
+  }, []);
+
+  useEffect(() => {
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
-  }, [fetchFormatting]);
+    fetchDisplayMenu({ data: { token, refreshKey } })
+      .then(setDisplayMenu)
+      .catch((error) => console.error("[display] failed to load menu", error));
+  }, [fetchFormatting, fetchDisplayMenu, token, refreshKey]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("menu-display")
+      .on("broadcast", { event: "refresh" }, () => setRefreshKey(Date.now()))
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     let frameIds: number[] = [];
@@ -397,6 +420,8 @@ function DisplayPage() {
       formatting.global?.fontFamily ?? DEFAULT_FORMATTING.global?.fontFamily
     );
   }, [formatting]);
+
+  const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
