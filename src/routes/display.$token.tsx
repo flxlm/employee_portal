@@ -361,9 +361,11 @@ function DisplayPage() {
 
   const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
 
-  const renderItem = (item: MenuItem) => (
-    <div className="menu-item" style={item.hidden ? { opacity: 0.35 } : undefined}>
-      <div className="menu-item-row" style={styleFor("itemTitle")}>
+  const SOLD_OUT_COLOR = "#e5e5e5";
+
+  const renderItem = (item: MenuItem, soldOut: boolean) => (
+    <div className="menu-item" style={{ ...(item.hidden ? { opacity: 0.35 } : {}), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
+      <div className="menu-item-row" style={{ ...styleFor("itemTitle"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
         <span className="menu-item-name">{item.name}</span>
         <span className="menu-item-price">
           {item.priceLabel ? (
@@ -374,17 +376,17 @@ function DisplayPage() {
         </span>
       </div>
       {item.description && (
-        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+        <p className="menu-item-sub" style={{ ...styleFor("itemDescription"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           {item.description}
         </p>
       )}
       {item.subtext && (
-        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+        <p className="menu-item-sub" style={{ ...styleFor("itemDescription"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           {item.subtext}
         </p>
       )}
       {item.inlineNote && (
-        <span className="menu-item-note" style={styleFor("modification")}>
+        <span className="menu-item-note" style={{ ...styleFor("modification"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           + {item.inlineNote.replace(/^\s*\+\s*/, "").replace(/\+\s*(\d+(?:[.,]\d+)?)\s*$/, "$1").trim()}
         </span>
       )}
