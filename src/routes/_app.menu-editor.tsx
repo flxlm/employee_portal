@@ -199,12 +199,18 @@ function MenuEditorPage() {
   };
 
   const [sections, setSections] = useState<MenuSection[]>([]);
+  const [menus, setMenus] = useState<MenuOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
   const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
   const [showDesc, setShowDesc] = useState<Set<string>>(new Set());
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [newMenuLabel, setNewMenuLabel] = useState("");
+  const [addingMenu, setAddingMenu] = useState(false);
+  const fetchMenus = useServerFn(listMenus);
+  const createMenu = useServerFn(addMenu);
   const revealDesc = (id: string) => setShowDesc((p) => { const n = new Set(p); n.add(id); return n; });
   const hasDesc = (id: string, val: string | null | undefined) => (val && val.length > 0) || showDesc.has(id);
 
