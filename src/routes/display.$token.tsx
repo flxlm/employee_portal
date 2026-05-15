@@ -195,6 +195,11 @@ const COLUMN_CSS = `
   display: block;
   margin-bottom: 1rem;
 }
+.menu-flow > .menu-section-block {
+  break-after: avoid;
+  -webkit-column-break-after: avoid;
+  page-break-after: avoid;
+}
 .menu-flow > section {
   display: block;
   margin-bottom: 1rem;
