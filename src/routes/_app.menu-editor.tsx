@@ -993,6 +993,7 @@ function MenuEditorPage() {
                               patchItem(sec.id, sub.id, item.id, { is_hidden: next });
                               queueEdit("menu_items", item.id, item.version, { is_hidden: next });
                             }}
+                            onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}
                           />
                         </div>
