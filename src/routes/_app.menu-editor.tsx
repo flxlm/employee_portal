@@ -432,11 +432,11 @@ function MenuEditorPage() {
                     {sub.items.map((item, iIdx) => (
                       <div key={item.id} className="rounded border bg-muted/30 p-2 space-y-2">
                         <div className="flex items-start gap-2">
-                          <div className="flex flex-col">
-                            <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)}>
+                          <div className="flex flex-col rounded-md border bg-background shrink-0">
+                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
                               <ChevronUp className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1)}>
+                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-t-none" disabled={iIdx === sub.items.length - 1} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1)} aria-label="Move item down">
                               <ChevronDown className="h-3 w-3" />
                             </Button>
                           </div>
