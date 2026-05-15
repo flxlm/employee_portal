@@ -378,12 +378,41 @@ const COLUMN_CSS = `
 function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
+  const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
   }, [fetchFormatting]);
+
+  useEffect(() => {
+    const updateTrailingColumn = () => {
+      const flow = flowRef.current;
+      if (!flow) return;
+
+      const flowRect = flow.getBoundingClientRect();
+      const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
+      const lastSection = sections.at(-1);
+      const lastSectionRect = lastSection?.getBoundingClientRect();
+      const computed = window.getComputedStyle(flow);
+      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
+      const columnGap = Number.parseFloat(computed.columnGap) || 0;
+      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
+      const lastColumnLeft = columnCount > 1 ? (columnWidth + columnGap) * (columnCount - 1) : 0;
+      const top = lastSectionRect
+        ? Math.max(0, lastSectionRect.bottom - flowRect.top + 8)
+        : flowRect.height * 0.55;
+
+      flow.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
+      flow.style.setProperty("--trailing-width", `${columnWidth}px`);
+      flow.style.setProperty("--trailing-top", `${Math.min(top, flowRect.height - 96)}px`);
+    };
+
+    updateTrailingColumn();
+    window.addEventListener("resize", updateTrailingColumn);
+    return () => window.removeEventListener("resize", updateTrailingColumn);
+  }, [formatting]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
@@ -458,7 +487,7 @@ function DisplayPage() {
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <div className="menu-flow">
+      <div className="menu-flow" ref={flowRef}>
         {menus.map((menu) => (
           <Fragment key={menu.section}>
             <div className="menu-section-block" aria-label={menu.section}>
