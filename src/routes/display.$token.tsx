@@ -175,17 +175,40 @@ function PriceLabel({ label }: { label: string }) {
 }
 
 const COLUMN_CSS = `
-.menu-flow { column-count: 1; column-gap: 2.5rem; column-fill: balance; }
+.menu-flow {
+  column-count: 1;
+  column-gap: 2.5rem;
+  column-fill: auto;
+  height: calc(100vh - 3rem);
+  overflow: hidden;
+}
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
-.menu-flow > section {
+.menu-flow > section,
+.menu-flow > .menu-section-block {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
+.menu-section-block {
+  width: 100%;
+  height: 240px;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
 .menu-section-title {
   display: inline-block;
   font-weight: 800;
