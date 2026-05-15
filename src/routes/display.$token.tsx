@@ -232,20 +232,25 @@ const COLUMN_CSS = `
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
+  break-before: avoid;
+  -webkit-column-break-before: avoid;
+  page-break-before: avoid;
 }
 .trailing-block {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: calc(100vh - 3rem);
+  min-height: 22vh;
+  max-height: 38vh;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
-  gap: 1rem;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 .trailing-asterisk {
   flex: 0 0 auto;
   width: 100%;
-  height: 25vh;
+  height: 13vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -263,7 +268,7 @@ const COLUMN_CSS = `
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: 0;
+  min-height: 8vh;
 }
 .trailing-logo img {
   width: 100%;
