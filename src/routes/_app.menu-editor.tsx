@@ -1073,6 +1073,8 @@ function MenuEditorPage() {
                             }}
                             onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}
+                            onAddDescription={() => revealDesc(item.id)}
+                            canAddDescription={!hasDesc(item.id, item.description)}
                           />
                         </div>
 
