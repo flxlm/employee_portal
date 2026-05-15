@@ -182,7 +182,7 @@ function LiveMenuTimetablePage() {
           ) : (
             <ul className="divide-y divide-border">
               {entries.map((e) => (
-                <li key={e.id} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center py-3">
+                <li key={e.id} className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] gap-3 items-center py-3">
                   <Select
                     value={e.menu_key}
                     onValueChange={(v) => updateMut.mutate({ ...e, menu_key: v })}
