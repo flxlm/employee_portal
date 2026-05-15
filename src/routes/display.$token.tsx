@@ -67,14 +67,22 @@ type Atom =
       key: string;
       sectionId: string;
       section: DisplaySection;
-      continued?: boolean;
     }
   | {
-      kind: "subsection";
+      kind: "subsection-header";
       key: string;
       sectionId: string;
-      section: DisplaySection;
+      subId: string;
       sub: DisplaySubsection;
+    }
+  | {
+      kind: "item";
+      key: string;
+      sectionId: string;
+      subId: string;
+      item: DisplaySubsection["items"][number];
+      compact: boolean;
+      isFirstInSub: boolean;
     };
 
 function DisplayPage() {
