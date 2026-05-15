@@ -382,17 +382,37 @@ function DisplayPage() {
     let raf: number | null = null;
     let timer: number | null = null;
 
-    const overflows = () => document.documentElement.scrollHeight > window.innerHeight + 2;
+    const overflows = () => {
+      const flow = flowRef.current;
+      if (!flow) return false;
+      const lastChild = flow.lastElementChild as HTMLElement | null;
+      if (!lastChild) return false;
+      const flowRect = flow.getBoundingClientRect();
+      const lastRect = lastChild.getBoundingClientRect();
+      return lastRect.bottom > flowRect.bottom + 2 || lastRect.right > flowRect.right + 2;
+    };
 
-    const fit = () => {
+    const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+    const fit = async () => {
       document.documentElement.style.setProperty("--menu-scale", "1");
+      await nextFrame();
       let scale = 1;
-      const tick = () => {
-        if (!overflows() || scale <= MIN_SCALE) {
-          const stillOverflows = overflows();
-          if (stillOverflows && scale <= MIN_SCALE + 0.0001) {
-            const overflowPx = document.documentElement.scrollHeight - window.innerHeight;
-            const est = Math.max(1, Math.ceil(overflowPx / 60));
+      while (overflows() && scale > MIN_SCALE) {
+        scale = Math.max(MIN_SCALE, scale - STEP);
+        document.documentElement.style.setProperty("--menu-scale", String(scale));
+        await nextFrame();
+      }
+      if (overflows()) {
+        const flow = flowRef.current;
+        const overflowPx = flow
+          ? Math.max(
+              0,
+              (flow.lastElementChild as HTMLElement).getBoundingClientRect().bottom -
+                flow.getBoundingClientRect().bottom,
+            )
+          : 0;
+        const est = Math.max(1, Math.ceil(overflowPx / 60));
             setIsOverflowing(true);
             setHiddenCount(est);
             if (import.meta.env.DEV) {
