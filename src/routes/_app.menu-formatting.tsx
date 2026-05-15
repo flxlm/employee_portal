@@ -218,16 +218,33 @@ function MenuFormattingPage() {
   const fetchSettings = useServerFn(getMenuFormatting);
   const save = useServerFn(saveMenuFormatting);
   const [settings, setSettings] = useState<MenuFormatting>({});
+  const [savedSettings, setSavedSettings] = useState<MenuFormatting>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
     fetchSettings({})
-      .then((s) => setSettings(s || {}))
+      .then((s) => {
+        const init = s || {};
+        setSettings(init);
+        setSavedSettings(init);
+      })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [fetchSettings]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   const updateKey = (key: FormattingKey, next: TextStyle) => {
     setSettings((prev) => ({ ...prev, [key]: next }));
@@ -245,6 +262,7 @@ function MenuFormattingPage() {
     setSaving(true);
     try {
       await save({ data: { settings } });
+      setSavedSettings(settings);
       toast.success("Formatting saved");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
@@ -278,6 +296,14 @@ function MenuFormattingPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-5xl">
+      {isDirty && (
+        <div className="sticky top-0 z-40 -mx-4 sm:-mx-6 mb-4 px-4 sm:px-6 py-3 border-b bg-background/95 backdrop-blur flex items-center justify-between gap-3 shadow-sm">
+          <span className="text-sm">Unsaved formatting changes</span>
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
@@ -287,7 +313,7 @@ function MenuFormattingPage() {
           </Button>
           <h1 className="text-2xl font-semibold">Menu formatting</h1>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || !isDirty}>
           <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>

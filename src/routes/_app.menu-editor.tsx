@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
 });
 
-const DEBOUNCE_MS = 500;
+
 
 const MENU_OPTIONS = [
   { key: "breakfast", label: "Breakfast" },
@@ -109,6 +109,7 @@ function MenuEditorPage() {
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
+  const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
@@ -130,7 +131,6 @@ function MenuEditorPage() {
   const expandAll = () => setCollapsed(new Set());
 
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reload = async () => {
     const res = await list();
@@ -141,15 +141,22 @@ function MenuEditorPage() {
     reload().finally(() => setLoading(false));
   }, []);
 
-  const scheduleFlush = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(flush, DEBOUNCE_MS);
-  };
+  // Warn on unload if there are unsaved edits
+  useEffect(() => {
+    if (dirtyCount === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirtyCount]);
 
   const flush = async () => {
     const items = Array.from(dirtyRef.current.values());
     if (items.length === 0) return;
     dirtyRef.current.clear();
+    setDirtyCount(0);
     setSavingCount((c) => c + items.length);
     try {
       const results = await Promise.all(
@@ -160,13 +167,21 @@ function MenuEditorPage() {
         )
       );
       let conflicts = 0;
+      let errors = 0;
       for (const r of results) {
         if ("conflict" in r && r.conflict) conflicts++;
-        if ("error" in r && r.error) console.error(r.error);
+        if ("error" in r && r.error) {
+          errors++;
+          console.error(r.error);
+        }
       }
       if (conflicts > 0) {
         toast.error(`${conflicts} edit conflict${conflicts > 1 ? "s" : ""} — reloading`);
         await reload();
+      } else if (errors > 0) {
+        toast.error(`${errors} change${errors > 1 ? "s" : ""} failed to save`);
+      } else {
+        toast.success("Changes saved");
       }
     } finally {
       setSavingCount((c) => Math.max(0, c - items.length));
@@ -182,7 +197,7 @@ function MenuEditorPage() {
       expectedVersion: existing?.expectedVersion ?? expectedVersion,
       patch: { ...(existing?.patch || {}), ...patch },
     });
-    scheduleFlush();
+    setDirtyCount(dirtyRef.current.size);
   };
 
   const patchSection = (id: string, patch: Partial<MenuSection>) => {
@@ -335,10 +350,6 @@ function MenuEditorPage() {
     setDeleteSubBusy(true);
     try {
       // Flush any pending edits so version numbers are current
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
       await flush();
 
       if (deleteSubMode === "move") {
@@ -419,6 +430,16 @@ function MenuEditorPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      {dirtyCount > 0 && (
+        <div className="sticky top-0 z-40 -mx-6 md:-mx-10 mb-4 px-6 md:px-10 py-3 border-b bg-background/95 backdrop-blur flex items-center justify-between gap-3 shadow-sm">
+          <span className="text-sm">
+            {dirtyCount} unsaved change{dirtyCount > 1 ? "s" : ""}
+          </span>
+          <Button size="sm" onClick={flush} disabled={savingCount > 0}>
+            <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      )}
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
@@ -426,16 +447,14 @@ function MenuEditorPage() {
           </Link>
           <h1 className="text-3xl md:text-4xl">Menu Editor</h1>
           <p className="text-muted-foreground mt-1">
-            {sections.length} sections · {totalItems} items · auto-saves as you type
+            {sections.length} sections · {totalItems} items
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {savingCount > 0 ? (
+          {savingCount > 0 && (
             <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
               <Save className="h-3 w-3 animate-pulse" /> Saving…
             </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">All changes saved</span>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
