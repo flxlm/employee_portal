@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,6 +61,7 @@ function RecipesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [selected, setSelected] = useState<Recipe | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -103,6 +104,9 @@ function RecipesPage() {
           <h1 className="text-3xl">Recipes</h1>
           <p className="text-muted-foreground text-sm">{filtered.length} recipes</p>
         </div>
+        <Button onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" /> Add recipe
+        </Button>
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -176,6 +180,19 @@ function RecipesPage() {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent className="max-w-xl">
+          <NewRecipeForm
+            existingCategories={categories}
+            onCancel={() => setCreating(false)}
+            onCreated={(r) => {
+              setRecipes((prev) => [...prev, r].sort((a, b) => a.sort_order - b.sort_order));
+              setCreating(false);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
@@ -306,6 +323,95 @@ function RecipeDetail({ recipe, onSaved }: { recipe: Recipe; onSaved: (r: Recipe
             </li>
           ))}
         </ol>
+      </div>
+    </>
+  );
+}
+
+function NewRecipeForm({
+  existingCategories,
+  onCancel,
+  onCreated,
+}: {
+  existingCategories: string[];
+  onCancel: () => void;
+  onCreated: (r: Recipe) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    product: "",
+    category: existingCategories[0] ?? "",
+    dish_used: "",
+    special_instructions: "",
+    recipe: "",
+  });
+
+  async function create() {
+    if (!form.product.trim()) {
+      toast.error("Product name is required");
+      return;
+    }
+    setSaving(true);
+    const { data: maxRow } = await supabase
+      .from("recipes")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextSort = (maxRow?.sort_order ?? 0) + 1;
+    const { data, error } = await supabase
+      .from("recipes")
+      .insert({ ...form, sort_order: nextSort })
+      .select("id, category, product, recipe, dish_used, special_instructions, sort_order")
+      .single();
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Recipe created");
+    onCreated(data as Recipe);
+  }
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl leading-tight">New recipe</DialogTitle>
+        <DialogDescription>Add a new recipe to the list.</DialogDescription>
+      </DialogHeader>
+      <div className="space-y-3 pt-2">
+        <div className="space-y-1.5">
+          <Label>Product</Label>
+          <Input value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Category</Label>
+          <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Dish used</Label>
+          <Input value={form.dish_used} onChange={(e) => setForm({ ...form, dish_used: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Notes</Label>
+          <Textarea
+            rows={3}
+            value={form.special_instructions}
+            onChange={(e) => setForm({ ...form, special_instructions: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Instructions (one step per line)</Label>
+          <Textarea
+            rows={8}
+            value={form.recipe}
+            onChange={(e) => setForm({ ...form, recipe: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="outline" onClick={onCancel} disabled={saving}>Cancel</Button>
+        <Button onClick={create} disabled={saving}>{saving ? "Creating..." : "Create"}</Button>
       </div>
     </>
   );
