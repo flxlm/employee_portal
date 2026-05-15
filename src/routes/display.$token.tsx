@@ -70,7 +70,7 @@ function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: M
           hidden: subsection.is_hidden,
           items: subsection.items.map((item) => ({
             name: item.title,
-            price: item.base_price_cents / 100,
+            price: item.base_price_cents > 0 ? item.base_price_cents / 100 : undefined,
             description: item.description,
             hidden: item.is_hidden,
             modifications: item.modifications.map((modification) => ({
