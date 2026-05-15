@@ -105,6 +105,7 @@ export const listMenu = createServerFn({ method: "GET" })
         display_order: i.display_order,
         version: i.version,
         is_hidden: (i as { is_hidden?: boolean }).is_hidden ?? false,
+        sold_out_date: (i as { sold_out_date?: string | null }).sold_out_date ?? null,
         modifications: modsByItem.get(i.id) || [],
       });
       itemsBySub.set(i.subsection_id, arr);
