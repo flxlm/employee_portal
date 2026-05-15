@@ -596,14 +596,24 @@ function MenuEditorPage() {
                         }}
                         placeholder="Subsection name"
                       />
-                      <Input
-                        value={sub.description}
-                        onChange={(e) => {
-                          patchSubsection(sec.id, sub.id, { description: e.target.value });
-                          queueEdit("menu_subsections", sub.id, sub.version, { description: e.target.value });
-                        }}
-                        placeholder="Subsection description"
-                      />
+                      {hasDesc(sub.id, sub.description) ? (
+                        <Input
+                          value={sub.description}
+                          onChange={(e) => {
+                            patchSubsection(sec.id, sub.id, { description: e.target.value });
+                            queueEdit("menu_subsections", sub.id, sub.version, { description: e.target.value });
+                          }}
+                          placeholder="Subsection description"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => revealDesc(sub.id)}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <Plus className="h-3 w-3" /> Add description
+                        </button>
+                      )}
                       <MenuToggles
                         value={sub.visible_menus}
                         onChange={(next) => {
