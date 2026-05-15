@@ -122,7 +122,7 @@ function LiveMenuTimetablePage() {
         </CardHeader>
         <CardContent>
           <form
-            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] gap-3 items-end"
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] md:grid-rows-[auto_auto] gap-x-3 gap-y-1.5 items-center"
             onSubmit={(e) => {
               e.preventDefault();
               if (!menuKey) {
@@ -132,37 +132,45 @@ function LiveMenuTimetablePage() {
               addMut.mutate();
             }}
           >
-            <div className="space-y-1.5">
-              <Label>Menu</Label>
-              <Select value={menuKey} onValueChange={setMenuKey}>
-                <SelectTrigger><SelectValue placeholder="Select menu" /></SelectTrigger>
-                <SelectContent>
-                  {menus.map((m) => (
-                    <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Day</Label>
-              <Select value={day} onValueChange={setDay}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {DAYS.map((d, i) => (
-                    <SelectItem key={i} value={String(i)}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Start</Label>
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>End</Label>
-              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-            </div>
-            <Button type="submit" disabled={addMut.isPending} className="w-full md:w-auto">
+            <Label className="md:row-start-1 md:col-start-1">Menu</Label>
+            <Label className="md:row-start-1 md:col-start-2">Day</Label>
+            <Label className="md:row-start-1 md:col-start-3">Start</Label>
+            <Label className="md:row-start-1 md:col-start-4">End</Label>
+            <span className="hidden md:block md:row-start-1 md:col-start-5" aria-hidden />
+
+            <Select value={menuKey} onValueChange={setMenuKey}>
+              <SelectTrigger className="md:row-start-2 md:col-start-1"><SelectValue placeholder="Select menu" /></SelectTrigger>
+              <SelectContent>
+                {menus.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={day} onValueChange={setDay}>
+              <SelectTrigger className="md:row-start-2 md:col-start-2"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {DAYS.map((d, i) => (
+                  <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="md:row-start-2 md:col-start-3"
+              type="time"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+            />
+            <Input
+              className="md:row-start-2 md:col-start-4"
+              type="time"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+            />
+            <Button
+              type="submit"
+              disabled={addMut.isPending}
+              className="w-full md:w-auto md:row-start-2 md:col-start-5"
+            >
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </form>
