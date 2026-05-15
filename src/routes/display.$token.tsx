@@ -186,7 +186,6 @@ const COLUMN_CSS = `
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
-.menu-flow > section,
 .menu-flow > .menu-section-block,
 .menu-flow > .menu-footer-block {
   break-inside: avoid;
@@ -194,6 +193,15 @@ const COLUMN_CSS = `
   page-break-inside: avoid;
   display: block;
   margin-bottom: 1rem;
+}
+.menu-flow > section {
+  display: block;
+  margin-bottom: 1rem;
+}
+.menu-flow .menu-item {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
 }
 .menu-footer-block {
   width: 100%;
