@@ -122,7 +122,7 @@ function LiveMenuTimetablePage() {
         </CardHeader>
         <CardContent>
           <form
-            className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] gap-3 items-end"
             onSubmit={(e) => {
               e.preventDefault();
               if (!menuKey) {
@@ -162,7 +162,7 @@ function LiveMenuTimetablePage() {
               <Label>End</Label>
               <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
-            <Button type="submit" disabled={addMut.isPending}>
+            <Button type="submit" disabled={addMut.isPending} className="w-full md:w-auto">
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </form>
@@ -182,7 +182,7 @@ function LiveMenuTimetablePage() {
           ) : (
             <ul className="divide-y divide-border">
               {entries.map((e) => (
-                <li key={e.id} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center py-3">
+                <li key={e.id} className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] gap-3 items-center py-3">
                   <Select
                     value={e.menu_key}
                     onValueChange={(v) => updateMut.mutate({ ...e, menu_key: v })}
