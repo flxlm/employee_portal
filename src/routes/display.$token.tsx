@@ -18,7 +18,7 @@ const MENU_ANIMATION_SRC = "/menu-animation.webm";
 export const Route = createFileRoute("/display/$token")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
-    const menu = isMenuFilter(s.menu) ? s.menu : undefined;
+    const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
     return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
   },
   head: () => ({
@@ -45,11 +45,7 @@ type MenuItem = {
 };
 type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean };
 type Menu = { section: string; subsections: Subsection[]; hidden?: boolean };
-type MenuFilter = "breakfast" | "lunch" | "dinner";
-
-function isMenuFilter(value: unknown): value is MenuFilter {
-  return value === "breakfast" || value === "lunch" || value === "dinner";
-}
+type MenuFilter = string;
 
 function isVisibleOnMenu(visibleMenus: string[], selectedMenu?: MenuFilter) {
   return !selectedMenu || visibleMenus.length === 0 || visibleMenus.includes(selectedMenu);

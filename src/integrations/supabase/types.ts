@@ -353,6 +353,33 @@ export type Database = {
           },
         ]
       }
+      menus: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          key: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          key: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          key?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       open_close_logs: {
         Row: {
           cash_tips: number

@@ -43,6 +43,7 @@ import {
   type MenuModification,
 } from "@/lib/menu.functions";
 import { refreshDisplayMenu } from "@/lib/menu-display.functions";
+import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
 
 export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
@@ -50,11 +51,7 @@ export const Route = createFileRoute("/_app/menu-editor")({
 
 
 
-const MENU_OPTIONS = [
-  { key: "breakfast", label: "Breakfast" },
-  { key: "lunch", label: "Lunch" },
-  { key: "dinner", label: "Dinner" },
-] as const;
+type MenuOptionLite = { key: string; label: string };
 
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
 
@@ -112,15 +109,17 @@ function PriceInput({
 function MenuToggles({
   value,
   onChange,
+  options,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
+  options: MenuOptionLite[];
 }) {
   const set = new Set(value);
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 flex-wrap">
       <span className="text-xs text-muted-foreground mr-1">Show on:</span>
-      {MENU_OPTIONS.map((m) => {
+      {options.map((m) => {
         const on = set.has(m.key);
         return (
           <Toggle
@@ -131,7 +130,7 @@ function MenuToggles({
               const next = new Set(set);
               if (pressed) next.add(m.key);
               else next.delete(m.key);
-              onChange(MENU_OPTIONS.filter((o) => next.has(o.key)).map((o) => o.key));
+              onChange(options.filter((o) => next.has(o.key)).map((o) => o.key));
             }}
             className="h-7 px-2 text-xs"
           >
@@ -200,12 +199,18 @@ function MenuEditorPage() {
   };
 
   const [sections, setSections] = useState<MenuSection[]>([]);
+  const [menus, setMenus] = useState<MenuOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
   const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
   const [showDesc, setShowDesc] = useState<Set<string>>(new Set());
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [newMenuLabel, setNewMenuLabel] = useState("");
+  const [addingMenu, setAddingMenu] = useState(false);
+  const fetchMenus = useServerFn(listMenus);
+  const createMenu = useServerFn(addMenu);
   const revealDesc = (id: string) => setShowDesc((p) => { const n = new Set(p); n.add(id); return n; });
   const hasDesc = (id: string, val: string | null | undefined) => (val && val.length > 0) || showDesc.has(id);
 
@@ -229,8 +234,9 @@ function MenuEditorPage() {
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
 
   const reload = async () => {
-    const res = await list();
+    const [res, m] = await Promise.all([list(), fetchMenus()]);
     setSections(res.sections);
+    setMenus(m.menus);
   };
 
   useEffect(() => {
@@ -774,15 +780,19 @@ function MenuEditorPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {[
-                { key: "all", label: "Full menu", qs: "" },
-                { key: "breakfast", label: "Breakfast", qs: "?menu=breakfast" },
-                { key: "lunch", label: "Lunch", qs: "?menu=lunch" },
-                { key: "dinner", label: "Dinner", qs: "?menu=dinner" },
-              ].map((opt) => (
+              <DropdownMenuItem asChild>
+                <a
+                  href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Full menu
+                </a>
+              </DropdownMenuItem>
+              {menus.map((opt) => (
                 <DropdownMenuItem key={opt.key} asChild>
                   <a
-                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU${opt.qs}`}
+                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=${encodeURIComponent(opt.key)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -795,9 +805,22 @@ function MenuEditorPage() {
           <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
             {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
           </Button>
-          <Button onClick={addSection} size="sm">
-            <Plus className="h-4 w-4" /> Section
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4" /> Add
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); addSection(); }}>
+                <Plus className="h-4 w-4" /> New section
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setNewMenuLabel(""); setAddMenuOpen(true); }}>
+                <Plus className="h-4 w-4" /> New menu
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -846,6 +869,7 @@ function MenuEditorPage() {
                     )
                   )}
                   <MenuToggles
+                    options={menus}
                     value={sec.visible_menus}
                     onChange={(next) => {
                       patchSection(sec.id, { visible_menus: next });
@@ -916,6 +940,7 @@ function MenuEditorPage() {
                         </button>
                       )}
                       <MenuToggles
+                        options={menus}
                         value={sub.visible_menus}
                         onChange={(next) => {
                           patchSubsection(sec.id, sub.id, { visible_menus: next });
@@ -1174,6 +1199,72 @@ function MenuEditorPage() {
                 : deleteSubMode === "move"
                 ? "Move items & delete subsection"
                 : "Delete subsection & items"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addMenuOpen} onOpenChange={(o) => { if (!addingMenu) setAddMenuOpen(o); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add a new menu</DialogTitle>
+            <DialogDescription>
+              Adds a new menu (e.g. Brunch, Late night) that items can be assigned to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="new-menu-label">Menu name</Label>
+            <Input
+              id="new-menu-label"
+              autoFocus
+              value={newMenuLabel}
+              onChange={(e) => setNewMenuLabel(e.target.value)}
+              placeholder="e.g. Brunch"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newMenuLabel.trim() && !addingMenu) {
+                  e.preventDefault();
+                  (async () => {
+                    setAddingMenu(true);
+                    try {
+                      const { menu } = await createMenu({ data: { label: newMenuLabel.trim() } });
+                      setMenus((m) => [...m, menu]);
+                      setAddMenuOpen(false);
+                      setNewMenuLabel("");
+                      toast.success(`Added menu "${menu.label}"`);
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to add menu");
+                    } finally {
+                      setAddingMenu(false);
+                    }
+                  })();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMenuOpen(false)} disabled={addingMenu}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const label = newMenuLabel.trim();
+                if (!label) return;
+                setAddingMenu(true);
+                try {
+                  const { menu } = await createMenu({ data: { label } });
+                  setMenus((m) => [...m, menu]);
+                  setAddMenuOpen(false);
+                  setNewMenuLabel("");
+                  toast.success(`Added menu "${menu.label}"`);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to add menu");
+                } finally {
+                  setAddingMenu(false);
+                }
+              }}
+              disabled={addingMenu || !newMenuLabel.trim()}
+            >
+              {addingMenu ? "Adding…" : "Add menu"}
             </Button>
           </DialogFooter>
         </DialogContent>
