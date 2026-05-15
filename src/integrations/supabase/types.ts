@@ -131,6 +131,195 @@ export type Database = {
         }
         Relationships: []
       }
+      item_modifications: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_deleted: boolean
+          item_id: string
+          modification_name: string
+          price_modifier_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          item_id: string
+          modification_name?: string
+          price_modifier_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          item_id?: string
+          modification_name?: string
+          price_modifier_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_modifications_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_display_view"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_modifications_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          base_price_cents: number
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          is_deleted: boolean
+          subsection_id: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          base_price_cents?: number
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          subsection_id: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          base_price_cents?: number
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          subsection_id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_subsection_id_fkey"
+            columns: ["subsection_id"]
+            isOneToOne: false
+            referencedRelation: "menu_display_view"
+            referencedColumns: ["subsection_id"]
+          },
+          {
+            foreignKeyName: "menu_items_subsection_id_fkey"
+            columns: ["subsection_id"]
+            isOneToOne: false
+            referencedRelation: "menu_subsections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_sections: {
+        Row: {
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          is_deleted: boolean
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      menu_subsections: {
+        Row: {
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          is_deleted: boolean
+          name: string
+          section_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          name?: string
+          section_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_deleted?: boolean
+          name?: string
+          section_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_subsections_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "menu_display_view"
+            referencedColumns: ["section_id"]
+          },
+          {
+            foreignKeyName: "menu_subsections_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "menu_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       open_close_logs: {
         Row: {
           cash_tips: number
@@ -343,7 +532,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      menu_display_view: {
+        Row: {
+          base_price_cents: number | null
+          item_description: string | null
+          item_id: string | null
+          item_order: number | null
+          item_title: string | null
+          modifications: Json | null
+          section_description: string | null
+          section_id: string | null
+          section_name: string | null
+          section_order: number | null
+          subsection_description: string | null
+          subsection_id: string | null
+          subsection_name: string | null
+          subsection_order: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
