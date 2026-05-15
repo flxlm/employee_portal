@@ -396,11 +396,15 @@ function DisplayPage() {
                   zIndex: 0,
                 }}
               />
-              <span style={{ position: "relative", zIndex: 1 }}>{menu.section}</span>
+              <span style={{ position: "relative", zIndex: 1, ...styleFor("section") }}>
+                {menu.section}
+              </span>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
-                <h2 className="menu-section-title">{sub.subsection}</h2>
+                <h2 className="menu-section-title" style={styleFor("subsection")}>
+                  {sub.subsection}
+                </h2>
                 {sub.items.map((item, ii) => (
                   <div key={ii}>{renderItem(item)}</div>
                 ))}
