@@ -13,6 +13,7 @@ export type DisplaySubsection = {
   id: string;
   name: string;
   description: string;
+  visible_menus: string[];
   items: DisplayItem[];
 };
 
@@ -20,6 +21,7 @@ export type DisplaySection = {
   id: string;
   name: string;
   description: string;
+  visible_menus: string[];
   subsections: DisplaySubsection[];
 };
 
@@ -41,10 +43,19 @@ export function clearDisplayCache() {
 }
 
 async function buildMenu(): Promise<DisplayMenu> {
-  const { data, error } = await supabaseAdmin
-    .from("menu_display_view")
-    .select("*");
+  const [{ data, error }, secVis, subVis] = await Promise.all([
+    supabaseAdmin.from("menu_display_view").select("*"),
+    supabaseAdmin.from("menu_sections").select("id, visible_menus"),
+    supabaseAdmin.from("menu_subsections").select("id, visible_menus"),
+  ]);
   if (error) throw error;
+
+  const secVisMap = new Map<string, string[]>(
+    (secVis.data || []).map((r: { id: string; visible_menus: string[] | null }) => [r.id, r.visible_menus || []])
+  );
+  const subVisMap = new Map<string, string[]>(
+    (subVis.data || []).map((r: { id: string; visible_menus: string[] | null }) => [r.id, r.visible_menus || []])
+  );
 
   const sections = new Map<string, DisplaySection>();
   for (const row of data || []) {
@@ -55,6 +66,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         id: row.section_id,
         name: row.section_name || "",
         description: row.section_description || "",
+        visible_menus: secVisMap.get(row.section_id) || [],
         subsections: [],
       };
       sections.set(row.section_id, sec);
@@ -66,6 +78,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         id: row.subsection_id,
         name: row.subsection_name || "",
         description: row.subsection_description || "",
+        visible_menus: subVisMap.get(row.subsection_id) || [],
         items: [],
       };
       sec.subsections.push(sub);

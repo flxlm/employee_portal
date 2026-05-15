@@ -4,7 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { supabase } from "@/integrations/supabase/client";
 
+type MenuType = "breakfast" | "lunch" | "dinner";
+const MENU_TYPES: MenuType[] = ["breakfast", "lunch", "dinner"];
+
 export const Route = createFileRoute("/display/$token")({
+  validateSearch: (s: Record<string, unknown>): { menu?: MenuType } => {
+    const m = typeof s.menu === "string" ? s.menu.toLowerCase() : "";
+    return MENU_TYPES.includes(m as MenuType) ? { menu: m as MenuType } : {};
+  },
   head: () => ({
     meta: [
       { title: "Menu Display" },
@@ -37,6 +44,7 @@ function FormattedPrice({ cents }: { cents: number }) {
 
 function DisplayPage() {
   const { token } = Route.useParams();
+  const { menu: menuFilter } = Route.useSearch();
   const fetchMenu = useServerFn(getDisplayMenu);
   const [menu, setMenu] = useState<DisplayMenu | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,8 +99,18 @@ function DisplayPage() {
     );
   }
 
-  const columns: typeof menu.sections[] = [[], [], [], []];
-  menu.sections.forEach((s, i) => columns[i % 4].push(s));
+  const filteredSections = menuFilter
+    ? menu.sections
+        .filter((s) => s.visible_menus.includes(menuFilter))
+        .map((s) => ({
+          ...s,
+          subsections: s.subsections.filter((sub) => sub.visible_menus.includes(menuFilter)),
+        }))
+        .filter((s) => s.subsections.length > 0)
+    : menu.sections;
+
+  const columns: typeof filteredSections[] = [[], [], [], []];
+  filteredSections.forEach((s, i) => columns[i % 4].push(s));
 
   return (
     <div
