@@ -164,7 +164,8 @@ function DisplayPage() {
                 style={{
                   position: "relative",
                   aspectRatio: "1 / 1",
-                  width: "100%",
+                  width: "75%",
+                  marginInline: "auto",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
