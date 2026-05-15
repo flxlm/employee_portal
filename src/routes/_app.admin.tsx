@@ -56,7 +56,21 @@ function AdminPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl mb-6">Invite user</h1>
+      <h1 className="text-3xl mb-6">Admin</h1>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Menu formatting</CardTitle>
+          <CardDescription>Control fonts, sizes and weights for the live menu display.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to="/menu-formatting">
+              <Type className="h-4 w-4 mr-2" /> Open formatting editor
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
