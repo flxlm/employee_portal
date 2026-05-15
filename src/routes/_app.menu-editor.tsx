@@ -342,11 +342,11 @@ function MenuEditorPage() {
                 >
                   {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
-                <div className="flex flex-col">
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)}>
+                <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={sIdx === 0} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)} aria-label="Move section up">
                     <ChevronUp className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1)}>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={sIdx === sections.length - 1} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1)} aria-label="Move section down">
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
@@ -389,11 +389,11 @@ function MenuEditorPage() {
               {sec.subsections.map((sub, ssIdx) => (
                 <div key={sub.id} className="rounded-md border p-3 space-y-3">
                   <div className="flex items-start gap-2">
-                    <div className="flex flex-col">
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)}>
+                    <div className="flex flex-col rounded-md border bg-background shrink-0">
+                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
                         <ChevronUp className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1)}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={ssIdx === sec.subsections.length - 1} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1)} aria-label="Move subsection down">
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </div>
@@ -432,11 +432,11 @@ function MenuEditorPage() {
                     {sub.items.map((item, iIdx) => (
                       <div key={item.id} className="rounded border bg-muted/30 p-2 space-y-2">
                         <div className="flex items-start gap-2">
-                          <div className="flex flex-col">
-                            <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)}>
+                          <div className="flex flex-col rounded-md border bg-background shrink-0">
+                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
                               <ChevronUp className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1)}>
+                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-t-none" disabled={iIdx === sub.items.length - 1} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1)} aria-label="Move item down">
                               <ChevronDown className="h-3 w-3" />
                             </Button>
                           </div>
@@ -479,8 +479,16 @@ function MenuEditorPage() {
 
                         {item.modifications.length > 0 && (
                           <div className="pl-7 space-y-1">
-                            {item.modifications.map((m) => (
+                            {item.modifications.map((m, mIdx) => (
                               <div key={m.id} className="flex items-center gap-2">
+                                <div className="flex flex-col rounded-md border bg-background shrink-0">
+                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-b-none" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move modification up">
+                                    <ChevronUp className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-t-none" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move modification down">
+                                    <ChevronDown className="h-3 w-3" />
+                                  </Button>
+                                </div>
                                 <Input
                                   className="h-8 flex-1"
                                   value={m.modification_name}
