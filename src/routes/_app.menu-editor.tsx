@@ -1003,7 +1003,7 @@ function MenuEditorPage() {
                   {!collapsedSubs.has(sub.id) && (
                   <div className="space-y-2 pl-8">
                     {sub.items.map((item, iIdx) => (
-                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""}`}>
+                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(item.sold_out_date) ? "[&_input]:text-muted-foreground/40 [&_textarea]:text-muted-foreground/40" : ""}`}>
                         <div className="flex items-start gap-2">
                           <div className="flex flex-col rounded-md border bg-background shrink-0">
                             <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
