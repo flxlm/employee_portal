@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -336,12 +335,17 @@ function DisplayPage() {
   }, [fetchFormatting, fetchDisplayMenu, token, refreshKey]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("menu-display")
-      .on("broadcast", { event: "refresh" }, () => setRefreshKey(Date.now()))
-      .subscribe();
+    let channel: ReturnType<(typeof import("@/integrations/supabase/client"))["supabase"]["channel"]> | null = null;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      channel = supabase
+        .channel("menu-display")
+        .on("broadcast", { event: "refresh" }, () => setRefreshKey(Date.now()))
+        .subscribe();
+    });
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        import("@/integrations/supabase/client").then(({ supabase }) => supabase.removeChannel(channel));
+      }
     };
   }, []);
 
@@ -392,7 +396,7 @@ function DisplayPage() {
       frameIds.forEach((id) => cancelAnimationFrame(id));
       window.removeEventListener("resize", scheduleUpdate);
     };
-  }, [formatting]);
+  }, [formatting, displayMenu]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
