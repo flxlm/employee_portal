@@ -380,7 +380,7 @@ function DisplayPage() {
                   style={styleFor("modification", {
                     listStyle: "none",
                     padding: 0,
-                    margin: "0.3vw 0 0 0",
+                    margin: "0.15vw 0 0 0",
                   })}
                 >
                   {item.modifications.map((m) => (
