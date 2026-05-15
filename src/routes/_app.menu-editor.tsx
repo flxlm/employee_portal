@@ -1031,8 +1031,10 @@ function MenuEditorPage() {
                                   onClick={() => revealDesc(item.id)}
                                   className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0"
                                   aria-label="Add description"
+                                  title="Add description"
                                 >
-                                  <Plus className="h-3 w-3" /> description
+                                  <Plus className="h-3 w-3" />
+                                  <span className="hidden sm:inline">description</span>
                                 </button>
                               )}
                             </div>
