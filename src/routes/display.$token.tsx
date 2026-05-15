@@ -155,7 +155,8 @@ function DisplayPage() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "2vw",
+            justifyContent: "space-between",
+            height: "100%",
             paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
           }}
         >
