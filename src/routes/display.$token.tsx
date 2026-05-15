@@ -249,7 +249,7 @@ const COLUMN_CSS = `
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center center;
+  object-position: left;
   display: block;
   border: none;
   z-index: 1;
