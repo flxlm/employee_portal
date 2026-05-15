@@ -138,6 +138,9 @@ function PriceLabel({ label }: { label: string }) {
 }
 
 const COLUMN_CSS = `
+:root { --menu-scale: 1; }
+body { font-size: calc(16px * var(--menu-scale)); }
+
 .menu-flow {
   column-count: 1;
   column-gap: 2.5rem;
