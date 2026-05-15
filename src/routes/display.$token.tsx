@@ -344,78 +344,69 @@ function DisplayPage() {
     </h2>
   );
 
-  const renderSubsection = (sub: DisplaySubsection, withTopGap: boolean) => {
-    const compact =
-      sub.items.length >= 3 &&
-      sub.items.every(
-        (it) => !it.description && it.modifications.length === 0,
+  const renderSubsectionHeader = (
+    sub: DisplaySubsection,
+    withTopGap: boolean,
+  ) => (
+    <div style={{ marginBottom: "0.15vw" }}>
+      {withTopGap && <div style={{ height: "0.35vw" }} />}
+      <h3 style={styleFor("subsection", { margin: "0 0 0.2vw 0" })}>
+        {sub.name}
+      </h3>
+    </div>
+  );
+
+  const renderItem = (
+    item: DisplaySubsection["items"][number],
+    compact: boolean,
+  ) => {
+    if (compact) {
+      return (
+        <div
+          style={styleFor("itemTitle", {
+            lineHeight: 1.35,
+            marginBottom: "0.05vw",
+          })}
+        >
+          {item.title} <FormattedPrice cents={item.base_price_cents} />
+        </div>
       );
+    }
     return (
-      <div style={{ marginBottom: "0.5vw" }}>
-        {withTopGap && <div style={{ height: "0.4vw" }} />}
-        {sub.name && (
-          <h3 style={styleFor("subsection", { margin: "0 0 0.25vw 0" })}>
-            {sub.name}
-          </h3>
+      <div style={{ marginBottom: "0.3vw" }}>
+        <div style={styleFor("itemTitle")}>
+          {item.title} <FormattedPrice cents={item.base_price_cents} />
+        </div>
+        {item.description && (
+          <p style={styleFor("itemDescription", { margin: "0.1vw 0 0 0" })}>
+            {item.description}
+          </p>
         )}
-        {compact ? (
+        {item.modifications.length > 0 && (
           <ul
-            style={styleFor("itemTitle", {
+            style={styleFor("modification", {
               listStyle: "none",
               padding: 0,
-              margin: 0,
-              lineHeight: 1.35,
+              margin: "0.15vw 0 0 0",
             })}
           >
-            {sub.items.map((item) => (
-              <li key={item.id}>
-                {item.title} <FormattedPrice cents={item.base_price_cents} />
+            {item.modifications.map((m) => (
+              <li
+                key={m.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.4vw",
+                }}
+              >
+                <span>+ {m.name}</span>
+                <span>
+                  {m.price_modifier_cents >= 0 ? "+" : ""}
+                  <FormattedPrice cents={m.price_modifier_cents} />
+                </span>
               </li>
             ))}
           </ul>
-        ) : (
-          sub.items.map((item) => (
-            <div key={item.id} style={{ marginBottom: "0.3vw" }}>
-              <div style={styleFor("itemTitle")}>
-                {item.title} <FormattedPrice cents={item.base_price_cents} />
-              </div>
-              {item.description && (
-                <p
-                  style={styleFor("itemDescription", {
-                    margin: "0.1vw 0 0 0",
-                  })}
-                >
-                  {item.description}
-                </p>
-              )}
-              {item.modifications.length > 0 && (
-                <ul
-                  style={styleFor("modification", {
-                    listStyle: "none",
-                    padding: 0,
-                    margin: "0.15vw 0 0 0",
-                  })}
-                >
-                  {item.modifications.map((m) => (
-                    <li
-                      key={m.id}
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: "0.4vw",
-                      }}
-                    >
-                      <span>+ {m.name}</span>
-                      <span>
-                        {m.price_modifier_cents >= 0 ? "+" : ""}
-                        <FormattedPrice cents={m.price_modifier_cents} />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))
         )}
       </div>
     );
