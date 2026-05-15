@@ -391,18 +391,11 @@ function DisplayPage() {
       const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
       const lastSection = sections.at(-1);
       const lastSectionRect = lastSection?.getBoundingClientRect();
-      const computed = window.getComputedStyle(flow);
-      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
-      const columnGap = Number.parseFloat(computed.columnGap) || 0;
-      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
-      const lastColumnLeft = columnCount > 1 ? (columnWidth + columnGap) * (columnCount - 1) : 0;
-      const top = lastSectionRect
-        ? Math.max(0, lastSectionRect.bottom - flowRect.top + 8)
-        : flowRect.height * 0.55;
+      const remainingHeight = lastSectionRect
+        ? Math.max(128, flowRect.bottom - lastSectionRect.bottom - 16)
+        : flowRect.height * 0.35;
 
-      flow.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
-      flow.style.setProperty("--trailing-width", `${columnWidth}px`);
-      flow.style.setProperty("--trailing-top", `${Math.min(top, flowRect.height - 96)}px`);
+      flow.style.setProperty("--trailing-height", `${remainingHeight}px`);
     };
 
     updateTrailingColumn();
