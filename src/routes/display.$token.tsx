@@ -111,9 +111,254 @@ function DisplayPage() {
         .filter((s) => s.subsections.length > 0)
     : menu.sections;
 
-  const columns: typeof filteredSections[] = [[], [], [], []];
-  filteredSections.forEach((s, i) => columns[i % 4].push(s));
+  return (
+    <FitToViewport key={(menuFilter ?? "all") + ":" + filteredSections.length}>
+      {filteredSections.map((section) => (
+        <section
+          key={section.id}
+          style={{
+            breakInside: "avoid",
+            WebkitColumnBreakInside: "avoid",
+            pageBreakInside: "avoid",
+            marginBottom: "1.6vw",
+          }}
+        >
+          <h2
+            style={{
+              position: "relative",
+              fontSize: "2.6vw",
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: "#fff",
+              textAlign: "center",
+              margin: "0 0 0.7vw 0",
+              lineHeight: 1,
+              padding: "1.4vw 0.6vw",
+              overflow: "hidden",
+              isolation: "isolate",
+            }}
+          >
+            <Lottie
+              animationData={menuAnimation}
+              loop
+              autoplay
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                zIndex: -1,
+                pointerEvents: "none",
+              }}
+            />
+            <span style={{ position: "relative" }}>{section.name}</span>
+          </h2>
+          {section.subsections.map((sub, si) => {
+            const compact =
+              sub.items.length >= 3 &&
+              sub.items.every((it) => !it.description && it.modifications.length === 0);
+            return (
+              <div key={sub.id} style={{ marginBottom: "0.9vw" }}>
+                {si > 0 && (
+                  <hr
+                    style={{
+                      border: "none",
+                      borderTop: "0.05vw solid #000",
+                      margin: "0.7vw 0",
+                    }}
+                  />
+                )}
+                {sub.name && (
+                  <h3
+                    style={{
+                      fontSize: "1.1vw",
+                      fontWeight: 700,
+                      margin: "0 0 0.4vw 0",
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {sub.name}
+                  </h3>
+                )}
+                {compact ? (
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      padding: 0,
+                      margin: 0,
+                      fontSize: "0.95vw",
+                      lineHeight: 1.5,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {sub.items.map((item) => (
+                      <li key={item.id}>
+                        {item.title} <FormattedPrice cents={item.base_price_cents} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  sub.items.map((item) => (
+                    <div key={item.id} style={{ marginBottom: "0.55vw" }}>
+                      <div
+                        style={{
+                          fontSize: "1.15vw",
+                          fontWeight: 700,
+                          lineHeight: 1.15,
+                        }}
+                      >
+                        {item.title} <FormattedPrice cents={item.base_price_cents} />
+                      </div>
+                      {item.description && (
+                        <p
+                          style={{
+                            fontSize: "0.78vw",
+                            fontWeight: 400,
+                            margin: "0.15vw 0 0 0",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {item.description}
+                        </p>
+                      )}
+                      {item.modifications.length > 0 && (
+                        <ul
+                          style={{
+                            listStyle: "none",
+                            padding: 0,
+                            margin: "0.2vw 0 0 0",
+                            fontSize: "0.7vw",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {item.modifications.map((m) => (
+                            <li
+                              key={m.id}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: "0.4vw",
+                              }}
+                            >
+                              <span>+ {m.name}</span>
+                              <span>
+                                {m.price_modifier_cents >= 0 ? "+" : ""}
+                                <FormattedPrice cents={m.price_modifier_cents} />
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </section>
+      ))}
+    </FitToViewport>
+  );
+}
 
+/**
+ * Renders children inside a 4-column CSS multicol that:
+ * - flows section-by-section into columns (no round-robin)
+ * - balances heights when underfilled
+ * - scales the entire layout up or down so it exactly fills 100vw × 100vh
+ */
+function FitToViewport({ children }: { children: React.ReactNode }) {
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    let raf = 0;
+    let cancelled = false;
+
+    const measure = () => {
+      const el = innerRef.current;
+      if (!el || cancelled) return;
+      const targetH = window.innerHeight;
+      // scrollHeight = balanced column height for current natural width
+      const naturalH = el.scrollHeight;
+      if (naturalH <= 0) return;
+      const next = targetH / naturalH;
+      // Clamp to a sane range
+      const clamped = Math.max(0.4, Math.min(3, next));
+      setScale((prev) => (Math.abs(prev - clamped) > 0.005 ? clamped : prev));
+    };
+
+    // Two passes so column reflow after scale change settles
+    const tick = () => {
+      measure();
+      raf = requestAnimationFrame(measure);
+    };
+    raf = requestAnimationFrame(tick);
+
+    const ro = new ResizeObserver(() => {
+      if (!cancelled) requestAnimationFrame(measure);
+    });
+    if (innerRef.current) ro.observe(innerRef.current);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [children]);
+
+  return (
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        background: "#fff",
+        color: "#000",
+        fontFamily: FONT_STACK,
+        textTransform: "uppercase",
+        fontWeight: 500,
+        position: "relative",
+      }}
+    >
+      <div
+        ref={innerRef}
+        style={{
+          width: `${100 / scale}vw`,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          columnCount: 4,
+          columnGap: "0",
+          columnRule: "0.05vw solid #000",
+          columnFill: "balance",
+          padding: "1.4vw 1.2vw",
+          boxSizing: "border-box",
+        }}
+      >
+        {children}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "1.2vw",
+          right: "1.4vw",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "0.3vw",
+          lineHeight: 1,
+          color: "#000",
+          fontFamily: FONT_STACK,
+        }}
+      >
+        <span style={{ fontSize: "2.4vw", fontWeight: 700 }}>✱</span>
+        <span style={{ fontSize: "1.6vw", fontWeight: 700, fontStyle: "italic" }}>Savsav</span>
+      </div>
+    </div>
+  );
+}
   return (
     <div
       style={{
