@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Monitor, Coffee, RotateCw, KeyRound } from "lucide-react";
+import { RefreshCw, Monitor, Coffee, RotateCw, KeyRound, UtensilsCrossed } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { refreshScreencloudMenu } from "@/lib/screencloud.functions";
 import { PasscodesDialog } from "@/components/passcodes-dialog";
 
@@ -49,6 +50,7 @@ function FunctionsPage() {
     grab_n_go: null,
   });
   const refresh = useServerFn(refreshScreencloudMenu);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLastRefreshed(loadTimestamps());
@@ -123,6 +125,13 @@ function FunctionsPage() {
       description: "View shared passcodes available to your account.",
       icon: KeyRound,
       onClick: () => setPasscodesOpen(true),
+    },
+    {
+      key: "menu-editor",
+      title: "Menu Editor",
+      description: "Edit menu sections, items and modifications. Auto-saves as you type.",
+      icon: UtensilsCrossed,
+      onClick: () => navigate({ to: "/menu-editor" }),
     },
   ];
 
