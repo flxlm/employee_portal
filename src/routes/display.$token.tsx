@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import Lottie from "lottie-react";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
