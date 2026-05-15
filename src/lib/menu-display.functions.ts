@@ -112,7 +112,7 @@ async function buildMenu(): Promise<DisplayMenu> {
 }
 
 export const getDisplayMenu = createServerFn({ method: "GET" })
-  .inputValidator((input: { token: string }) => {
+  .inputValidator((input: { token: string; refreshKey?: number }) => {
     if (typeof input?.token !== "string") throw new Error("token required");
     return input;
   })
@@ -122,7 +122,7 @@ export const getDisplayMenu = createServerFn({ method: "GET" })
     }
     const now = Date.now();
     const hit = cache.get("menu");
-    if (hit && hit.expires > now) {
+    if (!data.refreshKey && hit && hit.expires > now) {
       return hit.data;
     }
     const fresh = await buildMenu();
