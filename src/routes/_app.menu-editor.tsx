@@ -281,6 +281,126 @@ function MenuEditorPage() {
     await reload();
   };
 
+  // ---- Subsection deletion flow ----
+  const [deleteSubTarget, setDeleteSubTarget] = useState<{
+    sectionId: string;
+    subId: string;
+    name: string;
+    itemCount: number;
+  } | null>(null);
+  const [deleteSubMode, setDeleteSubMode] = useState<"move" | "delete">("move");
+  const [deleteSubMoveTo, setDeleteSubMoveTo] = useState<string>("");
+  const [deleteSubBusy, setDeleteSubBusy] = useState(false);
+
+  const subsectionOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    sections.forEach((sec) => {
+      sec.subsections.forEach((ss) => {
+        if (deleteSubTarget && ss.id === deleteSubTarget.subId) return;
+        opts.push({
+          value: ss.id,
+          label: `${sec.name || "Untitled section"} › ${ss.name || "Untitled subsection"}`,
+        });
+      });
+    });
+    return opts;
+  }, [sections, deleteSubTarget]);
+
+  const requestDeleteSubsection = (sectionId: string, subId: string) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    const sub = sec?.subsections.find((ss) => ss.id === subId);
+    if (!sub) return;
+    if (sub.items.length === 0) {
+      void removeRow("menu_subsections", subId);
+      return;
+    }
+    setDeleteSubTarget({
+      sectionId,
+      subId,
+      name: sub.name || "Untitled subsection",
+      itemCount: sub.items.length,
+    });
+    setDeleteSubMode("move");
+    setDeleteSubMoveTo("");
+  };
+
+  const confirmDeleteSubsection = async () => {
+    if (!deleteSubTarget) return;
+    const sec = sections.find((s) => s.id === deleteSubTarget.sectionId);
+    const sub = sec?.subsections.find((ss) => ss.id === deleteSubTarget.subId);
+    if (!sub) {
+      setDeleteSubTarget(null);
+      return;
+    }
+    setDeleteSubBusy(true);
+    try {
+      // Flush any pending edits so version numbers are current
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      await flush();
+
+      if (deleteSubMode === "move") {
+        if (!deleteSubMoveTo) {
+          toast.error("Pick a destination subsection");
+          setDeleteSubBusy(false);
+          return;
+        }
+        // Determine display_order offset in destination
+        const dest = sections
+          .flatMap((s) => s.subsections)
+          .find((ss) => ss.id === deleteSubMoveTo);
+        const baseOrder = (dest?.items.length ?? 0) + 1;
+        const results = await Promise.all(
+          sub.items.map((it, i) =>
+            update({
+              data: {
+                table: "menu_items" as never,
+                id: it.id,
+                expectedVersion: it.version,
+                patch: {
+                  subsection_id: deleteSubMoveTo,
+                  display_order: baseOrder + i,
+                } as never,
+              },
+            }).catch((e) => ({ ok: false as const, error: e })),
+          ),
+        );
+        const failed = results.filter(
+          (r) => ("ok" in r && !r.ok) || ("error" in r && r.error),
+        ).length;
+        if (failed > 0) {
+          toast.error(`Failed to move ${failed} item${failed > 1 ? "s" : ""}`);
+          await reload();
+          setDeleteSubBusy(false);
+          return;
+        }
+      } else {
+        // Delete every item in the subsection
+        await Promise.all(
+          sub.items.map((it) =>
+            del({ data: { table: "menu_items" as never, id: it.id } }),
+          ),
+        );
+      }
+
+      // Now soft-delete the subsection itself
+      await del({ data: { table: "menu_subsections" as never, id: sub.id } });
+      await reload();
+      toast.success(
+        deleteSubMode === "move"
+          ? `Moved ${sub.items.length} item${sub.items.length > 1 ? "s" : ""} and deleted subsection`
+          : "Subsection and items deleted",
+      );
+      setDeleteSubTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete subsection");
+    } finally {
+      setDeleteSubBusy(false);
+    }
+  };
+
   const move = async (table: string, ids: string[], from: number, to: number) => {
     if (to < 0 || to >= ids.length) return;
     const next = [...ids];
