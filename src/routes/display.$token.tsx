@@ -34,6 +34,7 @@ export const Route = createFileRoute("/display/$token")({
 const NUM_COLUMNS = 4;
 
 function FormattedPrice({ cents }: { cents: number }) {
+  if (!cents) return null;
   const sign = cents < 0 ? "-" : "";
   const abs = Math.abs(cents);
   const dollars = Math.floor(abs / 100);
