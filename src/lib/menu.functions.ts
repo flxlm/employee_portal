@@ -191,7 +191,7 @@ export const updateRow = createServerFn({ method: "POST" })
 
 const insertInputSchema = z.object({
   table: z.enum(TABLES),
-  values: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  values: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())])),
 });
 
 export const insertRow = createServerFn({ method: "POST" })
