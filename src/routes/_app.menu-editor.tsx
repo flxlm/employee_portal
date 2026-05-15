@@ -109,15 +109,17 @@ function PriceInput({
 function MenuToggles({
   value,
   onChange,
+  options,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
+  options: MenuOptionLite[];
 }) {
   const set = new Set(value);
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 flex-wrap">
       <span className="text-xs text-muted-foreground mr-1">Show on:</span>
-      {MENU_OPTIONS.map((m) => {
+      {options.map((m) => {
         const on = set.has(m.key);
         return (
           <Toggle
@@ -128,7 +130,7 @@ function MenuToggles({
               const next = new Set(set);
               if (pressed) next.add(m.key);
               else next.delete(m.key);
-              onChange(MENU_OPTIONS.filter((o) => next.has(o.key)).map((o) => o.key));
+              onChange(options.filter((o) => next.has(o.key)).map((o) => o.key));
             }}
             className="h-7 px-2 text-xs"
           >
