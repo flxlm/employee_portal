@@ -9,6 +9,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -265,6 +281,126 @@ function MenuEditorPage() {
     await reload();
   };
 
+  // ---- Subsection deletion flow ----
+  const [deleteSubTarget, setDeleteSubTarget] = useState<{
+    sectionId: string;
+    subId: string;
+    name: string;
+    itemCount: number;
+  } | null>(null);
+  const [deleteSubMode, setDeleteSubMode] = useState<"move" | "delete">("move");
+  const [deleteSubMoveTo, setDeleteSubMoveTo] = useState<string>("");
+  const [deleteSubBusy, setDeleteSubBusy] = useState(false);
+
+  const subsectionOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    sections.forEach((sec) => {
+      sec.subsections.forEach((ss) => {
+        if (deleteSubTarget && ss.id === deleteSubTarget.subId) return;
+        opts.push({
+          value: ss.id,
+          label: `${sec.name || "Untitled section"} › ${ss.name || "Untitled subsection"}`,
+        });
+      });
+    });
+    return opts;
+  }, [sections, deleteSubTarget]);
+
+  const requestDeleteSubsection = (sectionId: string, subId: string) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    const sub = sec?.subsections.find((ss) => ss.id === subId);
+    if (!sub) return;
+    if (sub.items.length === 0) {
+      void removeRow("menu_subsections", subId);
+      return;
+    }
+    setDeleteSubTarget({
+      sectionId,
+      subId,
+      name: sub.name || "Untitled subsection",
+      itemCount: sub.items.length,
+    });
+    setDeleteSubMode("move");
+    setDeleteSubMoveTo("");
+  };
+
+  const confirmDeleteSubsection = async () => {
+    if (!deleteSubTarget) return;
+    const sec = sections.find((s) => s.id === deleteSubTarget.sectionId);
+    const sub = sec?.subsections.find((ss) => ss.id === deleteSubTarget.subId);
+    if (!sub) {
+      setDeleteSubTarget(null);
+      return;
+    }
+    setDeleteSubBusy(true);
+    try {
+      // Flush any pending edits so version numbers are current
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      await flush();
+
+      if (deleteSubMode === "move") {
+        if (!deleteSubMoveTo) {
+          toast.error("Pick a destination subsection");
+          setDeleteSubBusy(false);
+          return;
+        }
+        // Determine display_order offset in destination
+        const dest = sections
+          .flatMap((s) => s.subsections)
+          .find((ss) => ss.id === deleteSubMoveTo);
+        const baseOrder = (dest?.items.length ?? 0) + 1;
+        const results = await Promise.all(
+          sub.items.map((it, i) =>
+            update({
+              data: {
+                table: "menu_items" as never,
+                id: it.id,
+                expectedVersion: it.version,
+                patch: {
+                  subsection_id: deleteSubMoveTo,
+                  display_order: baseOrder + i,
+                } as never,
+              },
+            }).catch((e) => ({ ok: false as const, error: e })),
+          ),
+        );
+        const failed = results.filter(
+          (r) => ("ok" in r && !r.ok) || ("error" in r && r.error),
+        ).length;
+        if (failed > 0) {
+          toast.error(`Failed to move ${failed} item${failed > 1 ? "s" : ""}`);
+          await reload();
+          setDeleteSubBusy(false);
+          return;
+        }
+      } else {
+        // Delete every item in the subsection
+        await Promise.all(
+          sub.items.map((it) =>
+            del({ data: { table: "menu_items" as never, id: it.id } }),
+          ),
+        );
+      }
+
+      // Now soft-delete the subsection itself
+      await del({ data: { table: "menu_subsections" as never, id: sub.id } });
+      await reload();
+      toast.success(
+        deleteSubMode === "move"
+          ? `Moved ${sub.items.length} item${sub.items.length > 1 ? "s" : ""} and deleted subsection`
+          : "Subsection and items deleted",
+      );
+      setDeleteSubTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete subsection");
+    } finally {
+      setDeleteSubBusy(false);
+    }
+  };
+
   const move = async (table: string, ids: string[], from: number, to: number) => {
     if (to < 0 || to >= ids.length) return;
     const next = [...ids];
@@ -431,7 +567,7 @@ function MenuEditorPage() {
                         }}
                       />
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => removeRow("menu_subsections", sub.id)}>
+                    <Button size="icon" variant="ghost" onClick={() => requestDeleteSubsection(sec.id, sub.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <Button
@@ -564,6 +700,108 @@ function MenuEditorPage() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={!!deleteSubTarget}
+        onOpenChange={(o) => {
+          if (!o && !deleteSubBusy) setDeleteSubTarget(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete subsection “{deleteSubTarget?.name}”?</DialogTitle>
+            <DialogDescription>
+              This subsection contains {deleteSubTarget?.itemCount} item
+              {deleteSubTarget?.itemCount === 1 ? "" : "s"}. Choose what to do
+              with them.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="delete-sub-mode"
+                  className="mt-1"
+                  checked={deleteSubMode === "move"}
+                  onChange={() => setDeleteSubMode("move")}
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Move items to another subsection</div>
+                  <div className="text-xs text-muted-foreground">
+                    Items keep their data and order at the end of the destination.
+                  </div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="delete-sub-mode"
+                  className="mt-1"
+                  checked={deleteSubMode === "delete"}
+                  onChange={() => setDeleteSubMode("delete")}
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-destructive">Delete items along with the subsection</div>
+                  <div className="text-xs text-muted-foreground">
+                    All {deleteSubTarget?.itemCount} item
+                    {deleteSubTarget?.itemCount === 1 ? "" : "s"} will be removed.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {deleteSubMode === "move" && (
+              <div className="space-y-2">
+                <Label>Move items to</Label>
+                {subsectionOptions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No other subsections available — create one first or choose to delete the items.
+                  </p>
+                ) : (
+                  <Select value={deleteSubMoveTo} onValueChange={setDeleteSubMoveTo}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pick a destination subsection" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subsectionOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteSubTarget(null)}
+              disabled={deleteSubBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteSubsection}
+              disabled={
+                deleteSubBusy ||
+                (deleteSubMode === "move" && !deleteSubMoveTo)
+              }
+            >
+              {deleteSubBusy
+                ? "Working…"
+                : deleteSubMode === "move"
+                ? "Move items & delete subsection"
+                : "Delete subsection & items"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
