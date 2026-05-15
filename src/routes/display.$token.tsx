@@ -407,6 +407,14 @@ function DisplayPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isFullscreen) {
+      const prev = document.body.style.cursor;
+      document.body.style.cursor = "none";
+      return () => { document.body.style.cursor = prev; };
+    }
+  }, [isFullscreen]);
+
   const enterFullscreen = async () => {
     const el = document.documentElement as any;
     try {
