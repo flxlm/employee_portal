@@ -239,13 +239,13 @@ const COLUMN_CSS = `
 }
 .trailing-block {
   position: absolute;
-  right: 0;
+  left: var(--trailing-left, 0px);
   bottom: 0;
-  top: 55%;
+  top: var(--trailing-top, 55%);
   z-index: 3;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: var(--trailing-width, 100%);
   height: auto;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -276,7 +276,7 @@ const COLUMN_CSS = `
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: clamp(4rem, 12vh, 7rem);
+  height: clamp(3.5rem, 11vh, 6.5rem);
   padding-bottom: 0;
   overflow: visible;
 }
