@@ -152,13 +152,17 @@ function MenuToggles({
 
 function RowSettingsMenu({
   hidden,
+  soldOut,
   onToggleHidden,
+  onToggleSoldOut,
   onDuplicate,
   onDelete,
   size = "md",
 }: {
   hidden: boolean;
+  soldOut: boolean;
   onToggleHidden: () => void;
+  onToggleSoldOut: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
   size?: "sm" | "md";
@@ -173,6 +177,13 @@ function RowSettingsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
+          {soldOut ? (
+            <><RotateCcw className="h-4 w-4" /> Mark as available</>
+          ) : (
+            <><Ban className="h-4 w-4" /> Mark as sold out (today)</>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleHidden(); }}>
           {hidden ? (
             <><Eye className="h-4 w-4" /> Show on live menu</>
