@@ -94,9 +94,17 @@ function MenuEditorPage() {
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
   const toggleCollapsed = (id: string) =>
     setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleCollapsedSub = (id: string) =>
+    setCollapsedSubs((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
