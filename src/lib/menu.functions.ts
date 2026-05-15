@@ -113,6 +113,7 @@ export const listMenu = createServerFn({ method: "GET" })
         description: ss.description,
         display_order: ss.display_order,
         version: ss.version,
+        visible_menus: (ss as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
         items: itemsBySub.get(ss.id) || [],
       });
       subsBySec.set(ss.section_id, arr);
@@ -124,6 +125,7 @@ export const listMenu = createServerFn({ method: "GET" })
       description: s.description,
       display_order: s.display_order,
       version: s.version,
+      visible_menus: (s as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
       subsections: subsBySec.get(s.id) || [],
     }));
 
