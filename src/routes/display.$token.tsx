@@ -325,7 +325,7 @@ function DisplayPage() {
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
-      <div className="menu-item-row">
+      <div className="menu-item-row" style={styleFor("itemTitle")}>
         <span className="menu-item-name">{item.name}</span>
         <span className="menu-item-price">
           {item.priceLabel ? (
@@ -335,9 +335,21 @@ function DisplayPage() {
           ) : null}
         </span>
       </div>
-      {item.description && <p className="menu-item-sub">{item.description}</p>}
-      {item.subtext && <p className="menu-item-sub">{item.subtext}</p>}
-      {item.inlineNote && <span className="menu-item-note">{item.inlineNote}</span>}
+      {item.description && (
+        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+          {item.description}
+        </p>
+      )}
+      {item.subtext && (
+        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+          {item.subtext}
+        </p>
+      )}
+      {item.inlineNote && (
+        <span className="menu-item-note" style={styleFor("modification")}>
+          {item.inlineNote}
+        </span>
+      )}
     </div>
   );
 
