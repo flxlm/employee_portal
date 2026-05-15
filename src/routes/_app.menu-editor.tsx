@@ -410,6 +410,7 @@ function MenuEditorPage() {
       // Now soft-delete the subsection itself
       await del({ data: { table: "menu_subsections" as never, id: sub.id } });
       await reload();
+      triggerRefresh();
       toast.success(
         deleteSubMode === "move"
           ? `Moved ${sub.items.length} item${sub.items.length > 1 ? "s" : ""} and deleted subsection`
