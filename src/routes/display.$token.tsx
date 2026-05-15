@@ -165,6 +165,11 @@ function DisplayPage() {
               <h2
                 style={{
                   position: "relative",
+                  aspectRatio: "1 / 1",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   fontSize: "1.8vw",
                   fontWeight: 700,
                   letterSpacing: "-0.01em",
@@ -172,9 +177,10 @@ function DisplayPage() {
                   textAlign: "center",
                   margin: "0 0 1vw 0",
                   lineHeight: 1,
-                  padding: "1.4vw 0.6vw",
+                  padding: "0.6vw",
                   overflow: "hidden",
                   isolation: "isolate",
+                  boxSizing: "border-box",
                 }}
               >
                 <video
@@ -188,7 +194,7 @@ function DisplayPage() {
                     inset: 0,
                     width: "100%",
                     height: "100%",
-                    objectFit: "fill",
+                    objectFit: "cover",
                     zIndex: -1,
                     pointerEvents: "none",
                   }}
