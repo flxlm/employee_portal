@@ -501,7 +501,7 @@ function DisplayPage() {
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <div className="menu-flow" ref={flowRef}>
+      <div className="menu-flow" ref={flowRef} style={columnCountOverride ? { columnCount: columnCountOverride } : undefined}>
         {menus.map((menu) => (
           <Fragment key={menu.section}>
             <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
