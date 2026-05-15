@@ -303,17 +303,26 @@ function DisplayPage() {
       <div
         style={{
           position: "fixed",
-          bottom: "0.6vw",
-          right: "0.8vw",
+          bottom: "1rem",
+          right: "1.25rem",
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "0.3vw",
-          lineHeight: 1,
+          alignItems: "baseline",
+          gap: "0.4rem",
+          color: "#000",
+          fontFamily: globalFontFamily,
         }}
       >
-        <span style={styleFor("brand", { fontSize: "2.4vw", fontStyle: "normal" })}>✱</span>
-        <span style={styleFor("brand")}>Savsav</span>
+        <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>✱</span>
+        <span
+          style={{
+            fontSize: "0.85rem",
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          Savsav
+        </span>
       </div>
     </div>
   );
