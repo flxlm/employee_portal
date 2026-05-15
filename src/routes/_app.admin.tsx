@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -67,6 +67,20 @@ function AdminPage() {
           <Button asChild variant="outline">
             <Link to="/menu-formatting">
               <Type className="h-4 w-4 mr-2" /> Open formatting editor
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Live Menu timetable</CardTitle>
+          <CardDescription>Schedule which menu shows on the Live Menu display by day and time.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to="/live-menu-timetable">
+              <Clock className="h-4 w-4 mr-2" /> Open timetable
             </Link>
           </Button>
         </CardContent>
