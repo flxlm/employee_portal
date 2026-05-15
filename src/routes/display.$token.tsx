@@ -223,20 +223,38 @@ const COLUMN_CSS = `
   border: none;
 }
 .menu-section-block {
+  position: relative;
   width: 100%;
-  height: 240px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
   background: #000;
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  font-size: 2.75rem;
-  text-align: center;
+}
+.section-title-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  z-index: 1;
+  display: block;
+  border: none;
+}
+.section-title-text {
   position: relative;
-  overflow: hidden;
+  z-index: 2;
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(3rem, 6vw, 6rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+  line-height: 1;
 }
 
 .menu-section-title {
@@ -374,6 +392,7 @@ function DisplayPage() {
           <Fragment key={menu.section}>
             <div className="menu-section-block">
               <video
+                className="section-title-video"
                 src={MENU_ANIMATION_SRC}
                 autoPlay
                 muted
@@ -385,20 +404,10 @@ function DisplayPage() {
                 onError={(e) => {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  border: "none",
-                  display: "block",
-                  zIndex: 0,
-                }}
               />
-              <span style={{ position: "relative", zIndex: 1, ...styleFor("section") }}>
+              <h2 className="section-title-text" style={styleFor("section")}>
                 {menu.section}
-              </span>
+              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
