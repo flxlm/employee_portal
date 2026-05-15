@@ -366,6 +366,22 @@ function DisplayPage() {
             ))}
           </Fragment>
         ))}
+        <div className="menu-footer-block">
+          <video
+            src={MENU_FOOTER_ANIMATION_SRC}
+            autoPlay
+            muted
+            playsInline
+            loop
+            controls={false}
+            preload="metadata"
+            aria-hidden="true"
+            onError={(e) => {
+              const c = (e.currentTarget as HTMLVideoElement).parentElement;
+              if (c) c.style.display = "none";
+            }}
+          />
+        </div>
       </div>
 
       {debug && (
