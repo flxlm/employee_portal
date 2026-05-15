@@ -304,6 +304,7 @@ function MenuEditorPage() {
   const removeRow = async (table: string, id: string) => {
     await del({ data: { table: table as never, id } });
     await reload();
+    triggerRefresh();
   };
 
   // ---- Subsection deletion flow ----
