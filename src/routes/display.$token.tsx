@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMenuFormatting,
@@ -175,17 +175,40 @@ function PriceLabel({ label }: { label: string }) {
 }
 
 const COLUMN_CSS = `
-.menu-flow { column-count: 1; column-gap: 2.5rem; column-fill: balance; }
+.menu-flow {
+  column-count: 1;
+  column-gap: 2.5rem;
+  column-fill: auto;
+  height: calc(100vh - 3rem);
+  overflow: hidden;
+}
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
-.menu-flow > section {
+.menu-flow > section,
+.menu-flow > .menu-section-block {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
+.menu-section-block {
+  width: 100%;
+  height: 240px;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
 .menu-section-title {
   display: inline-block;
   font-weight: 800;
@@ -275,62 +298,30 @@ function DisplayPage() {
         color: "#000",
         fontFamily: globalFontFamily,
         position: "relative",
-        padding: "1.5rem 1.5rem 4rem 1.5rem",
+        padding: "1rem 1rem 2rem 1rem",
         boxSizing: "border-box",
       }}
     >
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      {menus.map((menu) => (
-        <div key={menu.section} style={{ marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
-            <video
-              key={menu.section}
-              src={MENU_ANIMATION_SRC}
-              autoPlay
-              muted
-              playsInline
-              loop={false}
-              controls={false}
-              preload="metadata"
-              onError={(e) => {
-                (e.currentTarget as HTMLVideoElement).style.display = "none";
-              }}
-              style={{
-                height: "1em",
-                width: "auto",
-                fontSize: "2.5rem",
-                background: "transparent",
-                display: "block",
-              }}
-            />
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "2.5rem",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                lineHeight: 1,
-              }}
-            >
-              {menu.section}
-            </h1>
-          </div>
-
-          <div className="menu-flow">
+      <div className="menu-flow">
+        {menus.map((menu) => (
+          <Fragment key={menu.section}>
+            <div className="menu-section-block">
+              <span>{menu.section}</span>
+            </div>
             {menu.subsections.map((sub, si) => (
-              <section key={si}>
+              <section key={`${menu.section}-${si}`}>
                 <h2 className="menu-section-title">{sub.subsection}</h2>
                 {sub.items.map((item, ii) => (
                   <div key={ii}>{renderItem(item)}</div>
                 ))}
               </section>
             ))}
-          </div>
-        </div>
-      ))}
+          </Fragment>
+        ))}
+      </div>
 
       {debug && (
         <div
