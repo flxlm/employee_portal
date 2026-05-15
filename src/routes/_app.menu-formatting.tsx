@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getMenuFormatting,
   saveMenuFormatting,
@@ -18,6 +19,17 @@ import {
 import { FONT_OPTIONS, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 
 export const Route = createFileRoute("/_app/menu-formatting")({
+  beforeLoad: async () => {
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session) throw redirect({ to: "/login" });
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", sess.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!data) throw redirect({ to: "/events" });
+  },
   component: MenuFormattingPage,
 });
 
