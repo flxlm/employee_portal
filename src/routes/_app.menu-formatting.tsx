@@ -265,6 +265,7 @@ function MenuFormattingPage() {
     try {
       await save({ data: { settings } });
       setSavedSettings(settings);
+      refreshDisplay({}).catch((e) => console.error("[formatting] refresh failed", e));
       toast.success("Formatting saved");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
