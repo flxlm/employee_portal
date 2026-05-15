@@ -157,6 +157,8 @@ function RowSettingsMenu({
   onToggleSoldOut,
   onDuplicate,
   onDelete,
+  onAddDescription,
+  canAddDescription,
   size = "md",
 }: {
   hidden: boolean;
@@ -165,6 +167,8 @@ function RowSettingsMenu({
   onToggleSoldOut: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onAddDescription?: () => void;
+  canAddDescription?: boolean;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -177,6 +181,11 @@ function RowSettingsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {onAddDescription && canAddDescription && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
+            <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
           {soldOut ? (
             <><RotateCcw className="h-4 w-4" /> Mark as available</>
@@ -913,6 +922,8 @@ function MenuEditorPage() {
                   }}
                   onDuplicate={() => duplicateSection(sec.id)}
                   onDelete={() => removeRow("menu_sections", sec.id)}
+                  onAddDescription={() => revealDesc(sec.id)}
+                  canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
                 />
                 <Button
                   size="icon"
@@ -990,6 +1001,8 @@ function MenuEditorPage() {
                       }}
                       onDuplicate={() => duplicateSubsection(sec.id, sub.id)}
                       onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
+                      onAddDescription={() => revealDesc(sub.id)}
+                      canAddDescription={!hasDesc(sub.id, sub.description)}
                     />
                     <Button
                       size="icon"
@@ -1016,28 +1029,14 @@ function MenuEditorPage() {
                             </Button>
                           </div>
                           <div className="flex-1 grid gap-2 sm:grid-cols-[1fr_120px]">
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={item.title}
-                                onChange={(e) => {
-                                  patchItem(sec.id, sub.id, item.id, { title: e.target.value });
-                                  queueEdit("menu_items", item.id, item.version, { title: e.target.value });
-                                }}
-                                placeholder="Item title"
-                              />
-                              {!hasDesc(item.id, item.description) && (
-                                <button
-                                  type="button"
-                                  onClick={() => revealDesc(item.id)}
-                                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0"
-                                  aria-label="Add description"
-                                  title="Add description"
-                                >
-                                  <Plus className="h-3 w-3" />
-                                  <span className="hidden sm:inline">description</span>
-                                </button>
-                              )}
-                            </div>
+                            <Input
+                              value={item.title}
+                              onChange={(e) => {
+                                patchItem(sec.id, sub.id, item.id, { title: e.target.value });
+                                queueEdit("menu_items", item.id, item.version, { title: e.target.value });
+                              }}
+                              placeholder="Item title"
+                            />
                             <PriceInput
                               cents={item.base_price_cents}
                               onCommit={(cents) => {
@@ -1074,6 +1073,8 @@ function MenuEditorPage() {
                             }}
                             onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}
+                            onAddDescription={() => revealDesc(item.id)}
+                            canAddDescription={!hasDesc(item.id, item.description)}
                           />
                         </div>
 
