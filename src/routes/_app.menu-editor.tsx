@@ -1203,6 +1203,72 @@ function MenuEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={addMenuOpen} onOpenChange={(o) => { if (!addingMenu) setAddMenuOpen(o); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add a new menu</DialogTitle>
+            <DialogDescription>
+              Adds a new menu (e.g. Brunch, Late night) that items can be assigned to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="new-menu-label">Menu name</Label>
+            <Input
+              id="new-menu-label"
+              autoFocus
+              value={newMenuLabel}
+              onChange={(e) => setNewMenuLabel(e.target.value)}
+              placeholder="e.g. Brunch"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newMenuLabel.trim() && !addingMenu) {
+                  e.preventDefault();
+                  (async () => {
+                    setAddingMenu(true);
+                    try {
+                      const { menu } = await createMenu({ data: { label: newMenuLabel.trim() } });
+                      setMenus((m) => [...m, menu]);
+                      setAddMenuOpen(false);
+                      setNewMenuLabel("");
+                      toast.success(`Added menu "${menu.label}"`);
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to add menu");
+                    } finally {
+                      setAddingMenu(false);
+                    }
+                  })();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMenuOpen(false)} disabled={addingMenu}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const label = newMenuLabel.trim();
+                if (!label) return;
+                setAddingMenu(true);
+                try {
+                  const { menu } = await createMenu({ data: { label } });
+                  setMenus((m) => [...m, menu]);
+                  setAddMenuOpen(false);
+                  setNewMenuLabel("");
+                  toast.success(`Added menu "${menu.label}"`);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to add menu");
+                } finally {
+                  setAddingMenu(false);
+                }
+              }}
+              disabled={addingMenu || !newMenuLabel.trim()}
+            >
+              {addingMenu ? "Adding…" : "Add menu"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
