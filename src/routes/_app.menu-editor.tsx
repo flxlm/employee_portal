@@ -234,8 +234,9 @@ function MenuEditorPage() {
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
 
   const reload = async () => {
-    const res = await list();
+    const [res, m] = await Promise.all([list(), fetchMenus()]);
     setSections(res.sections);
+    setMenus(m.menus);
   };
 
   useEffect(() => {
