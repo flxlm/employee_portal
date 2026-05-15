@@ -619,6 +619,27 @@ function DisplayPage() {
           Play Fullscreen
         </button>
       )}
+      {import.meta.env.DEV && isOverflowing && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            background: "#d00",
+            color: "#fff",
+            padding: "0.5rem 1rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: "0.875rem",
+            letterSpacing: "0.05em",
+            zIndex: 9999,
+            textAlign: "center",
+          }}
+        >
+          ⚠ Menu content is overflowing — {hiddenCount} item{hiddenCount === 1 ? "" : "s"} may be hidden. Remove items or increase viewport size.
+        </div>
+      )}
     </div>
   );
 }
