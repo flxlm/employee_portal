@@ -15,6 +15,7 @@ import {
   type TextStyle,
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
+import { FONT_OPTIONS, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 
 export const Route = createFileRoute("/_app/menu-formatting")({
   component: MenuFormattingPage,
