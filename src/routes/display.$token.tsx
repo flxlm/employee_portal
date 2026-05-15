@@ -134,7 +134,8 @@ function DisplayPage() {
     <div
       style={{
         width: "100vw",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#fff",
         color: "#000",
         fontFamily: FONT_STACK,
