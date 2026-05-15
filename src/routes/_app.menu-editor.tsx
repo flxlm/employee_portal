@@ -117,6 +117,9 @@ function MenuEditorPage() {
   const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
+  const [showDesc, setShowDesc] = useState<Set<string>>(new Set());
+  const revealDesc = (id: string) => setShowDesc((p) => { const n = new Set(p); n.add(id); return n; });
+  const hasDesc = (id: string, val: string | null | undefined) => (val && val.length > 0) || showDesc.has(id);
 
   const toggleCollapsed = (id: string) =>
     setCollapsed((prev) => {
