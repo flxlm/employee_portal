@@ -285,6 +285,14 @@ function MenuEditorPage() {
     }
   };
 
+  const discardChanges = async () => {
+    if (dirtyRef.current.size === 0) return;
+    dirtyRef.current.clear();
+    setDirtyCount(0);
+    await reload();
+    toast.success("Changes discarded");
+  };
+
   const queueEdit = (table: string, id: string, expectedVersion: number, patch: Record<string, unknown>) => {
     const key = `${table}:${id}`;
     const existing = dirtyRef.current.get(key);
