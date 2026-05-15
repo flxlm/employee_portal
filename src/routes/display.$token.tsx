@@ -134,7 +134,8 @@ function DisplayPage() {
     <div
       style={{
         width: "100vw",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#fff",
         color: "#000",
         fontFamily: FONT_STACK,
@@ -154,7 +155,8 @@ function DisplayPage() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "2vw",
+            justifyContent: "space-between",
+            height: "100%",
             paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
           }}
         >
