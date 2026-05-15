@@ -118,7 +118,6 @@ function DisplayPage() {
           key={section.id}
           style={{
             breakInside: "avoid",
-            WebkitColumnBreakInside: "avoid",
             pageBreakInside: "avoid",
             marginBottom: "1.6vw",
           }}
