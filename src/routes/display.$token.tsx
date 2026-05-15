@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import Lottie from "lottie-react";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { supabase } from "@/integrations/supabase/client";
-import menuAnimation from "@/assets/menu-animation.json";
+
+const MENU_ANIMATION_SRC = "/menu-animation.webm";
 
 type MenuType = "breakfast" | "lunch" | "dinner";
 const MENU_TYPES: MenuType[] = ["breakfast", "lunch", "dinner"];
@@ -137,15 +137,18 @@ function DisplayPage() {
               isolation: "isolate",
             }}
           >
-            <Lottie
-              animationData={menuAnimation}
+            <video
+              src={MENU_ANIMATION_SRC}
+              autoPlay
               loop
-              autoplay
+              muted
+              playsInline
               style={{
                 position: "absolute",
                 inset: 0,
                 width: "100%",
                 height: "100%",
+                objectFit: "cover",
                 zIndex: -1,
                 pointerEvents: "none",
               }}
