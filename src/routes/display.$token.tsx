@@ -338,10 +338,10 @@ function DisplayPage() {
         (it) => !it.description && it.modifications.length === 0,
       );
     return (
-      <div style={{ marginBottom: "1.2vw" }}>
-        {withTopGap && <div style={{ height: "1vw" }} />}
+      <div style={{ marginBottom: "0.5vw" }}>
+        {withTopGap && <div style={{ height: "0.4vw" }} />}
         {sub.name && (
-          <h3 style={styleFor("subsection", { margin: "0 0 0.6vw 0" })}>
+          <h3 style={styleFor("subsection", { margin: "0 0 0.25vw 0" })}>
             {sub.name}
           </h3>
         )}
