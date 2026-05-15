@@ -388,11 +388,11 @@ function DisplayPage() {
       const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
       const lastSection = sections.at(-1);
       const lastSectionRect = lastSection?.getBoundingClientRect();
-      const computed = window.getComputedStyle(flow);
-      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
-      const columnGap = Number.parseFloat(computed.columnGap) || 0;
-      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
-      const lastColumnLeft = (columnWidth + columnGap) * (columnCount - 1);
+      const fallbackWidth = flowRect.width;
+      const lastColumnLeft = lastSectionRect
+        ? Math.max(0, lastSectionRect.left - flowRect.left)
+        : 0;
+      const columnWidth = lastSectionRect?.width ?? fallbackWidth;
       const measuredTop = lastSectionRect
         ? lastSectionRect.bottom - flowRect.top + 10
         : flowRect.height * 0.65;
