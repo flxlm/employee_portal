@@ -129,3 +129,21 @@ export const getDisplayMenu = createServerFn({ method: "GET" })
     cache.set("menu", { data: fresh, expires: now + TTL_MS });
     return fresh;
   });
+
+export const refreshDisplayMenu = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    clearDisplayCache();
+    try {
+      const channel = supabaseAdmin.channel("menu-display");
+      await channel.send({
+        type: "broadcast",
+        event: "refresh",
+        payload: { at: new Date().toISOString() },
+      });
+      await supabaseAdmin.removeChannel(channel);
+    } catch (e) {
+      console.error("[refreshDisplayMenu] broadcast failed", e);
+    }
+    return { ok: true };
+  });
