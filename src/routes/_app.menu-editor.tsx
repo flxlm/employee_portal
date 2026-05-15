@@ -923,6 +923,7 @@ function MenuEditorPage() {
                         </button>
                       )}
                       <MenuToggles
+                        options={menus}
                         value={sub.visible_menus}
                         onChange={(next) => {
                           patchSubsection(sec.id, sub.id, { visible_menus: next });
