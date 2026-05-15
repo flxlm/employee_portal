@@ -218,16 +218,33 @@ function MenuFormattingPage() {
   const fetchSettings = useServerFn(getMenuFormatting);
   const save = useServerFn(saveMenuFormatting);
   const [settings, setSettings] = useState<MenuFormatting>({});
+  const [savedSettings, setSavedSettings] = useState<MenuFormatting>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
     fetchSettings({})
-      .then((s) => setSettings(s || {}))
+      .then((s) => {
+        const init = s || {};
+        setSettings(init);
+        setSavedSettings(init);
+      })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [fetchSettings]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   const updateKey = (key: FormattingKey, next: TextStyle) => {
     setSettings((prev) => ({ ...prev, [key]: next }));
@@ -245,6 +262,7 @@ function MenuFormattingPage() {
     setSaving(true);
     try {
       await save({ data: { settings } });
+      setSavedSettings(settings);
       toast.success("Formatting saved");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
