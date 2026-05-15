@@ -19,6 +19,7 @@ export type MenuItem = {
   display_order: number;
   version: number;
   is_hidden: boolean;
+  sold_out_date: string | null;
   modifications: MenuModification[];
 };
 
@@ -31,6 +32,7 @@ export type MenuSubsection = {
   version: number;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   items: MenuItem[];
 };
 
@@ -42,6 +44,7 @@ export type MenuSection = {
   version: number;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   subsections: MenuSubsection[];
 };
 
