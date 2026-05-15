@@ -45,11 +45,7 @@ type MenuItem = {
 };
 type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean };
 type Menu = { section: string; subsections: Subsection[]; hidden?: boolean };
-type MenuFilter = "breakfast" | "lunch" | "dinner";
-
-function isMenuFilter(value: unknown): value is MenuFilter {
-  return value === "breakfast" || value === "lunch" || value === "dinner";
-}
+type MenuFilter = string;
 
 function isVisibleOnMenu(visibleMenus: string[], selectedMenu?: MenuFilter) {
   return !selectedMenu || visibleMenus.length === 0 || visibleMenus.includes(selectedMenu);
