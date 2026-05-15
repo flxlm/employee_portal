@@ -137,6 +137,7 @@ export const listMenu = createServerFn({ method: "GET" })
       version: s.version,
       visible_menus: (s as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
       is_hidden: (s as { is_hidden?: boolean }).is_hidden ?? false,
+      sold_out_date: (s as { sold_out_date?: string | null }).sold_out_date ?? null,
       subsections: subsBySec.get(s.id) || [],
     }));
 
