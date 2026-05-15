@@ -279,7 +279,7 @@ function DisplayPage() {
                                   key={m.id}
                                   style={{
                                     display: "flex",
-                                    justifyContent: "space-between",
+                                    justifyContent: "flex-end",
                                     gap: "0.4vw",
                                   }}
                                 >
