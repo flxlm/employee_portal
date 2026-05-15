@@ -700,6 +700,108 @@ function MenuEditorPage() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={!!deleteSubTarget}
+        onOpenChange={(o) => {
+          if (!o && !deleteSubBusy) setDeleteSubTarget(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete subsection “{deleteSubTarget?.name}”?</DialogTitle>
+            <DialogDescription>
+              This subsection contains {deleteSubTarget?.itemCount} item
+              {deleteSubTarget?.itemCount === 1 ? "" : "s"}. Choose what to do
+              with them.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="delete-sub-mode"
+                  className="mt-1"
+                  checked={deleteSubMode === "move"}
+                  onChange={() => setDeleteSubMode("move")}
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Move items to another subsection</div>
+                  <div className="text-xs text-muted-foreground">
+                    Items keep their data and order at the end of the destination.
+                  </div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="delete-sub-mode"
+                  className="mt-1"
+                  checked={deleteSubMode === "delete"}
+                  onChange={() => setDeleteSubMode("delete")}
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-destructive">Delete items along with the subsection</div>
+                  <div className="text-xs text-muted-foreground">
+                    All {deleteSubTarget?.itemCount} item
+                    {deleteSubTarget?.itemCount === 1 ? "" : "s"} will be removed.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {deleteSubMode === "move" && (
+              <div className="space-y-2">
+                <Label>Move items to</Label>
+                {subsectionOptions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No other subsections available — create one first or choose to delete the items.
+                  </p>
+                ) : (
+                  <Select value={deleteSubMoveTo} onValueChange={setDeleteSubMoveTo}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pick a destination subsection" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subsectionOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteSubTarget(null)}
+              disabled={deleteSubBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteSubsection}
+              disabled={
+                deleteSubBusy ||
+                (deleteSubMode === "move" && !deleteSubMoveTo)
+              }
+            >
+              {deleteSubBusy
+                ? "Working…"
+                : deleteSubMode === "move"
+                ? "Move items & delete subsection"
+                : "Delete subsection & items"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
