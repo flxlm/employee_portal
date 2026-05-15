@@ -192,12 +192,30 @@ function DisplayPage() {
         section: sec,
       });
       sec.subsections.forEach((sub) => {
-        out.push({
-          kind: "subsection",
-          key: `s-${sub.id}`,
-          sectionId: sec.id,
-          section: sec,
-          sub,
+        const compact =
+          sub.items.length >= 3 &&
+          sub.items.every(
+            (it) => !it.description && it.modifications.length === 0,
+          );
+        if (sub.name) {
+          out.push({
+            kind: "subsection-header",
+            key: `sh-${sub.id}`,
+            sectionId: sec.id,
+            subId: sub.id,
+            sub,
+          });
+        }
+        sub.items.forEach((item, idx) => {
+          out.push({
+            kind: "item",
+            key: `i-${item.id}`,
+            sectionId: sec.id,
+            subId: sub.id,
+            item,
+            compact,
+            isFirstInSub: idx === 0,
+          });
         });
       });
     });
