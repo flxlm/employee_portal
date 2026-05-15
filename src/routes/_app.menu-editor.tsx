@@ -333,15 +333,6 @@ function MenuEditorPage() {
           <Card key={sec.id} className="border-2">
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => toggleCollapsed(sec.id)}
-                  aria-label={collapsed.has(sec.id) ? "Expand section" : "Collapse section"}
-                >
-                  {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
                 <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
                   <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={sIdx === 0} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)} aria-label="Move section up">
                     <ChevronUp className="h-4 w-4" />
@@ -381,6 +372,15 @@ function MenuEditorPage() {
                 </div>
                 <Button size="icon" variant="ghost" onClick={() => removeRow("menu_sections", sec.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => toggleCollapsed(sec.id)}
+                  aria-label={collapsed.has(sec.id) ? "Expand section" : "Collapse section"}
+                >
+                  {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>
