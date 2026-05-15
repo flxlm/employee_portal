@@ -13,6 +13,7 @@ export type DisplaySubsection = {
   id: string;
   name: string;
   description: string;
+  visible_menus: string[];
   items: DisplayItem[];
 };
 
@@ -20,6 +21,7 @@ export type DisplaySection = {
   id: string;
   name: string;
   description: string;
+  visible_menus: string[];
   subsections: DisplaySubsection[];
 };
 
