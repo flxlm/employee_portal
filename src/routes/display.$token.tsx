@@ -137,15 +137,18 @@ function DisplayPage() {
               isolation: "isolate",
             }}
           >
-            <Lottie
-              animationData={menuAnimation}
+            <video
+              src={MENU_ANIMATION_SRC}
+              autoPlay
               loop
-              autoplay
+              muted
+              playsInline
               style={{
                 position: "absolute",
                 inset: 0,
                 width: "100%",
                 height: "100%",
+                objectFit: "cover",
                 zIndex: -1,
                 pointerEvents: "none",
               }}
