@@ -298,7 +298,7 @@ function DisplayPage() {
         color: "#000",
         fontFamily: globalFontFamily,
         position: "relative",
-        padding: "1.5rem 1.5rem 4rem 1.5rem",
+        padding: "1rem 1rem 2rem 1rem",
         boxSizing: "border-box",
       }}
     >
