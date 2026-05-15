@@ -152,15 +152,12 @@ body { font-size: calc(16px * var(--menu-scale)); }
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
-.menu-flow > .menu-section-block,
-.menu-flow > .menu-footer-block {
+.menu-flow > .menu-section-block {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
   margin-bottom: 1rem;
-}
-.menu-flow > .menu-section-block {
   break-after: avoid;
   -webkit-column-break-after: avoid;
   page-break-after: avoid;
@@ -174,40 +171,19 @@ body { font-size: calc(16px * var(--menu-scale)); }
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
 }
-.menu-footer-block {
-  width: 100%;
-  min-height: 35vh;
-  max-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  margin-top: 0.5rem;
-}
-.menu-footer-block video {
-  width: 100%;
-  height: 100%;
-  max-height: 60vh;
-  object-fit: contain;
-  object-position: center center;
-  display: block;
-  border: none;
-}
 .menu-end-logo {
   break-inside: avoid;
+  -webkit-column-break-inside: avoid;
   width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 .menu-end-logo img {
   width: 100%;
+  max-width: 12rem;
   height: auto;
-  max-height: clamp(3.5rem, 11vh, 6.5rem);
-  object-fit: contain;
-  object-position: left;
   display: block;
+  margin: 0 auto;
+  object-fit: contain;
 }
 .menu-section-block {
   position: relative;
@@ -406,33 +382,46 @@ function DisplayPage() {
     let raf: number | null = null;
     let timer: number | null = null;
 
-    const overflows = () => document.documentElement.scrollHeight > window.innerHeight + 2;
+    const overflows = () => {
+      const flow = flowRef.current;
+      if (!flow) return false;
+      const lastChild = flow.lastElementChild as HTMLElement | null;
+      if (!lastChild) return false;
+      const flowRect = flow.getBoundingClientRect();
+      const lastRect = lastChild.getBoundingClientRect();
+      return lastRect.bottom > flowRect.bottom + 2 || lastRect.right > flowRect.right + 2;
+    };
 
-    const fit = () => {
+    const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+    const fit = async () => {
       document.documentElement.style.setProperty("--menu-scale", "1");
+      await nextFrame();
       let scale = 1;
-      const tick = () => {
-        if (!overflows() || scale <= MIN_SCALE) {
-          const stillOverflows = overflows();
-          if (stillOverflows && scale <= MIN_SCALE + 0.0001) {
-            const overflowPx = document.documentElement.scrollHeight - window.innerHeight;
-            const est = Math.max(1, Math.ceil(overflowPx / 60));
-            setIsOverflowing(true);
-            setHiddenCount(est);
-            if (import.meta.env.DEV) {
-              console.warn("[Menu] Content overflows viewport. Scale floor reached.");
-            }
-          } else {
-            setIsOverflowing(false);
-            setHiddenCount(0);
-          }
-          return;
-        }
+      while (overflows() && scale > MIN_SCALE) {
         scale = Math.max(MIN_SCALE, scale - STEP);
         document.documentElement.style.setProperty("--menu-scale", String(scale));
-        raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
+        await nextFrame();
+      }
+      if (overflows()) {
+        const flow = flowRef.current;
+        const overflowPx = flow
+          ? Math.max(
+              0,
+              (flow.lastElementChild as HTMLElement).getBoundingClientRect().bottom -
+                flow.getBoundingClientRect().bottom,
+            )
+          : 0;
+        const est = Math.max(1, Math.ceil(overflowPx / 60));
+        setIsOverflowing(true);
+        setHiddenCount(est);
+        if (import.meta.env.DEV) {
+          console.warn("[Menu] Content overflows viewport. Scale floor reached.");
+        }
+      } else {
+        setIsOverflowing(false);
+        setHiddenCount(0);
+      }
     };
 
     fit();
