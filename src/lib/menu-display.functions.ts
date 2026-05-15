@@ -47,10 +47,11 @@ export function clearDisplayCache() {
 }
 
 async function buildMenu(): Promise<DisplayMenu> {
-  const [{ data, error }, secVis, subVis] = await Promise.all([
+  const [{ data, error }, secVis, subVis, itemHidden] = await Promise.all([
     supabaseAdmin.from("menu_display_view").select("*"),
-    supabaseAdmin.from("menu_sections").select("id, visible_menus"),
-    supabaseAdmin.from("menu_subsections").select("id, visible_menus"),
+    supabaseAdmin.from("menu_sections").select("id, visible_menus, is_hidden"),
+    supabaseAdmin.from("menu_subsections").select("id, visible_menus, is_hidden"),
+    supabaseAdmin.from("menu_items").select("id, is_hidden").eq("is_deleted", false),
   ]);
   if (error) throw error;
 
@@ -59,6 +60,15 @@ async function buildMenu(): Promise<DisplayMenu> {
   );
   const subVisMap = new Map<string, string[]>(
     (subVis.data || []).map((r: { id: string; visible_menus: string[] | null }) => [r.id, r.visible_menus || []])
+  );
+  const secHiddenMap = new Map<string, boolean>(
+    (secVis.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
+  );
+  const subHiddenMap = new Map<string, boolean>(
+    (subVis.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
+  );
+  const itemHiddenMap = new Map<string, boolean>(
+    (itemHidden.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
   );
 
   const sections = new Map<string, DisplaySection>();
@@ -71,6 +81,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         name: row.section_name || "",
         description: row.section_description || "",
         visible_menus: secVisMap.get(row.section_id) || [],
+        is_hidden: secHiddenMap.get(row.section_id) || false,
         subsections: [],
       };
       sections.set(row.section_id, sec);
@@ -83,6 +94,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         name: row.subsection_name || "",
         description: row.subsection_description || "",
         visible_menus: subVisMap.get(row.subsection_id) || [],
+        is_hidden: subHiddenMap.get(row.subsection_id) || false,
         items: [],
       };
       sec.subsections.push(sub);
@@ -99,6 +111,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         title: row.item_title || "",
         description: row.item_description || "",
         base_price_cents: row.base_price_cents || 0,
+        is_hidden: itemHiddenMap.get(row.item_id) || false,
         modifications: mods.map((m) => ({
           id: m.id,
           name: m.name,
