@@ -187,12 +187,32 @@ const COLUMN_CSS = `
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
 .menu-flow > section,
-.menu-flow > .menu-section-block {
+.menu-flow > .menu-section-block,
+.menu-flow > .menu-footer-block {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
   margin-bottom: 1rem;
+}
+.menu-footer-block {
+  width: 100%;
+  min-height: 35vh;
+  max-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-top: 0.5rem;
+}
+.menu-footer-block video {
+  width: 100%;
+  height: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  border: none;
 }
 .menu-section-block {
   width: 100%;
