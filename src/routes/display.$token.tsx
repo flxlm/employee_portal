@@ -386,15 +386,19 @@ function DisplayPage() {
 
       const flowRect = flow.getBoundingClientRect();
       const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
-      const lastSection = sections.at(-1);
-      const lastSectionRect = lastSection?.getBoundingClientRect();
-      const fallbackWidth = flowRect.width;
-      const lastColumnLeft = lastSectionRect
-        ? Math.max(0, lastSectionRect.left - flowRect.left)
-        : 0;
-      const columnWidth = lastSectionRect?.width ?? fallbackWidth;
-      const measuredTop = lastSectionRect
-        ? lastSectionRect.bottom - flowRect.top + 10
+      const computed = window.getComputedStyle(flow);
+      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
+      const columnGap = Number.parseFloat(computed.columnGap) || 0;
+      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
+      const lastColumnLeft = (columnWidth + columnGap) * (columnCount - 1);
+      const lastColumnStart = flowRect.left + lastColumnLeft - 1;
+      const lastColumnEnd = lastColumnStart + columnWidth + 2;
+      const lastVisibleInLastColumn = sections
+        .map((section) => section.getBoundingClientRect())
+        .filter((rect) => rect.left >= lastColumnStart && rect.right <= lastColumnEnd)
+        .sort((a, b) => b.bottom - a.bottom)[0];
+      const measuredTop = lastVisibleInLastColumn
+        ? lastVisibleInLastColumn.bottom - flowRect.top + 10
         : flowRect.height * 0.65;
       const top = Math.max(0, Math.min(measuredTop, flowRect.height - 128));
 
