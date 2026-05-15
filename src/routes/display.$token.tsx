@@ -99,8 +99,18 @@ function DisplayPage() {
     );
   }
 
-  const columns: typeof menu.sections[] = [[], [], [], []];
-  menu.sections.forEach((s, i) => columns[i % 4].push(s));
+  const filteredSections = menuFilter
+    ? menu.sections
+        .filter((s) => s.visible_menus.includes(menuFilter))
+        .map((s) => ({
+          ...s,
+          subsections: s.subsections.filter((sub) => sub.visible_menus.includes(menuFilter)),
+        }))
+        .filter((s) => s.subsections.length > 0)
+    : menu.sections;
+
+  const columns: typeof filteredSections[] = [[], [], [], []];
+  filteredSections.forEach((s, i) => columns[i % 4].push(s));
 
   return (
     <div
