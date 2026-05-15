@@ -131,7 +131,6 @@ function MenuEditorPage() {
   const expandAll = () => setCollapsed(new Set());
 
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reload = async () => {
     const res = await list();
@@ -142,15 +141,22 @@ function MenuEditorPage() {
     reload().finally(() => setLoading(false));
   }, []);
 
-  const scheduleFlush = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(flush, DEBOUNCE_MS);
-  };
+  // Warn on unload if there are unsaved edits
+  useEffect(() => {
+    if (dirtyCount === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirtyCount]);
 
   const flush = async () => {
     const items = Array.from(dirtyRef.current.values());
     if (items.length === 0) return;
     dirtyRef.current.clear();
+    setDirtyCount(0);
     setSavingCount((c) => c + items.length);
     try {
       const results = await Promise.all(
@@ -161,13 +167,21 @@ function MenuEditorPage() {
         )
       );
       let conflicts = 0;
+      let errors = 0;
       for (const r of results) {
         if ("conflict" in r && r.conflict) conflicts++;
-        if ("error" in r && r.error) console.error(r.error);
+        if ("error" in r && r.error) {
+          errors++;
+          console.error(r.error);
+        }
       }
       if (conflicts > 0) {
         toast.error(`${conflicts} edit conflict${conflicts > 1 ? "s" : ""} — reloading`);
         await reload();
+      } else if (errors > 0) {
+        toast.error(`${errors} change${errors > 1 ? "s" : ""} failed to save`);
+      } else {
+        toast.success("Changes saved");
       }
     } finally {
       setSavingCount((c) => Math.max(0, c - items.length));
@@ -183,7 +197,7 @@ function MenuEditorPage() {
       expectedVersion: existing?.expectedVersion ?? expectedVersion,
       patch: { ...(existing?.patch || {}), ...patch },
     });
-    scheduleFlush();
+    setDirtyCount(dirtyRef.current.size);
   };
 
   const patchSection = (id: string, patch: Partial<MenuSection>) => {
