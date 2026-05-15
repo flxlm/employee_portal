@@ -28,6 +28,7 @@ export type MenuSubsection = {
   description: string;
   display_order: number;
   version: number;
+  visible_menus: string[];
   items: MenuItem[];
 };
 
@@ -37,6 +38,7 @@ export type MenuSection = {
   description: string;
   display_order: number;
   version: number;
+  visible_menus: string[];
   subsections: MenuSubsection[];
 };
 
@@ -111,6 +113,7 @@ export const listMenu = createServerFn({ method: "GET" })
         description: ss.description,
         display_order: ss.display_order,
         version: ss.version,
+        visible_menus: (ss as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
         items: itemsBySub.get(ss.id) || [],
       });
       subsBySec.set(ss.section_id, arr);
@@ -122,6 +125,7 @@ export const listMenu = createServerFn({ method: "GET" })
       description: s.description,
       display_order: s.display_order,
       version: s.version,
+      visible_menus: (s as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
       subsections: subsBySec.get(s.id) || [],
     }));
 
@@ -135,7 +139,10 @@ const updateInputSchema = z.object({
   table: z.enum(TABLES),
   id: z.string().uuid(),
   expectedVersion: z.number().int().nonnegative(),
-  patch: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  patch: z.record(
+    z.string(),
+    z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())])
+  ),
 });
 
 // Generic update with optimistic locking

@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,12 @@ export const Route = createFileRoute("/_app/menu-editor")({
 
 const DEBOUNCE_MS = 500;
 
+const MENU_OPTIONS = [
+  { key: "breakfast", label: "Breakfast" },
+  { key: "lunch", label: "Lunch" },
+  { key: "dinner", label: "Dinner" },
+] as const;
+
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
 
 function formatPrice(cents: number) {
@@ -34,6 +41,40 @@ function parsePrice(s: string): number | null {
   const n = Number(s);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
+}
+
+function MenuToggles({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const set = new Set(value);
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-muted-foreground mr-1">Show on:</span>
+      {MENU_OPTIONS.map((m) => {
+        const on = set.has(m.key);
+        return (
+          <Toggle
+            key={m.key}
+            size="sm"
+            pressed={on}
+            onPressedChange={(pressed) => {
+              const next = new Set(set);
+              if (pressed) next.add(m.key);
+              else next.delete(m.key);
+              onChange(MENU_OPTIONS.filter((o) => next.has(o.key)).map((o) => o.key));
+            }}
+            className="h-7 px-2 text-xs"
+          >
+            {m.label}
+          </Toggle>
+        );
+      })}
+    </div>
+  );
 }
 
 function MenuEditorPage() {
@@ -46,6 +87,17 @@ function MenuEditorPage() {
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleCollapsed = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const collapseAll = () => setCollapsed(new Set(sections.map((s) => s.id)));
+  const expandAll = () => setCollapsed(new Set());
 
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -244,6 +296,9 @@ function MenuEditorPage() {
               <ExternalLink className="h-4 w-4" /> Live menu
             </a>
           </Button>
+          <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
+            {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
+          </Button>
           <Button onClick={addSection} size="sm">
             <Plus className="h-4 w-4" /> Section
           </Button>
@@ -255,6 +310,15 @@ function MenuEditorPage() {
           <Card key={sec.id} className="border-2">
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => toggleCollapsed(sec.id)}
+                  aria-label={collapsed.has(sec.id) ? "Expand section" : "Collapse section"}
+                >
+                  {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
                 <div className="flex flex-col">
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)}>
                     <ChevronUp className="h-4 w-4" />
@@ -273,14 +337,23 @@ function MenuEditorPage() {
                     }}
                     placeholder="Section name"
                   />
-                  <Textarea
-                    rows={1}
-                    value={sec.description}
-                    onChange={(e) => {
-                      patchSection(sec.id, { description: e.target.value });
-                      queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                  {!collapsed.has(sec.id) && (
+                    <Textarea
+                      rows={1}
+                      value={sec.description}
+                      onChange={(e) => {
+                        patchSection(sec.id, { description: e.target.value });
+                        queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                      }}
+                      placeholder="Section description"
+                    />
+                  )}
+                  <MenuToggles
+                    value={sec.visible_menus}
+                    onChange={(next) => {
+                      patchSection(sec.id, { visible_menus: next });
+                      queueEdit("menu_sections", sec.id, sec.version, { visible_menus: next });
                     }}
-                    placeholder="Section description"
                   />
                 </div>
                 <Button size="icon" variant="ghost" onClick={() => removeRow("menu_sections", sec.id)}>
@@ -288,6 +361,7 @@ function MenuEditorPage() {
                 </Button>
               </div>
             </CardHeader>
+            {!collapsed.has(sec.id) && (
             <CardContent className="space-y-4">
               {sec.subsections.map((sub, ssIdx) => (
                 <div key={sub.id} className="rounded-md border p-3 space-y-3">
@@ -317,6 +391,13 @@ function MenuEditorPage() {
                           queueEdit("menu_subsections", sub.id, sub.version, { description: e.target.value });
                         }}
                         placeholder="Subsection description"
+                      />
+                      <MenuToggles
+                        value={sub.visible_menus}
+                        onChange={(next) => {
+                          patchSubsection(sec.id, sub.id, { visible_menus: next });
+                          queueEdit("menu_subsections", sub.id, sub.version, { visible_menus: next });
+                        }}
                       />
                     </div>
                     <Button size="icon" variant="ghost" onClick={() => removeRow("menu_subsections", sub.id)}>
@@ -423,6 +504,7 @@ function MenuEditorPage() {
                 <Plus className="h-3 w-3" /> Add subsection
               </Button>
             </CardContent>
+            )}
           </Card>
         ))}
 
