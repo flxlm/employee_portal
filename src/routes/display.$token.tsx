@@ -435,8 +435,8 @@ function DisplayPage() {
         position: "relative",
         display: "grid",
         gridTemplateColumns: `repeat(${NUM_COLUMNS}, 1fr)`,
-        padding: "2vw 1.6vw 7vw 1.6vw",
-        gap: "1.6vw",
+        padding: "0.8vw 0.8vw 3vw 0.8vw",
+        gap: "0.8vw",
         boxSizing: "border-box",
       }}
     >
