@@ -396,12 +396,15 @@ function DisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    const eventName = "fullscreenchange" in document ? "fullscreenchange" : "webkitfullscreenchange";
     const onChange = () => {
       setIsFullscreen(!!document.fullscreenElement || !!(document as any).webkitFullscreenElement);
     };
-    document.addEventListener(eventName, onChange);
-    return () => document.removeEventListener(eventName, onChange);
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
   }, []);
 
   const enterFullscreen = async () => {
