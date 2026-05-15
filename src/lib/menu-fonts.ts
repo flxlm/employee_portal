@@ -19,6 +19,18 @@ export const FONT_OPTIONS: FontOption[] = [
   { label: "PP Neue Montreal Mono Regular", value: '"PP Neue Montreal Mono Regular", ui-monospace, monospace' },
   { label: "PP Neue Montreal Mono Medium", value: '"PP Neue Montreal Mono Medium", ui-monospace, monospace' },
   { label: "PP Neue Montreal Mono Bold", value: '"PP Neue Montreal Mono Bold", ui-monospace, monospace' },
+
+  // PP Neue Corp Condensed
+  { label: "PP Neue Corp Condensed Ultralight", value: '"PP Neue Corp Condensed Ultralight", sans-serif' },
+  { label: "PP Neue Corp Condensed Ultralight Italic", value: '"PP Neue Corp Condensed Ultralight Italic", sans-serif' },
+  { label: "PP Neue Corp Condensed Thin", value: '"PP Neue Corp Condensed Thin", sans-serif' },
+  { label: "PP Neue Corp Condensed Thin Italic", value: '"PP Neue Corp Condensed Thin Italic", sans-serif' },
+  { label: "PP Neue Corp Condensed Medium", value: '"PP Neue Corp Condensed Medium", sans-serif' },
+  { label: "PP Neue Corp Condensed Medium Italic", value: '"PP Neue Corp Condensed Medium Italic", sans-serif' },
+  { label: "PP Neue Corp Condensed Ultrabold", value: '"PP Neue Corp Condensed Ultrabold", sans-serif' },
+  { label: "PP Neue Corp Condensed Ultrabold Italic", value: '"PP Neue Corp Condensed Ultrabold Italic", sans-serif' },
+  { label: "PP Neue Corp Condensed Black", value: '"PP Neue Corp Condensed Black", sans-serif' },
+  { label: "PP Neue Corp Condensed Black Italic", value: '"PP Neue Corp Condensed Black Italic", sans-serif' },
   { label: "System sans-serif", value: "system-ui, -apple-system, sans-serif" },
   { label: "System serif", value: 'Georgia, "Times New Roman", serif' },
   { label: "System monospace", value: "ui-monospace, SFMono-Regular, Menlo, monospace" },
