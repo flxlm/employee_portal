@@ -393,6 +393,16 @@ function DisplayPage() {
   );
 
   const SOLD_OUT_COLOR = "#e5e5e5";
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const eventName = "fullscreenchange" in document ? "fullscreenchange" : "webkitfullscreenchange";
+    const onChange = () => {
+      setIsFullscreen(!!document.fullscreenElement || !!(document as any).webkitFullscreenElement);
+    };
+    document.addEventListener(eventName, onChange);
+    return () => document.removeEventListener(eventName, onChange);
+  }, []);
 
   const renderItem = (item: MenuItem, soldOut: boolean) => (
     <div className="menu-item" style={{ ...(item.hidden ? { opacity: 0.35 } : {}), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
