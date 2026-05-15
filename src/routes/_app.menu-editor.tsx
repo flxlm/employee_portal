@@ -1029,28 +1029,14 @@ function MenuEditorPage() {
                             </Button>
                           </div>
                           <div className="flex-1 grid gap-2 sm:grid-cols-[1fr_120px]">
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={item.title}
-                                onChange={(e) => {
-                                  patchItem(sec.id, sub.id, item.id, { title: e.target.value });
-                                  queueEdit("menu_items", item.id, item.version, { title: e.target.value });
-                                }}
-                                placeholder="Item title"
-                              />
-                              {!hasDesc(item.id, item.description) && (
-                                <button
-                                  type="button"
-                                  onClick={() => revealDesc(item.id)}
-                                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0"
-                                  aria-label="Add description"
-                                  title="Add description"
-                                >
-                                  <Plus className="h-3 w-3" />
-                                  <span className="hidden sm:inline">description</span>
-                                </button>
-                              )}
-                            </div>
+                            <Input
+                              value={item.title}
+                              onChange={(e) => {
+                                patchItem(sec.id, sub.id, item.id, { title: e.target.value });
+                                queueEdit("menu_items", item.id, item.version, { title: e.target.value });
+                              }}
+                              placeholder="Item title"
+                            />
                             <PriceInput
                               cents={item.base_price_cents}
                               onCommit={(cents) => {
