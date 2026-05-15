@@ -407,33 +407,6 @@ function DisplayPage() {
     };
   }, []);
 
-  const [columnCountOverride, setColumnCountOverride] = useState<number | null>(null);
-
-  useEffect(() => {
-    const el = flowRef.current;
-    if (!el) return;
-    let raf = 0;
-    const check = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        if (!flowRef.current) return;
-        // reset to natural column count, then measure
-        flowRef.current.style.columnCount = "";
-        const overflows = flowRef.current.scrollWidth > flowRef.current.clientWidth + 1;
-        setColumnCountOverride(overflows ? 5 : null);
-      });
-    };
-    check();
-    const ro = new ResizeObserver(check);
-    ro.observe(el);
-    window.addEventListener("resize", check);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener("resize", check);
-    };
-  }, [menus, formatting]);
-
   useEffect(() => {
     if (isFullscreen) {
       const prev = document.body.style.cursor;
@@ -501,7 +474,7 @@ function DisplayPage() {
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <div className="menu-flow" ref={flowRef} style={columnCountOverride ? { columnCount: columnCountOverride } : undefined}>
+      <div className="menu-flow" ref={flowRef}>
         {menus.map((menu) => (
           <Fragment key={menu.section}>
             <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
