@@ -157,6 +157,8 @@ function RowSettingsMenu({
   onToggleSoldOut,
   onDuplicate,
   onDelete,
+  onAddDescription,
+  canAddDescription,
   size = "md",
 }: {
   hidden: boolean;
@@ -165,6 +167,8 @@ function RowSettingsMenu({
   onToggleSoldOut: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onAddDescription?: () => void;
+  canAddDescription?: boolean;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -177,6 +181,11 @@ function RowSettingsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {onAddDescription && canAddDescription && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
+            <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
           {soldOut ? (
             <><RotateCcw className="h-4 w-4" /> Mark as available</>
