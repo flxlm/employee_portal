@@ -18,7 +18,7 @@ const MENU_ANIMATION_SRC = "/menu-animation.webm";
 export const Route = createFileRoute("/display/$token")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
-    const menu = isMenuFilter(s.menu) ? s.menu : undefined;
+    const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
     return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
   },
   head: () => ({
