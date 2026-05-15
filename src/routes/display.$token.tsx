@@ -26,23 +26,6 @@ export const Route = createFileRoute("/display/$token")({
   component: DisplayPage,
 });
 
-const NUM_COLUMNS = 4;
-
-const SECTION_NAMES = ["LUNCH", "DRINKS"] as const;
-type SectionName = (typeof SECTION_NAMES)[number];
-
-const DRINK_SUBSECTIONS = new Set([
-  "BIÈRES EN FÛT",
-  "COCKTAILS",
-  "VINS AU VERRE",
-  "CLASSIQUES",
-  "SPÉCIALITÉS",
-]);
-
-function sectionFor(subsection: string): SectionName {
-  return DRINK_SUBSECTIONS.has(subsection) ? "DRINKS" : "LUNCH";
-}
-
 // ----------------------------------------------------------------------------
 // Single source of truth for menu content
 // ----------------------------------------------------------------------------
@@ -54,86 +37,97 @@ type MenuItem = {
   subtext?: string;
   inlineNote?: string;
 };
-type MenuSection = { section: string; items: MenuItem[] };
+type Subsection = { subsection: string; items: MenuItem[] };
+type Menu = { section: string; subsections: Subsection[] };
 
-const menu: MenuSection[] = [
+const menus: Menu[] = [
   {
-    section: "PLATS",
-    items: [
-      { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
-      { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
-      { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
-      { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
-      { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
-      { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
-      { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
-      { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
-      { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
-      { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
+    section: "LUNCH",
+    subsections: [
+      {
+        subsection: "PLATS",
+        items: [
+          { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
+          { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
+          { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
+          { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
+          { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
+          { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
+          { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
+          { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
+          { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
+          { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
+        ],
+      },
+      {
+        subsection: "SPÉCIAL DE LA SEMAINE",
+        items: [
+          { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
+        ],
+      },
+      {
+        subsection: "SIDES",
+        items: [
+          { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
+          { name: "DEMI AVOCAT", price: 3 },
+          { name: "SCOOP DE SALADE DE POULET", price: 6 },
+          { name: "OEUF MOLLET", price: 2 },
+          { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
+          { name: "SOUPE AUX TOMATES", price: 4 },
+          { name: "SALADE VERTE", price: 5 },
+        ],
+      },
     ],
   },
   {
-    section: "SPÉCIAL DE LA SEMAINE",
-    items: [
-      { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
-    ],
-  },
-  {
-    section: "SIDES",
-    items: [
-      { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
-      { name: "DEMI AVOCAT", price: 3 },
-      { name: "SCOOP DE SALADE DE POULET", price: 6 },
-      { name: "OEUF MOLLET", price: 2 },
-      { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
-      { name: "SOUPE AUX TOMATES", price: 4 },
-      { name: "SALADE VERTE", price: 5 },
-    ],
-  },
-  {
-    section: "BIÈRES EN FÛT",
-    items: [
-      { name: "DDC! BLONDE", price: 9 },
-      { name: "DDC! IPA", price: 9 },
-    ],
-  },
-  {
-    section: "COCKTAILS",
-    items: [
-      { name: "TINTO DE VERANO", price: 9 },
-      { name: "MIMOSA", price: 9 },
-    ],
-  },
-  {
-    section: "VINS AU VERRE",
-    items: [
-      { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
-      { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
-      { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
-    ],
-  },
-  {
-    section: "CLASSIQUES",
-    items: [
-      { name: "NOIR", price: 3 },
-      { name: "PETIT BLANC", price: 4.5 },
-      { name: "BLANC", price: 6 },
-      { name: "THÉ", price: 3 },
-      { name: "MATCHA / ESPRESSO TONIC", price: 6 },
-      { name: "MOCHA", price: 7 },
-      { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
-      { name: "\"FRESH PRESSED OJ\"", price: 4 },
-    ],
-  },
-  {
-    section: "SPÉCIALITÉS",
-    items: [
-      { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
-      { name: "MATCHA AUX FRAISES", price: 9 },
-      { name: "LIMOMATCHA", price: 7 },
-      { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
-      { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
-      { name: "COLD BREW!!!", price: 6 },
+    section: "DRINKS",
+    subsections: [
+      {
+        subsection: "BIÈRES EN FÛT",
+        items: [
+          { name: "DDC! BLONDE", price: 9 },
+          { name: "DDC! IPA", price: 9 },
+        ],
+      },
+      {
+        subsection: "COCKTAILS",
+        items: [
+          { name: "TINTO DE VERANO", price: 9 },
+          { name: "MIMOSA", price: 9 },
+        ],
+      },
+      {
+        subsection: "VINS AU VERRE",
+        items: [
+          { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
+          { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
+          { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
+        ],
+      },
+      {
+        subsection: "CLASSIQUES",
+        items: [
+          { name: "NOIR", price: 3 },
+          { name: "PETIT BLANC", price: 4.5 },
+          { name: "BLANC", price: 6 },
+          { name: "THÉ", price: 3 },
+          { name: "MATCHA / ESPRESSO TONIC", price: 6 },
+          { name: "MOCHA", price: 7 },
+          { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
+          { name: "\"FRESH PRESSED OJ\"", price: 4 },
+        ],
+      },
+      {
+        subsection: "SPÉCIALITÉS",
+        items: [
+          { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
+          { name: "MATCHA AUX FRAISES", price: 9 },
+          { name: "LIMOMATCHA", price: 7 },
+          { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
+          { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
+          { name: "COLD BREW!!!", price: 6 },
+        ],
+      },
     ],
   },
 ];
@@ -240,7 +234,6 @@ function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
-  const [activeSection, setActiveSection] = useState<SectionName>("LUNCH");
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
@@ -254,11 +247,6 @@ function DisplayPage() {
     };
     return merged.fontFamily;
   }, [formatting]);
-
-  const visibleSections = useMemo(
-    () => menu.filter((s) => sectionFor(s.section) === activeSection),
-    [activeSection],
-  );
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
@@ -281,7 +269,8 @@ function DisplayPage() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#fff",
         color: "#000",
         fontFamily: globalFontFamily,
@@ -290,90 +279,58 @@ function DisplayPage() {
         boxSizing: "border-box",
       }}
     >
+      <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
-          marginBottom: "1.25rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <video
-            key={activeSection}
-            src={MENU_ANIMATION_SRC}
-            autoPlay
-            muted
-            playsInline
-            loop={false}
-            controls={false}
-            preload="metadata"
-            onError={(e) => {
-              (e.currentTarget as HTMLVideoElement).style.display = "none";
-            }}
-            style={{
-              height: "1em",
-              width: "auto",
-              fontSize: "2.5rem",
-              background: "transparent",
-              display: "block",
-            }}
-          />
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "2.5rem",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "0.02em",
-              lineHeight: 1,
-            }}
-          >
-            {activeSection}
-          </h1>
-        </div>
-        <nav style={{ display: "flex", gap: "0.5rem" }}>
-          {SECTION_NAMES.map((name) => {
-            const active = name === activeSection;
-            return (
-              <button
-                key={name}
-                type="button"
-                onClick={() => setActiveSection(name)}
-                style={{
-                  background: active ? "#000" : "transparent",
-                  color: active ? "#fff" : "#000",
-                  border: "1px solid #000",
-                  padding: "0.35rem 0.8rem",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                {name}
-              </button>
-            );
-          })}
-        </nav>
-      </header>
+      {menus.map((menu) => (
+        <div key={menu.section} style={{ marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
+            <video
+              key={menu.section}
+              src={MENU_ANIMATION_SRC}
+              autoPlay
+              muted
+              playsInline
+              loop={false}
+              controls={false}
+              preload="metadata"
+              onError={(e) => {
+                (e.currentTarget as HTMLVideoElement).style.display = "none";
+              }}
+              style={{
+                height: "1em",
+                width: "auto",
+                fontSize: "2.5rem",
+                background: "transparent",
+                display: "block",
+              }}
+            />
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "2.5rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.02em",
+                lineHeight: 1,
+              }}
+            >
+              {menu.section}
+            </h1>
+          </div>
 
-      <div className="menu-flow">
-        {visibleSections.map((sec, si) => (
-          <section key={`${activeSection}-${si}`}>
-            <h2 className="menu-section-title">{sec.section}</h2>
-            {sec.items.map((item, ii) => (
-              <div key={ii}>{renderItem(item)}</div>
+          <div className="menu-flow">
+            {menu.subsections.map((sub, si) => (
+              <section key={si}>
+                <h2 className="menu-section-title">{sub.subsection}</h2>
+                {sub.items.map((item, ii) => (
+                  <div key={ii}>{renderItem(item)}</div>
+                ))}
+              </section>
             ))}
-          </section>
-        ))}
-      </div>
-
+          </div>
+        </div>
+      ))}
 
       {debug && (
         <div
@@ -390,7 +347,7 @@ function DisplayPage() {
             fontFamily: "monospace",
           }}
         >
-          {menu.length} sections
+          {menus.length} sections
         </div>
       )}
 
