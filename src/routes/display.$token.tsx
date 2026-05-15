@@ -310,7 +310,30 @@ function DisplayPage() {
         {menus.map((menu) => (
           <Fragment key={menu.section}>
             <div className="menu-section-block">
-              <span>{menu.section}</span>
+              <video
+                src={MENU_ANIMATION_SRC}
+                autoPlay
+                muted
+                playsInline
+                loop
+                controls={false}
+                preload="metadata"
+                aria-hidden="true"
+                onError={(e) => {
+                  (e.currentTarget as HTMLVideoElement).style.display = "none";
+                }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  border: "none",
+                  display: "block",
+                  zIndex: 0,
+                }}
+              />
+              <span style={{ position: "relative", zIndex: 1 }}>{menu.section}</span>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
