@@ -26,23 +26,6 @@ export const Route = createFileRoute("/display/$token")({
   component: DisplayPage,
 });
 
-const NUM_COLUMNS = 4;
-
-const SECTION_NAMES = ["LUNCH", "DRINKS"] as const;
-type SectionName = (typeof SECTION_NAMES)[number];
-
-const DRINK_SUBSECTIONS = new Set([
-  "BIÈRES EN FÛT",
-  "COCKTAILS",
-  "VINS AU VERRE",
-  "CLASSIQUES",
-  "SPÉCIALITÉS",
-]);
-
-function sectionFor(subsection: string): SectionName {
-  return DRINK_SUBSECTIONS.has(subsection) ? "DRINKS" : "LUNCH";
-}
-
 // ----------------------------------------------------------------------------
 // Single source of truth for menu content
 // ----------------------------------------------------------------------------
@@ -54,86 +37,97 @@ type MenuItem = {
   subtext?: string;
   inlineNote?: string;
 };
-type MenuSection = { section: string; items: MenuItem[] };
+type Subsection = { subsection: string; items: MenuItem[] };
+type Menu = { section: string; subsections: Subsection[] };
 
-const menu: MenuSection[] = [
+const menus: Menu[] = [
   {
-    section: "PLATS",
-    items: [
-      { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
-      { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
-      { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
-      { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
-      { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
-      { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
-      { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
-      { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
-      { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
-      { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
+    section: "LUNCH",
+    subsections: [
+      {
+        subsection: "PLATS",
+        items: [
+          { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
+          { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
+          { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
+          { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
+          { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
+          { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
+          { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
+          { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
+          { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
+          { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
+        ],
+      },
+      {
+        subsection: "SPÉCIAL DE LA SEMAINE",
+        items: [
+          { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
+        ],
+      },
+      {
+        subsection: "SIDES",
+        items: [
+          { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
+          { name: "DEMI AVOCAT", price: 3 },
+          { name: "SCOOP DE SALADE DE POULET", price: 6 },
+          { name: "OEUF MOLLET", price: 2 },
+          { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
+          { name: "SOUPE AUX TOMATES", price: 4 },
+          { name: "SALADE VERTE", price: 5 },
+        ],
+      },
     ],
   },
   {
-    section: "SPÉCIAL DE LA SEMAINE",
-    items: [
-      { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
-    ],
-  },
-  {
-    section: "SIDES",
-    items: [
-      { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
-      { name: "DEMI AVOCAT", price: 3 },
-      { name: "SCOOP DE SALADE DE POULET", price: 6 },
-      { name: "OEUF MOLLET", price: 2 },
-      { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
-      { name: "SOUPE AUX TOMATES", price: 4 },
-      { name: "SALADE VERTE", price: 5 },
-    ],
-  },
-  {
-    section: "BIÈRES EN FÛT",
-    items: [
-      { name: "DDC! BLONDE", price: 9 },
-      { name: "DDC! IPA", price: 9 },
-    ],
-  },
-  {
-    section: "COCKTAILS",
-    items: [
-      { name: "TINTO DE VERANO", price: 9 },
-      { name: "MIMOSA", price: 9 },
-    ],
-  },
-  {
-    section: "VINS AU VERRE",
-    items: [
-      { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
-      { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
-      { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
-    ],
-  },
-  {
-    section: "CLASSIQUES",
-    items: [
-      { name: "NOIR", price: 3 },
-      { name: "PETIT BLANC", price: 4.5 },
-      { name: "BLANC", price: 6 },
-      { name: "THÉ", price: 3 },
-      { name: "MATCHA / ESPRESSO TONIC", price: 6 },
-      { name: "MOCHA", price: 7 },
-      { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
-      { name: "\"FRESH PRESSED OJ\"", price: 4 },
-    ],
-  },
-  {
-    section: "SPÉCIALITÉS",
-    items: [
-      { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
-      { name: "MATCHA AUX FRAISES", price: 9 },
-      { name: "LIMOMATCHA", price: 7 },
-      { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
-      { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
-      { name: "COLD BREW!!!", price: 6 },
+    section: "DRINKS",
+    subsections: [
+      {
+        subsection: "BIÈRES EN FÛT",
+        items: [
+          { name: "DDC! BLONDE", price: 9 },
+          { name: "DDC! IPA", price: 9 },
+        ],
+      },
+      {
+        subsection: "COCKTAILS",
+        items: [
+          { name: "TINTO DE VERANO", price: 9 },
+          { name: "MIMOSA", price: 9 },
+        ],
+      },
+      {
+        subsection: "VINS AU VERRE",
+        items: [
+          { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
+          { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
+          { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
+        ],
+      },
+      {
+        subsection: "CLASSIQUES",
+        items: [
+          { name: "NOIR", price: 3 },
+          { name: "PETIT BLANC", price: 4.5 },
+          { name: "BLANC", price: 6 },
+          { name: "THÉ", price: 3 },
+          { name: "MATCHA / ESPRESSO TONIC", price: 6 },
+          { name: "MOCHA", price: 7 },
+          { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
+          { name: "\"FRESH PRESSED OJ\"", price: 4 },
+        ],
+      },
+      {
+        subsection: "SPÉCIALITÉS",
+        items: [
+          { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
+          { name: "MATCHA AUX FRAISES", price: 9 },
+          { name: "LIMOMATCHA", price: 7 },
+          { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
+          { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
+          { name: "COLD BREW!!!", price: 6 },
+        ],
+      },
     ],
   },
 ];
