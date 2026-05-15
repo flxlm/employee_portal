@@ -514,21 +514,6 @@ function DisplayPage() {
           {menus.length} sections
         </div>
       )}
-
-      <div
-        style={{
-          position: "fixed",
-          bottom: "1rem",
-          right: "1.25rem",
-          display: "flex",
-          alignItems: "baseline",
-          gap: "0.4rem",
-          ...styleFor("brand"),
-        }}
-      >
-        <span style={{ lineHeight: 1 }}>✱</span>
-        <span>Savsav</span>
-      </div>
     </div>
   );
 }
