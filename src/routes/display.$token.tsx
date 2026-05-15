@@ -268,38 +268,21 @@ const COLUMN_CSS = `
   display: block;
 }
 .menu-section-block {
-  position: relative;
-  width: 100%;
+  width: 75%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: transparent;
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
 }
 .section-title-video {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  z-index: 1;
+  object-fit: contain;
+  object-position: left center;
   display: block;
   border: none;
-}
-.section-title-text {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  font-weight: 900;
-  font-size: clamp(3rem, 6vw, 6rem);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  margin: 0;
-  text-align: center;
-  line-height: 1;
 }
 
 .menu-section-title {
@@ -435,7 +418,7 @@ function DisplayPage() {
       <div className="menu-flow">
         {menus.map((menu) => (
           <Fragment key={menu.section}>
-            <div className="menu-section-block">
+            <div className="menu-section-block" aria-label={menu.section}>
               <video
                 className="section-title-video"
                 src={MENU_ANIMATION_SRC}
@@ -450,9 +433,6 @@ function DisplayPage() {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
               />
-              <h2 className="section-title-text" style={styleFor("section")}>
-                {menu.section}
-              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
