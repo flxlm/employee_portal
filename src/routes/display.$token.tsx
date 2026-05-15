@@ -142,20 +142,23 @@ function FormattedPrice({ price }: { price: number }) {
   );
 }
 
-type Atom =
-  | { kind: "section-header"; key: string; section: MenuSection }
-  | { kind: "item"; key: string; sectionIdx: number; itemIdx: number; item: MenuItem };
+const COLUMN_CSS = `
+.menu-flow { column-count: 1; column-gap: 2.5rem; column-fill: balance; }
+@media (min-width: 600px) { .menu-flow { column-count: 2; } }
+@media (min-width: 900px) { .menu-flow { column-count: 3; } }
+@media (min-width: 1200px) { .menu-flow { column-count: 4; } }
+.menu-flow > section {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  display: block;
+}
+`;
 
 function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
-  const [columnWidth, setColumnWidth] = useState(0);
-  const [columnHeight, setColumnHeight] = useState(0);
-  const [heights, setHeights] = useState<Record<string, number>>({});
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
@@ -184,101 +187,12 @@ function DisplayPage() {
     };
   }, [formatting]);
 
-  const globalMerged: TextStyle = {
-    ...DEFAULT_FORMATTING.global,
-    ...formatting.global,
-  };
-
-  const atoms = useMemo<Atom[]>(() => {
-    const out: Atom[] = [];
-    menu.forEach((sec, si) => {
-      out.push({ kind: "section-header", key: `h-${si}`, section: sec });
-      sec.items.forEach((item, ii) => {
-        out.push({ kind: "item", key: `i-${si}-${ii}`, sectionIdx: si, itemIdx: ii, item });
-      });
-    });
-    return out;
-  }, []);
-
-  // Measure container/column geometry
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const update = () => {
-      const cs = getComputedStyle(el);
-      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-      const gap = parseFloat(cs.columnGap || cs.gap || "0");
-      const w = (el.clientWidth - padX - gap * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
-      const h = el.clientHeight - padY;
-      setColumnWidth(Math.max(0, w));
-      setColumnHeight(Math.max(0, h));
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Measure each atom block height
-  useLayoutEffect(() => {
-    if (!measureRef.current || !columnWidth) return;
-    const next: Record<string, number> = {};
-    measureRef.current
-      .querySelectorAll<HTMLElement>("[data-measure-key]")
-      .forEach((node) => {
-        const k = node.dataset.measureKey!;
-        next[k] = node.getBoundingClientRect().height;
-      });
-    setHeights((prev) => {
-      const keys = Object.keys(next);
-      if (
-        keys.length === Object.keys(prev).length &&
-        keys.every((k) => Math.abs((prev[k] ?? -1) - next[k]) < 0.5)
-      ) {
-        return prev;
-      }
-      return next;
-    });
-  }, [columnWidth, atoms, formatting]);
-
-  const packed = useMemo(() => {
-    if (!columnHeight || atoms.length === 0) return null;
-    if (Object.keys(heights).length === 0) return null;
-    const cols: { items: Atom[]; used: number }[] = [{ items: [], used: 0 }];
-    let overflow = false;
-    for (let i = 0; i < atoms.length; i++) {
-      const atom = atoms[i];
-      const h = heights[atom.key] ?? 0;
-      const cur = cols[cols.length - 1];
-      const fits = cur.used + h <= columnHeight;
-      if (!fits && cur.items.length > 0) {
-        if (cols.length >= NUM_COLUMNS) {
-          overflow = true;
-          cur.items.push(atom);
-          cur.used += h;
-          continue;
-        }
-        cols.push({ items: [], used: 0 });
-        const newCol = cols[cols.length - 1];
-        newCol.items.push(atom);
-        newCol.used += h;
-      } else {
-        cur.items.push(atom);
-        cur.used += h;
-      }
-    }
-    while (cols.length < NUM_COLUMNS) cols.push({ items: [], used: 0 });
-    return { cols, overflow };
-  }, [atoms, heights, columnHeight]);
-
-  const renderSectionHeader = (section: MenuSection, measuring?: boolean) => (
+  const renderSectionHeader = (section: MenuSection) => (
     <h2
       style={styleFor("section", {
         position: "relative",
         aspectRatio: "1 / 1",
         width: "75%",
-        marginInline: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -290,24 +204,22 @@ function DisplayPage() {
         boxSizing: "border-box",
       })}
     >
-      {!measuring && (
-        <video
-          src={MENU_ANIMATION_SRC}
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            zIndex: -1,
-            pointerEvents: "none",
-          }}
-        />
-      )}
+      <video
+        src={MENU_ANIMATION_SRC}
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: -1,
+          pointerEvents: "none",
+        }}
+      />
       <span style={{ position: "relative" }}>{section.section}</span>
     </h2>
   );
@@ -346,107 +258,30 @@ function DisplayPage() {
     </div>
   );
 
-  const baseShell: React.CSSProperties = {
-    minHeight: "100vh",
-    background: "#fff",
-    color: globalMerged.color,
-    fontFamily: globalMerged.fontFamily,
-    textTransform: globalMerged.textTransform,
-    fontWeight: globalMerged.fontWeight as React.CSSProperties["fontWeight"],
-  };
-
-  if (!atoms.length) {
-    return (
-      <div style={{ ...baseShell, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>No menu</p>
-      </div>
-    );
-  }
-
   return (
     <div
-      ref={containerRef}
       style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
+        minHeight: "100vh",
         background: "#fff",
         ...styleFor("global"),
         position: "relative",
-        display: "grid",
-        gridTemplateColumns: `repeat(${NUM_COLUMNS}, 1fr)`,
         padding: "0.8vw 0.8vw 3vw 0.8vw",
-        gap: "0.8vw",
         boxSizing: "border-box",
       }}
     >
-      <div
-        ref={measureRef}
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: -99999,
-          top: 0,
-          width: columnWidth || 1,
-          visibility: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        {atoms.map((atom) => (
-          <div key={atom.key} data-measure-key={atom.key}>
-            {atom.kind === "section-header"
-              ? renderSectionHeader(atom.section, true)
-              : renderItem(atom.item)}
-          </div>
+      <style>{COLUMN_CSS}</style>
+      <div className="menu-flow">
+        {menu.map((sec, si) => (
+          <section key={si} style={{ marginBottom: "1rem" }}>
+            {renderSectionHeader(sec)}
+            {sec.items.map((item, ii) => (
+              <div key={ii}>{renderItem(item)}</div>
+            ))}
+          </section>
         ))}
       </div>
 
-      {(packed?.cols ?? Array.from({ length: NUM_COLUMNS }, () => ({ items: [] as Atom[] }))).map(
-        (col, ci) => (
-          <div
-            key={ci}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              height: "100%",
-              paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
-              overflow: "hidden",
-            }}
-          >
-            {col.items.map((atom) =>
-              atom.kind === "section-header" ? (
-                <section key={atom.key}>{renderSectionHeader(atom.section)}</section>
-              ) : (
-                <div key={atom.key}>{renderItem(atom.item)}</div>
-              ),
-            )}
-          </div>
-        ),
-      )}
-
-      {packed?.overflow && (
-        <div
-          style={{
-            position: "fixed",
-            top: "0.8vw",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#b91c1c",
-            color: "#fff",
-            padding: "0.4vw 1vw",
-            borderRadius: "0.4vw",
-            fontSize: "0.9vw",
-            fontWeight: 700,
-            letterSpacing: "0.05em",
-            zIndex: 50,
-          }}
-        >
-          MENU OVERFLOW — content cut off
-        </div>
-      )}
-
-      {debug && packed && (
+      {debug && (
         <div
           style={{
             position: "fixed",
@@ -457,18 +292,11 @@ function DisplayPage() {
             padding: "0.4vw 0.8vw",
             borderRadius: "0.3vw",
             fontSize: "0.7vw",
-            lineHeight: 1.4,
             zIndex: 50,
             fontFamily: "monospace",
           }}
         >
-          col-h: {Math.round(columnHeight)}px
-          {packed.cols.map((c, i) => (
-            <div key={i}>
-              c{i + 1}: {Math.round(c.used)}px ({c.items.length} blocks)
-              {c.used > columnHeight ? " ⚠" : ""}
-            </div>
-          ))}
+          {menu.length} sections
         </div>
       )}
 
