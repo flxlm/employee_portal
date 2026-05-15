@@ -404,6 +404,19 @@ function DisplayPage() {
     return () => document.removeEventListener(eventName, onChange);
   }, []);
 
+  const enterFullscreen = async () => {
+    const el = document.documentElement as any;
+    try {
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+      } else if (el.webkitRequestFullscreen) {
+        await el.webkitRequestFullscreen();
+      }
+    } catch {
+      // silently ignore if fullscreen is blocked or unsupported
+    }
+  };
+
   const renderItem = (item: MenuItem, soldOut: boolean) => (
     <div className="menu-item" style={{ ...(item.hidden ? { opacity: 0.35 } : {}), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
       <div className="menu-item-row" style={{ ...styleFor("itemTitle"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
