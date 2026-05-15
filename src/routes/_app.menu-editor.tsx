@@ -106,6 +106,10 @@ function MenuEditorPage() {
   const update = useServerFn(updateRow);
   const del = useServerFn(softDeleteRow);
   const reorder = useServerFn(reorderRows);
+  const refreshDisplay = useServerFn(refreshDisplayMenu);
+  const triggerRefresh = () => {
+    refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
+  };
 
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState(true);
