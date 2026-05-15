@@ -244,7 +244,9 @@ const COLUMN_CSS = `
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
+  padding-bottom: 0.5rem;
+  box-sizing: border-box;
 }
 .trailing-asterisk {
   flex: 1 1 auto;
@@ -270,6 +272,7 @@ const COLUMN_CSS = `
   justify-content: center;
   height: 12vh;
   padding-bottom: 0;
+  overflow: visible;
 }
 .trailing-logo img {
   width: 100%;
