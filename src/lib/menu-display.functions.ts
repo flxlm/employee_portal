@@ -50,29 +50,26 @@ export function clearDisplayCache() {
 }
 
 async function buildMenu(): Promise<DisplayMenu> {
-  const [{ data, error }, secVis, subVis, itemHidden] = await Promise.all([
+  const [{ data, error }, secMeta, subMeta, itemMeta] = await Promise.all([
     supabaseAdmin.from("menu_display_view").select("*"),
-    supabaseAdmin.from("menu_sections").select("id, visible_menus, is_hidden"),
-    supabaseAdmin.from("menu_subsections").select("id, visible_menus, is_hidden"),
-    supabaseAdmin.from("menu_items").select("id, is_hidden").eq("is_deleted", false),
+    supabaseAdmin.from("menu_sections").select("id, visible_menus, is_hidden, sold_out_date"),
+    supabaseAdmin.from("menu_subsections").select("id, visible_menus, is_hidden, sold_out_date"),
+    supabaseAdmin.from("menu_items").select("id, is_hidden, sold_out_date").eq("is_deleted", false),
   ]);
   if (error) throw error;
 
-  const secVisMap = new Map<string, string[]>(
-    (secVis.data || []).map((r: { id: string; visible_menus: string[] | null }) => [r.id, r.visible_menus || []])
-  );
-  const subVisMap = new Map<string, string[]>(
-    (subVis.data || []).map((r: { id: string; visible_menus: string[] | null }) => [r.id, r.visible_menus || []])
-  );
-  const secHiddenMap = new Map<string, boolean>(
-    (secVis.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
-  );
-  const subHiddenMap = new Map<string, boolean>(
-    (subVis.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
-  );
-  const itemHiddenMap = new Map<string, boolean>(
-    (itemHidden.data || []).map((r: { id: string; is_hidden?: boolean | null }) => [r.id, !!r.is_hidden])
-  );
+  type SecMeta = { id: string; visible_menus: string[] | null; is_hidden?: boolean | null; sold_out_date?: string | null };
+  type SubMeta = SecMeta;
+  type ItemMeta = { id: string; is_hidden?: boolean | null; sold_out_date?: string | null };
+
+  const secVisMap = new Map<string, string[]>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, r.visible_menus || []]));
+  const subVisMap = new Map<string, string[]>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, r.visible_menus || []]));
+  const secHiddenMap = new Map<string, boolean>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, !!r.is_hidden]));
+  const subHiddenMap = new Map<string, boolean>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, !!r.is_hidden]));
+  const itemHiddenMap = new Map<string, boolean>(((itemMeta.data || []) as ItemMeta[]).map((r) => [r.id, !!r.is_hidden]));
+  const secSoldMap = new Map<string, string | null>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
+  const subSoldMap = new Map<string, string | null>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
+  const itemSoldMap = new Map<string, string | null>(((itemMeta.data || []) as ItemMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
 
   const sections = new Map<string, DisplaySection>();
   for (const row of data || []) {
@@ -85,6 +82,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         description: row.section_description || "",
         visible_menus: secVisMap.get(row.section_id) || [],
         is_hidden: secHiddenMap.get(row.section_id) || false,
+        sold_out_date: secSoldMap.get(row.section_id) ?? null,
         subsections: [],
       };
       sections.set(row.section_id, sec);
@@ -98,6 +96,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         description: row.subsection_description || "",
         visible_menus: subVisMap.get(row.subsection_id) || [],
         is_hidden: subHiddenMap.get(row.subsection_id) || false,
+        sold_out_date: subSoldMap.get(row.subsection_id) ?? null,
         items: [],
       };
       sec.subsections.push(sub);
@@ -115,6 +114,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         description: row.item_description || "",
         base_price_cents: row.base_price_cents || 0,
         is_hidden: itemHiddenMap.get(row.item_id) || false,
+        sold_out_date: itemSoldMap.get(row.item_id) ?? null,
         modifications: mods.map((m) => ({
           id: m.id,
           name: m.name,
