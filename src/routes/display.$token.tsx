@@ -322,7 +322,7 @@ function DisplayPage() {
   const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
   const [displayMenu, setDisplayMenu] = useState<DisplayMenu | null>(null);
-  const [refreshKey, setRefreshKey] = useState(() => Date.now());
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
