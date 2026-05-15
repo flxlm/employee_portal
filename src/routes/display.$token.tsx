@@ -365,7 +365,7 @@ function DisplayPage() {
       )}
       {item.inlineNote && (
         <span className="menu-item-note" style={styleFor("modification")}>
-          {item.inlineNote}
+          + {item.inlineNote.replace(/^\s*\+\s*/, "").replace(/\s*\+\s*\d+(?:[.,]\d+)?\s*$/, "").trim()}
         </span>
       )}
     </div>
