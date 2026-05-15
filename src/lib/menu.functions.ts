@@ -139,7 +139,10 @@ const updateInputSchema = z.object({
   table: z.enum(TABLES),
   id: z.string().uuid(),
   expectedVersion: z.number().int().nonnegative(),
-  patch: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  patch: z.record(
+    z.string(),
+    z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())])
+  ),
 });
 
 // Generic update with optimistic locking
