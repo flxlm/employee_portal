@@ -457,21 +457,11 @@ function DisplayPage() {
           display: "flex",
           alignItems: "baseline",
           gap: "0.4rem",
-          color: "#000",
-          fontFamily: globalFontFamily,
+          ...styleFor("brand"),
         }}
       >
-        <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>✱</span>
-        <span
-          style={{
-            fontSize: "0.85rem",
-            fontWeight: 800,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          Savsav
-        </span>
+        <span style={{ lineHeight: 1 }}>✱</span>
+        <span>Savsav</span>
       </div>
     </div>
   );
