@@ -40,7 +40,7 @@ export const DEFAULT_FORMATTING: MenuFormatting = {
     color: "#ffffff",
   },
   subsection: {
-    fontSize: "1.05vw",
+    fontSize: "2.2vw",
     fontWeight: 700,
     lineHeight: 1.1,
   },
