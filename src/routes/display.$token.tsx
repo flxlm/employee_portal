@@ -562,8 +562,8 @@ function DisplayPage() {
       <div
         style={{
           position: "fixed",
-          bottom: "1.6vw",
-          right: "1.8vw",
+          bottom: "0.6vw",
+          right: "0.8vw",
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
