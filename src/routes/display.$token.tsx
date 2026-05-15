@@ -2,12 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  getDisplayMenu,
-  type DisplayMenu,
-  type DisplaySection,
-  type DisplaySubsection,
-} from "@/lib/menu-display.functions";
-import {
   getMenuFormatting,
   DEFAULT_FORMATTING,
   type MenuFormatting,
@@ -15,21 +9,13 @@ import {
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
-import { supabase } from "@/integrations/supabase/client";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
 
-type MenuType = "breakfast" | "lunch" | "dinner";
-const MENU_TYPES: MenuType[] = ["breakfast", "lunch", "dinner"];
-
 export const Route = createFileRoute("/display/$token")({
-  validateSearch: (s: Record<string, unknown>): { menu?: MenuType; debug?: boolean } => {
-    const m = typeof s.menu === "string" ? s.menu.toLowerCase() : "";
+  validateSearch: (s: Record<string, unknown>): { debug?: boolean } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
-    return {
-      ...(MENU_TYPES.includes(m as MenuType) ? { menu: m as MenuType } : {}),
-      ...(debug ? { debug: true } : {}),
-    };
+    return debug ? { debug: true } : {};
   },
   head: () => ({
     meta: [
@@ -42,12 +28,107 @@ export const Route = createFileRoute("/display/$token")({
 
 const NUM_COLUMNS = 4;
 
-function FormattedPrice({ cents }: { cents: number }) {
-  if (!cents) return null;
-  const sign = cents < 0 ? "-" : "";
-  const abs = Math.abs(cents);
-  const dollars = Math.floor(abs / 100);
-  const c = abs % 100;
+// ----------------------------------------------------------------------------
+// Single source of truth for menu content
+// ----------------------------------------------------------------------------
+type MenuItem = {
+  name: string;
+  price?: number;
+  priceLabel?: string;
+  description?: string;
+  subtext?: string;
+  inlineNote?: string;
+};
+type MenuSection = { section: string; items: MenuItem[] };
+
+const menu: MenuSection[] = [
+  {
+    section: "PLATS",
+    items: [
+      { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
+      { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
+      { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
+      { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
+      { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
+      { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
+      { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
+      { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
+      { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
+      { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
+    ],
+  },
+  {
+    section: "SPÉCIAL DE LA SEMAINE",
+    items: [
+      { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
+    ],
+  },
+  {
+    section: "SIDES",
+    items: [
+      { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
+      { name: "DEMI AVOCAT", price: 3 },
+      { name: "SCOOP DE SALADE DE POULET", price: 6 },
+      { name: "OEUF MOLLET", price: 2 },
+      { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
+      { name: "SOUPE AUX TOMATES", price: 4 },
+      { name: "SALADE VERTE", price: 5 },
+    ],
+  },
+  {
+    section: "BIÈRES EN FÛT",
+    items: [
+      { name: "DDC! BLONDE", price: 9 },
+      { name: "DDC! IPA", price: 9 },
+    ],
+  },
+  {
+    section: "COCKTAILS",
+    items: [
+      { name: "TINTO DE VERANO", price: 9 },
+      { name: "MIMOSA", price: 9 },
+    ],
+  },
+  {
+    section: "VINS AU VERRE",
+    items: [
+      { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
+      { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
+      { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
+    ],
+  },
+  {
+    section: "CLASSIQUES",
+    items: [
+      { name: "NOIR", price: 3 },
+      { name: "PETIT BLANC", price: 4.5 },
+      { name: "BLANC", price: 6 },
+      { name: "THÉ", price: 3 },
+      { name: "MATCHA / ESPRESSO TONIC", price: 6 },
+      { name: "MOCHA", price: 7 },
+      { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
+      { name: "\"FRESH PRESSED OJ\"", price: 4 },
+    ],
+  },
+  {
+    section: "SPÉCIALITÉS",
+    items: [
+      { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
+      { name: "MATCHA AUX FRAISES", price: 9 },
+      { name: "LIMOMATCHA", price: 7 },
+      { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
+      { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
+      { name: "COLD BREW!!!", price: 6 },
+    ],
+  },
+];
+
+function FormattedPrice({ price }: { price: number }) {
+  if (!price) return null;
+  const sign = price < 0 ? "-" : "";
+  const abs = Math.abs(price);
+  const dollars = Math.floor(abs);
+  const c = Math.round((abs - dollars) * 100);
   return (
     <span style={{ whiteSpace: "nowrap" }}>
       {sign}
@@ -62,37 +143,13 @@ function FormattedPrice({ cents }: { cents: number }) {
 }
 
 type Atom =
-  | {
-      kind: "section-header";
-      key: string;
-      sectionId: string;
-      section: DisplaySection;
-    }
-  | {
-      kind: "subsection-header";
-      key: string;
-      sectionId: string;
-      subId: string;
-      sub: DisplaySubsection;
-    }
-  | {
-      kind: "item";
-      key: string;
-      sectionId: string;
-      subId: string;
-      item: DisplaySubsection["items"][number];
-      compact: boolean;
-      isFirstInSub: boolean;
-    };
+  | { kind: "section-header"; key: string; section: MenuSection }
+  | { kind: "item"; key: string; sectionIdx: number; itemIdx: number; item: MenuItem };
 
 function DisplayPage() {
-  const { token } = Route.useParams();
-  const { menu: menuFilter, debug } = Route.useSearch();
-  const fetchMenu = useServerFn(getDisplayMenu);
+  const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
-  const [menu, setMenu] = useState<DisplayMenu | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
-  const [error, setError] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -100,36 +157,10 @@ function DisplayPage() {
   const [columnHeight, setColumnHeight] = useState(0);
   const [heights, setHeights] = useState<Record<string, number>>({});
 
-  const load = async () => {
-    try {
-      const [m, f] = await Promise.all([
-        fetchMenu({ data: { token } }),
-        fetchFormatting({}).catch(() => ({})),
-      ]);
-      setMenu(m);
-      setFormatting(f || {});
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load menu");
-    }
-  };
-
   useEffect(() => {
     ensureGoogleFontsLoaded();
-    load();
-    const channel = supabase
-      .channel("menu-display")
-      .on("broadcast", { event: "refresh" }, () => {
-        load();
-      })
-      .subscribe();
-    const interval = setInterval(load, 5 * 60 * 1000);
-    return () => {
-      clearInterval(interval);
-      supabase.removeChannel(channel);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+    fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
+  }, [fetchFormatting]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey, extra?: React.CSSProperties): React.CSSProperties => {
@@ -158,69 +189,16 @@ function DisplayPage() {
     ...formatting.global,
   };
 
-  const baseShell: React.CSSProperties = {
-    minHeight: "100vh",
-    background: "#fff",
-    color: globalMerged.color,
-    fontFamily: globalMerged.fontFamily,
-    textTransform: globalMerged.textTransform,
-    fontWeight: globalMerged.fontWeight as React.CSSProperties["fontWeight"],
-  };
-
-  const filteredSections = useMemo(() => {
-    if (!menu) return [];
-    return menuFilter
-      ? menu.sections
-          .filter((s) => s.visible_menus.includes(menuFilter))
-          .map((s) => ({
-            ...s,
-            subsections: s.subsections.filter((sub) =>
-              sub.visible_menus.includes(menuFilter),
-            ),
-          }))
-          .filter((s) => s.subsections.length > 0)
-      : menu.sections;
-  }, [menu, menuFilter]);
-
   const atoms = useMemo<Atom[]>(() => {
     const out: Atom[] = [];
-    filteredSections.forEach((sec) => {
-      out.push({
-        kind: "section-header",
-        key: `h-${sec.id}`,
-        sectionId: sec.id,
-        section: sec,
-      });
-      sec.subsections.forEach((sub) => {
-        const compact =
-          sub.items.length >= 3 &&
-          sub.items.every(
-            (it) => !it.description && it.modifications.length === 0,
-          );
-        if (sub.name) {
-          out.push({
-            kind: "subsection-header",
-            key: `sh-${sub.id}`,
-            sectionId: sec.id,
-            subId: sub.id,
-            sub,
-          });
-        }
-        sub.items.forEach((item, idx) => {
-          out.push({
-            kind: "item",
-            key: `i-${item.id}`,
-            sectionId: sec.id,
-            subId: sub.id,
-            item,
-            compact,
-            isFirstInSub: idx === 0,
-          });
-        });
+    menu.forEach((sec, si) => {
+      out.push({ kind: "section-header", key: `h-${si}`, section: sec });
+      sec.items.forEach((item, ii) => {
+        out.push({ kind: "item", key: `i-${si}-${ii}`, sectionIdx: si, itemIdx: ii, item });
       });
     });
     return out;
-  }, [filteredSections]);
+  }, []);
 
   // Measure container/column geometry
   useEffect(() => {
@@ -231,8 +209,7 @@ function DisplayPage() {
       const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
       const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
       const gap = parseFloat(cs.columnGap || cs.gap || "0");
-      const w =
-        (el.clientWidth - padX - gap * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+      const w = (el.clientWidth - padX - gap * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
       const h = el.clientHeight - padY;
       setColumnWidth(Math.max(0, w));
       setColumnHeight(Math.max(0, h));
@@ -241,7 +218,7 @@ function DisplayPage() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [menu]);
+  }, []);
 
   // Measure each atom block height
   useLayoutEffect(() => {
@@ -254,7 +231,6 @@ function DisplayPage() {
         next[k] = node.getBoundingClientRect().height;
       });
     setHeights((prev) => {
-      // shallow compare to avoid render loops
       const keys = Object.keys(next);
       if (
         keys.length === Object.keys(prev).length &&
@@ -266,7 +242,6 @@ function DisplayPage() {
     });
   }, [columnWidth, atoms, formatting]);
 
-  // Pack atoms greedily into columns
   const packed = useMemo(() => {
     if (!columnHeight || atoms.length === 0) return null;
     if (Object.keys(heights).length === 0) return null;
@@ -279,14 +254,11 @@ function DisplayPage() {
       const fits = cur.used + h <= columnHeight;
       if (!fits && cur.items.length > 0) {
         if (cols.length >= NUM_COLUMNS) {
-          // No more columns — accept overflow into last column
           overflow = true;
           cur.items.push(atom);
           cur.used += h;
           continue;
         }
-        // Start a new column. Don't repeat the section header — subsections
-        // continue flowing into the next column without the animated header.
         cols.push({ items: [], used: 0 });
         const newCol = cols[cols.length - 1];
         newCol.items.push(atom);
@@ -300,11 +272,7 @@ function DisplayPage() {
     return { cols, overflow };
   }, [atoms, heights, columnHeight]);
 
-  // ---------- block renderers ----------
-  const renderSectionHeader = (
-    section: DisplaySection,
-    measuring?: boolean,
-  ) => (
+  const renderSectionHeader = (section: MenuSection, measuring?: boolean) => (
     <h2
       style={styleFor("section", {
         position: "relative",
@@ -340,89 +308,57 @@ function DisplayPage() {
           }}
         />
       )}
-      <span style={{ position: "relative" }}>{section.name}</span>
+      <span style={{ position: "relative" }}>{section.section}</span>
     </h2>
   );
 
-  const renderSubsectionHeader = (
-    sub: DisplaySubsection,
-    withTopGap: boolean,
-  ) => (
-    <div style={{ marginBottom: "0.15vw" }}>
-      {withTopGap && <div style={{ height: "0.35vw" }} />}
-      <h3 style={styleFor("subsection", { margin: "0 0 0.2vw 0" })}>
-        {sub.name}
-      </h3>
+  const renderItem = (item: MenuItem) => (
+    <div style={{ marginBottom: "0.3vw" }}>
+      <div
+        style={styleFor("itemTitle", {
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "0.4vw",
+        })}
+      >
+        <span>{item.name}</span>
+        <span style={{ whiteSpace: "nowrap" }}>
+          {item.priceLabel
+            ? item.priceLabel
+            : typeof item.price === "number"
+              ? <FormattedPrice price={item.price} />
+              : null}
+          {item.inlineNote && (
+            <span style={{ marginLeft: "0.4vw", opacity: 0.75 }}>{item.inlineNote}</span>
+          )}
+        </span>
+      </div>
+      {item.subtext && (
+        <p style={styleFor("itemDescription", { margin: "0.05vw 0 0 0", opacity: 0.75 })}>
+          {item.subtext}
+        </p>
+      )}
+      {item.description && (
+        <p style={styleFor("itemDescription", { margin: "0.1vw 0 0 0" })}>
+          {item.description}
+        </p>
+      )}
     </div>
   );
 
-  const renderItem = (
-    item: DisplaySubsection["items"][number],
-    compact: boolean,
-  ) => {
-    if (compact) {
-      return (
-        <div
-          style={styleFor("itemTitle", {
-            lineHeight: 1.35,
-            marginBottom: "0.05vw",
-          })}
-        >
-          {item.title} <FormattedPrice cents={item.base_price_cents} />
-        </div>
-      );
-    }
-    return (
-      <div style={{ marginBottom: "0.3vw" }}>
-        <div style={styleFor("itemTitle")}>
-          {item.title} <FormattedPrice cents={item.base_price_cents} />
-        </div>
-        {item.description && (
-          <p style={styleFor("itemDescription", { margin: "0.1vw 0 0 0" })}>
-            {item.description}
-          </p>
-        )}
-        {item.modifications.length > 0 && (
-          <ul
-            style={styleFor("modification", {
-              listStyle: "none",
-              padding: 0,
-              margin: "0.15vw 0 0 0",
-            })}
-          >
-            {item.modifications.map((m) => (
-              <li
-                key={m.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "0.4vw",
-                }}
-              >
-                <span>+ {m.name}</span>
-                <span>
-                  {m.price_modifier_cents >= 0 ? "+" : ""}
-                  <FormattedPrice cents={m.price_modifier_cents} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    );
+  const baseShell: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#fff",
+    color: globalMerged.color,
+    fontFamily: globalMerged.fontFamily,
+    textTransform: globalMerged.textTransform,
+    fontWeight: globalMerged.fontWeight as React.CSSProperties["fontWeight"],
   };
 
-  if (error) {
+  if (!atoms.length) {
     return (
       <div style={{ ...baseShell, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>{error}</p>
-      </div>
-    );
-  }
-  if (!menu) {
-    return (
-      <div style={{ ...baseShell, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>Loading menu…</p>
+        <p>No menu</p>
       </div>
     );
   }
@@ -444,7 +380,6 @@ function DisplayPage() {
         boxSizing: "border-box",
       }}
     >
-      {/* Hidden measurement layer */}
       <div
         ref={measureRef}
         aria-hidden
@@ -461,60 +396,35 @@ function DisplayPage() {
           <div key={atom.key} data-measure-key={atom.key}>
             {atom.kind === "section-header"
               ? renderSectionHeader(atom.section, true)
-              : atom.kind === "subsection-header"
-                ? renderSubsectionHeader(atom.sub, false)
-                : renderItem(atom.item, atom.compact)}
+              : renderItem(atom.item)}
           </div>
         ))}
       </div>
 
       {(packed?.cols ?? Array.from({ length: NUM_COLUMNS }, () => ({ items: [] as Atom[] }))).map(
-        (col, ci) => {
-          let currentSubId: string | null = null;
-          return (
-            <div
-              key={ci}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                height: "100%",
-                paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
-                overflow: "hidden",
-              }}
-            >
-              {col.items.map((atom) => {
-                if (atom.kind === "section-header") {
-                  currentSubId = null;
-                  return (
-                    <section key={atom.key}>
-                      {renderSectionHeader(atom.section)}
-                    </section>
-                  );
-                }
-                if (atom.kind === "subsection-header") {
-                  const withTopGap = currentSubId !== null;
-                  currentSubId = atom.subId;
-                  return (
-                    <div key={atom.key}>
-                      {renderSubsectionHeader(atom.sub, withTopGap)}
-                    </div>
-                  );
-                }
-                // item
-                if (currentSubId !== atom.subId) {
-                  currentSubId = atom.subId;
-                }
-                return (
-                  <div key={atom.key}>{renderItem(atom.item, atom.compact)}</div>
-                );
-              })}
-            </div>
-          );
-        },
+        (col, ci) => (
+          <div
+            key={ci}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              height: "100%",
+              paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
+              overflow: "hidden",
+            }}
+          >
+            {col.items.map((atom) =>
+              atom.kind === "section-header" ? (
+                <section key={atom.key}>{renderSectionHeader(atom.section)}</section>
+              ) : (
+                <div key={atom.key}>{renderItem(atom.item)}</div>
+              ),
+            )}
+          </div>
+        ),
       )}
 
-      {/* Overflow indicator */}
       {packed?.overflow && (
         <div
           style={{
@@ -536,7 +446,6 @@ function DisplayPage() {
         </div>
       )}
 
-      {/* Debug panel (?debug=1) */}
       {debug && packed && (
         <div
           style={{
