@@ -155,8 +155,6 @@ function DisplayPage() {
             display: "flex",
             flexDirection: "column",
             gap: "2vw",
-            borderRight:
-              ci < NUM_COLUMNS - 1 ? "0.05vw solid #000" : "none",
             paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
           }}
         >
@@ -209,15 +207,7 @@ function DisplayPage() {
                   );
                 return (
                   <div key={sub.id} style={{ marginBottom: "1.2vw" }}>
-                    {si > 0 && (
-                      <hr
-                        style={{
-                          border: "none",
-                          borderTop: "0.05vw solid #000",
-                          margin: "1vw 0",
-                        }}
-                      />
-                    )}
+                    {si > 0 && <div style={{ height: "1vw" }} />}
                     {sub.name && (
                       <h3
                         style={{
