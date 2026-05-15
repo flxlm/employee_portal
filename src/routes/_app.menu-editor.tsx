@@ -310,6 +310,15 @@ function MenuEditorPage() {
           <Card key={sec.id} className="border-2">
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => toggleCollapsed(sec.id)}
+                  aria-label={collapsed.has(sec.id) ? "Expand section" : "Collapse section"}
+                >
+                  {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
                 <div className="flex flex-col">
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)}>
                     <ChevronUp className="h-4 w-4" />
@@ -328,14 +337,23 @@ function MenuEditorPage() {
                     }}
                     placeholder="Section name"
                   />
-                  <Textarea
-                    rows={1}
-                    value={sec.description}
-                    onChange={(e) => {
-                      patchSection(sec.id, { description: e.target.value });
-                      queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                  {!collapsed.has(sec.id) && (
+                    <Textarea
+                      rows={1}
+                      value={sec.description}
+                      onChange={(e) => {
+                        patchSection(sec.id, { description: e.target.value });
+                        queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                      }}
+                      placeholder="Section description"
+                    />
+                  )}
+                  <MenuToggles
+                    value={sec.visible_menus}
+                    onChange={(next) => {
+                      patchSection(sec.id, { visible_menus: next });
+                      queueEdit("menu_sections", sec.id, sec.version, { visible_menus: next });
                     }}
-                    placeholder="Section description"
                   />
                 </div>
                 <Button size="icon" variant="ghost" onClick={() => removeRow("menu_sections", sec.id)}>
@@ -343,6 +361,7 @@ function MenuEditorPage() {
                 </Button>
               </div>
             </CardHeader>
+            {!collapsed.has(sec.id) && (
             <CardContent className="space-y-4">
               {sec.subsections.map((sub, ssIdx) => (
                 <div key={sub.id} className="rounded-md border p-3 space-y-3">
