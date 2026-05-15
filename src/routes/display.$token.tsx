@@ -204,7 +204,8 @@ const COLUMN_CSS = `
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.04em;
-  font-size: 1.75rem;
+  font-size: 2.75rem;
+  text-align: center;
   position: relative;
   overflow: hidden;
 }
