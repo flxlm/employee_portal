@@ -305,55 +305,23 @@ function DisplayPage() {
       <style>{`html, body { overflow: hidden; height: 100%; margin: 0; }`}</style>
       <style>{COLUMN_CSS}</style>
 
-      {menus.map((menu) => (
-        <div key={menu.section} style={{ marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
-            <video
-              key={menu.section}
-              src={MENU_ANIMATION_SRC}
-              autoPlay
-              muted
-              playsInline
-              loop={false}
-              controls={false}
-              preload="metadata"
-              onError={(e) => {
-                (e.currentTarget as HTMLVideoElement).style.display = "none";
-              }}
-              style={{
-                height: "1em",
-                width: "auto",
-                fontSize: "2.5rem",
-                background: "transparent",
-                display: "block",
-              }}
-            />
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "2.5rem",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                lineHeight: 1,
-              }}
-            >
-              {menu.section}
-            </h1>
-          </div>
-
-          <div className="menu-flow">
+      <div className="menu-flow">
+        {menus.map((menu) => (
+          <Fragment key={menu.section}>
+            <div className="menu-section-block">
+              <span>{menu.section}</span>
+            </div>
             {menu.subsections.map((sub, si) => (
-              <section key={si}>
+              <section key={`${menu.section}-${si}`}>
                 <h2 className="menu-section-title">{sub.subsection}</h2>
                 {sub.items.map((item, ii) => (
                   <div key={ii}>{renderItem(item)}</div>
                 ))}
               </section>
             ))}
-          </div>
-        </div>
-      ))}
+          </Fragment>
+        ))}
+      </div>
 
       {debug && (
         <div
