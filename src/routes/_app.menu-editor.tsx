@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
 });
 
-const DEBOUNCE_MS = 500;
+
 
 const MENU_OPTIONS = [
   { key: "breakfast", label: "Breakfast" },
