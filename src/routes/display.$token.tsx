@@ -155,8 +155,6 @@ function DisplayPage() {
             display: "flex",
             flexDirection: "column",
             gap: "2vw",
-            borderRight:
-              ci < NUM_COLUMNS - 1 ? "0.05vw solid #000" : "none",
             paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
           }}
         >
