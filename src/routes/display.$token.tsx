@@ -40,10 +40,11 @@ type MenuItem = {
   description?: string;
   subtext?: string;
   inlineNote?: string;
+  hidden?: boolean;
   modifications?: { name: string; price_modifier_cents: number }[];
 };
-type Subsection = { subsection: string; items: MenuItem[] };
-type Menu = { section: string; subsections: Subsection[] };
+type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean };
+type Menu = { section: string; subsections: Subsection[]; hidden?: boolean };
 type MenuFilter = "breakfast" | "lunch" | "dinner";
 
 function isMenuFilter(value: unknown): value is MenuFilter {
@@ -61,14 +62,17 @@ function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: M
     .filter((section) => isVisibleOnMenu(section.visible_menus, selectedMenu))
     .map((section) => ({
       section: section.name,
+      hidden: section.is_hidden,
       subsections: section.subsections
         .filter((subsection) => isVisibleOnMenu(subsection.visible_menus, selectedMenu))
         .map((subsection) => ({
           subsection: subsection.name,
+          hidden: subsection.is_hidden,
           items: subsection.items.map((item) => ({
             name: item.title,
             price: item.base_price_cents / 100,
             description: item.description,
+            hidden: item.is_hidden,
             modifications: item.modifications.map((modification) => ({
               name: modification.name,
               price_modifier_cents: modification.price_modifier_cents,
@@ -433,7 +437,7 @@ function DisplayPage() {
   const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
 
   const renderItem = (item: MenuItem) => (
-    <div className="menu-item">
+    <div className="menu-item" style={item.hidden ? { opacity: 0.35 } : undefined}>
       <div className="menu-item-row" style={styleFor("itemTitle")}>
         <span className="menu-item-name">{item.name}</span>
         <span className="menu-item-price">
@@ -481,7 +485,7 @@ function DisplayPage() {
       <div className="menu-flow" ref={flowRef}>
         {menus.map((menu) => (
           <Fragment key={menu.section}>
-            <div className="menu-section-block" aria-label={menu.section}>
+            <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
               <video
                 className="section-title-video"
                 src={MENU_ANIMATION_SRC}
@@ -500,16 +504,19 @@ function DisplayPage() {
                 {menu.section}
               </h2>
             </div>
-            {menu.subsections.map((sub, si) => (
-              <section key={`${menu.section}-${si}`}>
-                <h2 className="menu-section-title" style={styleFor("subsection")}>
-                  {sub.subsection}
-                </h2>
-                {sub.items.map((item, ii) => (
-                  <div key={ii}>{renderItem(item)}</div>
-                ))}
-              </section>
-            ))}
+            {menu.subsections.map((sub, si) => {
+              const dim = menu.hidden || sub.hidden;
+              return (
+                <section key={`${menu.section}-${si}`} style={dim ? { opacity: 0.35 } : undefined}>
+                  <h2 className="menu-section-title" style={styleFor("subsection")}>
+                    {sub.subsection}
+                  </h2>
+                  {sub.items.map((item, ii) => (
+                    <div key={ii}>{renderItem(item)}</div>
+                  ))}
+                </section>
+              );
+            })}
           </Fragment>
         ))}
       </div>

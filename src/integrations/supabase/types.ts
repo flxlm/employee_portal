@@ -208,6 +208,7 @@ export type Database = {
           display_order: number
           id: string
           is_deleted: boolean
+          is_hidden: boolean
           subsection_id: string
           title: string
           updated_at: string
@@ -220,6 +221,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           subsection_id: string
           title?: string
           updated_at?: string
@@ -232,6 +234,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           subsection_id?: string
           title?: string
           updated_at?: string
@@ -261,6 +264,7 @@ export type Database = {
           display_order: number
           id: string
           is_deleted: boolean
+          is_hidden: boolean
           name: string
           updated_at: string
           version: number
@@ -272,6 +276,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           name?: string
           updated_at?: string
           version?: number
@@ -283,6 +288,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           name?: string
           updated_at?: string
           version?: number
@@ -297,6 +303,7 @@ export type Database = {
           display_order: number
           id: string
           is_deleted: boolean
+          is_hidden: boolean
           name: string
           section_id: string
           updated_at: string
@@ -309,6 +316,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           name?: string
           section_id: string
           updated_at?: string
@@ -321,6 +329,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_deleted?: boolean
+          is_hidden?: boolean
           name?: string
           section_id?: string
           updated_at?: string

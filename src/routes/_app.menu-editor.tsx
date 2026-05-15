@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -139,6 +140,46 @@ function MenuToggles({
         );
       })}
     </div>
+  );
+}
+
+function RowSettingsMenu({
+  hidden,
+  onToggleHidden,
+  onDelete,
+  size = "md",
+}: {
+  hidden: boolean;
+  onToggleHidden: () => void;
+  onDelete: () => void;
+  size?: "sm" | "md";
+}) {
+  const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
+  const iconClass = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="ghost" className={btnClass} aria-label="Settings">
+          <Settings2 className={iconClass} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleHidden(); }}>
+          {hidden ? (
+            <><Eye className="h-4 w-4" /> Show on live menu</>
+          ) : (
+            <><EyeOff className="h-4 w-4" /> Hide on live menu</>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={(e) => { e.preventDefault(); onDelete(); }}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -564,7 +605,7 @@ function MenuEditorPage() {
 
       <div className="space-y-6">
         {sections.map((sec, sIdx) => (
-          <Card key={sec.id} className="border-2">
+          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""}`}>
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
                 <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
@@ -614,9 +655,15 @@ function MenuEditorPage() {
                     }}
                   />
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => removeRow("menu_sections", sec.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <RowSettingsMenu
+                  hidden={sec.is_hidden}
+                  onToggleHidden={() => {
+                    const next = !sec.is_hidden;
+                    patchSection(sec.id, { is_hidden: next });
+                    queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next });
+                  }}
+                  onDelete={() => removeRow("menu_sections", sec.id)}
+                />
                 <Button
                   size="icon"
                   variant="ghost"
@@ -631,7 +678,7 @@ function MenuEditorPage() {
             {!collapsed.has(sec.id) && (
             <CardContent className="space-y-4">
               {sec.subsections.map((sub, ssIdx) => (
-                <div key={sub.id} className="rounded-md border p-3 space-y-3">
+                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""}`}>
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col rounded-md border bg-background shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
@@ -677,9 +724,15 @@ function MenuEditorPage() {
                         }}
                       />
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => requestDeleteSubsection(sec.id, sub.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <RowSettingsMenu
+                      hidden={sub.is_hidden}
+                      onToggleHidden={() => {
+                        const next = !sub.is_hidden;
+                        patchSubsection(sec.id, sub.id, { is_hidden: next });
+                        queueEdit("menu_subsections", sub.id, sub.version, { is_hidden: next });
+                      }}
+                      onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
+                    />
                     <Button
                       size="icon"
                       variant="ghost"
@@ -694,7 +747,7 @@ function MenuEditorPage() {
                   {!collapsedSubs.has(sub.id) && (
                   <div className="space-y-2 pl-8">
                     {sub.items.map((item, iIdx) => (
-                      <div key={item.id} className="rounded border bg-muted/30 p-2 space-y-2">
+                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""}`}>
                         <div className="flex items-start gap-2">
                           <div className="flex flex-col rounded-md border bg-background shrink-0">
                             <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
@@ -745,9 +798,16 @@ function MenuEditorPage() {
                               />
                             )}
                           </div>
-                          <Button size="icon" variant="ghost" onClick={() => removeRow("menu_items", item.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <RowSettingsMenu
+                            size="sm"
+                            hidden={item.is_hidden}
+                            onToggleHidden={() => {
+                              const next = !item.is_hidden;
+                              patchItem(sec.id, sub.id, item.id, { is_hidden: next });
+                              queueEdit("menu_items", item.id, item.version, { is_hidden: next });
+                            }}
+                            onDelete={() => removeRow("menu_items", item.id)}
+                          />
                         </div>
 
                         {item.modifications.length > 0 && (
