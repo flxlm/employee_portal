@@ -13,7 +13,7 @@ import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
-const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
+
 
 export const Route = createFileRoute("/display/$token")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
@@ -181,44 +181,18 @@ const COLUMN_CSS = `
   display: block;
   border: none;
 }
-.trailing-block {
+.menu-end-logo {
   break-inside: avoid;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  box-sizing: border-box;
-}
-.trailing-asterisk {
-  width: 100%;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  aspect-ratio: 1 / 1;
-}
-.trailing-asterisk video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center center;
-  display: block;
-}
-.trailing-logo {
-  flex: 0 0 auto;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: clamp(3.5rem, 11vh, 6.5rem);
-  padding-bottom: 0;
-  overflow: visible;
+  margin-top: 1rem;
 }
-.trailing-logo img {
+.menu-end-logo img {
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: clamp(3.5rem, 11vh, 6.5rem);
   object-fit: contain;
   object-position: center bottom;
   display: block;
@@ -349,55 +323,6 @@ function DisplayPage() {
     };
   }, []);
 
-  useEffect(() => {
-    let frameIds: number[] = [];
-    const updateTrailingColumn = () => {
-      const flow = flowRef.current;
-      if (!flow) return;
-
-      const flowRect = flow.getBoundingClientRect();
-      const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
-      const computed = window.getComputedStyle(flow);
-      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
-      const columnGap = Number.parseFloat(computed.columnGap) || 0;
-      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
-      const lastColumnLeft = (columnWidth + columnGap) * (columnCount - 1);
-      const lastColumnStart = flowRect.left + lastColumnLeft - 1;
-      const lastColumnEnd = lastColumnStart + columnWidth + 2;
-      const lastVisibleInLastColumn = sections
-        .map((section) => section.getBoundingClientRect())
-        .filter((rect) => rect.left >= lastColumnStart && rect.right <= lastColumnEnd)
-        .sort((a, b) => b.bottom - a.bottom)[0];
-      const measuredTop = lastVisibleInLastColumn
-        ? lastVisibleInLastColumn.bottom - flowRect.top + 10
-        : flowRect.height * 0.65;
-      const top = Math.max(0, Math.min(measuredTop, flowRect.height - 128));
-
-      const styleTarget = flow.parentElement ?? flow;
-      styleTarget.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
-      styleTarget.style.setProperty("--trailing-width", `${columnWidth}px`);
-      styleTarget.style.setProperty("--trailing-top", `${top}px`);
-    };
-    const scheduleUpdate = () => {
-      frameIds.forEach((id) => cancelAnimationFrame(id));
-      const timeoutIds = [80, 250, 600].map((delay) => window.setTimeout(updateTrailingColumn, delay));
-      frameIds = [
-        requestAnimationFrame(updateTrailingColumn),
-        requestAnimationFrame(() => requestAnimationFrame(updateTrailingColumn)),
-      ];
-      return timeoutIds;
-    };
-
-    const timeoutIds = scheduleUpdate();
-    document.fonts?.ready.then(scheduleUpdate).catch(() => {});
-    window.addEventListener("resize", scheduleUpdate);
-    return () => {
-      timeoutIds.forEach((id) => window.clearTimeout(id));
-      frameIds.forEach((id) => cancelAnimationFrame(id));
-      window.removeEventListener("resize", scheduleUpdate);
-    };
-  }, [formatting, displayMenu]);
-
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
       const merged: TextStyle = {
@@ -511,33 +436,15 @@ function DisplayPage() {
             })}
           </Fragment>
         ))}
-        <div className="trailing-block">
-          <div className="trailing-asterisk">
-            <video
-              src={MENU_FOOTER_ANIMATION_SRC}
-              autoPlay
-              muted
-              playsInline
-              loop
-              controls={false}
-              preload="metadata"
-              aria-hidden="true"
-              onError={(e) => {
-                const c = (e.currentTarget as HTMLVideoElement).parentElement;
-                if (c) c.style.display = "none";
-              }}
-            />
-          </div>
-          <div className="trailing-logo">
-            <img
-              src={savsavLogoSvg}
-              alt="SAVSAV"
-              onError={(e) => {
-                const c = (e.currentTarget as HTMLImageElement).parentElement;
-                if (c) c.style.display = "none";
-              }}
-            />
-          </div>
+        <div className="menu-end-logo">
+          <img
+            src={savsavLogoSvg}
+            alt="SAVSAV"
+            onError={(e) => {
+              const c = (e.currentTarget as HTMLImageElement).parentElement;
+              if (c) c.style.display = "none";
+            }}
+          />
         </div>
       </div>
 
