@@ -202,7 +202,7 @@ const COLUMN_CSS = `
   height: auto;
   max-height: clamp(3.5rem, 11vh, 6.5rem);
   object-fit: contain;
-  object-position: center bottom;
+  object-position: left;
   display: block;
 }
 .menu-section-block {
