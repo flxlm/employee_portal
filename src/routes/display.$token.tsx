@@ -362,7 +362,7 @@ function DisplayPage() {
           </ul>
         ) : (
           sub.items.map((item) => (
-            <div key={item.id} style={{ marginBottom: "0.8vw" }}>
+            <div key={item.id} style={{ marginBottom: "0.3vw" }}>
               <div style={styleFor("itemTitle")}>
                 {item.title} <FormattedPrice cents={item.base_price_cents} />
               </div>
