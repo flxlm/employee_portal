@@ -327,6 +327,9 @@ function MenuEditorPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/menu-formatting">Formatting</Link>
+          </Button>
           <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
             {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
           </Button>
