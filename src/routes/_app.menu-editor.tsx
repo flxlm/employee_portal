@@ -285,6 +285,14 @@ function MenuEditorPage() {
     }
   };
 
+  const discardChanges = async () => {
+    if (dirtyRef.current.size === 0) return;
+    dirtyRef.current.clear();
+    setDirtyCount(0);
+    await reload();
+    toast.success("Changes discarded");
+  };
+
   const queueEdit = (table: string, id: string, expectedVersion: number, patch: Record<string, unknown>) => {
     const key = `${table}:${id}`;
     const existing = dirtyRef.current.get(key);
@@ -732,9 +740,14 @@ function MenuEditorPage() {
           <span className="text-sm">
             {dirtyCount} unsaved change{dirtyCount > 1 ? "s" : ""}
           </span>
-          <Button size="sm" onClick={flush} disabled={savingCount > 0}>
-            <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={discardChanges} disabled={savingCount > 0}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={flush} disabled={savingCount > 0}>
+              <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
         </div>
       )}
       <header className="mb-6 flex items-center justify-between gap-4">
