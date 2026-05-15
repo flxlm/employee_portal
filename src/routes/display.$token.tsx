@@ -14,16 +14,23 @@ export const Route = createFileRoute("/display/$token")({
   component: DisplayPage,
 });
 
+const FONT_STACK =
+  '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
 function FormattedPrice({ cents }: { cents: number }) {
   const sign = cents < 0 ? "-" : "";
   const abs = Math.abs(cents);
   const dollars = Math.floor(abs / 100);
-  const c = (abs % 100).toString().padStart(2, "0");
+  const c = abs % 100;
   return (
     <span style={{ whiteSpace: "nowrap" }}>
       {sign}
       {dollars}
-      <sup style={{ fontSize: "0.55em", fontWeight: 700, marginLeft: "0.05em" }}>{c}</sup>
+      {c > 0 && (
+        <sup style={{ fontSize: "0.55em", fontWeight: 700, marginLeft: "0.04em" }}>
+          {c.toString().padStart(2, "0")}
+        </sup>
+      )}
     </span>
   );
 }
@@ -60,58 +67,38 @@ function DisplayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const baseShell: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#fff",
+    color: "#000",
+    fontFamily: FONT_STACK,
+    textTransform: "uppercase",
+    fontWeight: 500,
+  };
+
   if (error) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#fff",
-          color: "#000",
-          fontFamily: "Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-          textTransform: "uppercase",
-          fontWeight: 700,
-        }}
-      >
+      <div style={{ ...baseShell, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p>{error}</p>
       </div>
     );
   }
   if (!menu) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#fff",
-          color: "#000",
-          fontFamily: "Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-          textTransform: "uppercase",
-          fontWeight: 700,
-        }}
-      >
+      <div style={{ ...baseShell, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p>Loading menu…</p>
       </div>
     );
   }
 
-  // Distribute sections round-robin into 4 columns
   const columns: typeof menu.sections[] = [[], [], [], []];
   menu.sections.forEach((s, i) => columns[i % 4].push(s));
 
   return (
     <div
       style={{
-        minHeight: "100vh",
+        ...baseShell,
         width: "100vw",
-        background: "#fff",
-        color: "#000",
-        fontFamily: "Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        textTransform: "uppercase",
         position: "relative",
         overflow: "hidden",
         contain: "layout paint",
@@ -129,49 +116,49 @@ function DisplayPage() {
           <div
             key={ci}
             style={{
-              borderLeft: ci === 0 ? "none" : "0.08vw solid #000",
-              padding: "1.2vw 1vw",
+              borderLeft: ci === 0 ? "none" : "0.05vw solid #000",
+              padding: "1.4vw 1.2vw 4vw",
               display: "flex",
               flexDirection: "column",
-              gap: "1.5vw",
+              gap: "1.6vw",
             }}
           >
             {col.map((section) => (
               <section key={section.id}>
                 <h2
                   style={{
-                    fontSize: "1.9vw",
-                    fontWeight: 900,
+                    fontSize: "2.6vw",
+                    fontWeight: 700,
                     letterSpacing: "-0.01em",
-                    borderBottom: "0.18vw solid #000",
-                    paddingBottom: "0.3vw",
-                    marginBottom: "0.8vw",
+                    textDecoration: "underline",
+                    textDecorationThickness: "0.12vw",
+                    textUnderlineOffset: "0.25vw",
+                    margin: "0 0 0.7vw 0",
                     lineHeight: 1,
                   }}
                 >
                   {section.name}
                 </h2>
                 {section.subsections.map((sub, si) => {
-                  // "Compact" subsections: many short items with no description -> inline list
                   const compact =
                     sub.items.length >= 3 &&
                     sub.items.every((it) => !it.description && it.modifications.length === 0);
                   return (
-                    <div key={sub.id} style={{ marginBottom: "0.8vw" }}>
+                    <div key={sub.id} style={{ marginBottom: "0.9vw" }}>
                       {si > 0 && (
                         <hr
                           style={{
                             border: "none",
                             borderTop: "0.05vw solid #000",
-                            margin: "0.6vw 0",
+                            margin: "0.7vw 0",
                           }}
                         />
                       )}
                       {sub.name && (
                         <h3
                           style={{
-                            fontSize: "1vw",
-                            fontWeight: 800,
+                            fontSize: "1.1vw",
+                            fontWeight: 700,
                             margin: "0 0 0.4vw 0",
                             lineHeight: 1.1,
                           }}
@@ -180,38 +167,38 @@ function DisplayPage() {
                         </h3>
                       )}
                       {compact ? (
-                        <div style={{ fontSize: "0.85vw", lineHeight: 1.4 }}>
-                          {sub.items.map((item, ii) => (
-                            <span key={item.id}>
-                              <span style={{ fontWeight: 700 }}>{item.title}</span>{" "}
-                              <FormattedPrice cents={item.base_price_cents} />
-                              {ii < sub.items.length - 1 && (
-                                <span style={{ margin: "0 0.4vw" }}>·</span>
-                              )}
-                            </span>
+                        <ul
+                          style={{
+                            listStyle: "none",
+                            padding: 0,
+                            margin: 0,
+                            fontSize: "0.95vw",
+                            lineHeight: 1.5,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {sub.items.map((item) => (
+                            <li key={item.id}>
+                              {item.title} <FormattedPrice cents={item.base_price_cents} />
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       ) : (
                         sub.items.map((item) => (
-                          <div key={item.id} style={{ marginBottom: "0.5vw" }}>
+                          <div key={item.id} style={{ marginBottom: "0.55vw" }}>
                             <div
                               style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "baseline",
-                                gap: "0.6vw",
-                                fontSize: "1.05vw",
-                                fontWeight: 800,
+                                fontSize: "1.15vw",
+                                fontWeight: 700,
                                 lineHeight: 1.15,
                               }}
                             >
-                              <span>{item.title}</span>
-                              <FormattedPrice cents={item.base_price_cents} />
+                              {item.title} <FormattedPrice cents={item.base_price_cents} />
                             </div>
                             {item.description && (
                               <p
                                 style={{
-                                  fontSize: "0.7vw",
+                                  fontSize: "0.78vw",
                                   fontWeight: 400,
                                   margin: "0.15vw 0 0 0",
                                   lineHeight: 1.3,
@@ -226,8 +213,8 @@ function DisplayPage() {
                                   listStyle: "none",
                                   padding: 0,
                                   margin: "0.2vw 0 0 0",
-                                  fontSize: "0.65vw",
-                                  fontWeight: 500,
+                                  fontSize: "0.7vw",
+                                  fontWeight: 400,
                                 }}
                               >
                                 {item.modifications.map((m) => (
@@ -259,19 +246,21 @@ function DisplayPage() {
           </div>
         ))}
       </div>
-      <img
-        src="/logo.svg"
-        alt=""
+      <div
         style={{
           position: "absolute",
-          bottom: "1vw",
-          right: "1vw",
-          height: "2vw",
-          width: "auto",
-          filter: "grayscale(1) contrast(1000%) brightness(0)",
-          opacity: 0.9,
+          bottom: "1.2vw",
+          right: "1.4vw",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "0.3vw",
+          lineHeight: 1,
         }}
-      />
+      >
+        <span style={{ fontSize: "2.4vw", fontWeight: 700 }}>✱</span>
+        <span style={{ fontSize: "1.6vw", fontWeight: 700, fontStyle: "italic" }}>Savsav</span>
+      </div>
     </div>
   );
 }
