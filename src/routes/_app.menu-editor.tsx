@@ -109,6 +109,7 @@ function MenuEditorPage() {
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
+  const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
