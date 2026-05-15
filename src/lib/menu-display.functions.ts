@@ -72,13 +72,17 @@ async function buildMenu(): Promise<DisplayMenu> {
     }
     if (!row.item_id) continue;
     if (!sub.items.find((i) => i.id === row.item_id)) {
-      const mods = Array.isArray(row.modifications) ? row.modifications : [];
+      const mods = (Array.isArray(row.modifications) ? row.modifications : []) as Array<{
+        id: string;
+        name: string;
+        price_modifier_cents: number;
+      }>;
       sub.items.push({
         id: row.item_id,
         title: row.item_title || "",
         description: row.item_description || "",
         base_price_cents: row.base_price_cents || 0,
-        modifications: mods.map((m: { id: string; name: string; price_modifier_cents: number }) => ({
+        modifications: mods.map((m) => ({
           id: m.id,
           name: m.name,
           price_modifier_cents: m.price_modifier_cents,

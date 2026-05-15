@@ -156,7 +156,7 @@ export const updateRow = createServerFn({ method: "POST" })
 
     const { data: updated, error } = await supabase
       .from(table)
-      .update(safe)
+      .update(safe as never)
       .eq("id", id)
       .eq("version", expectedVersion)
       .select()
