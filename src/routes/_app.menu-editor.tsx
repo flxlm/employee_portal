@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,14 @@ export const Route = createFileRoute("/_app/menu-editor")({
 type MenuOptionLite = { key: string; label: string };
 
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function isSoldOutToday(d?: string | null): boolean {
+  return !!d && d === todayISO();
+}
 
 function formatPrice(cents: number) {
   return (cents / 100).toFixed(2);
@@ -144,13 +152,17 @@ function MenuToggles({
 
 function RowSettingsMenu({
   hidden,
+  soldOut,
   onToggleHidden,
+  onToggleSoldOut,
   onDuplicate,
   onDelete,
   size = "md",
 }: {
   hidden: boolean;
+  soldOut: boolean;
   onToggleHidden: () => void;
+  onToggleSoldOut: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
   size?: "sm" | "md";
@@ -165,6 +177,13 @@ function RowSettingsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
+          {soldOut ? (
+            <><RotateCcw className="h-4 w-4" /> Mark as available</>
+          ) : (
+            <><Ban className="h-4 w-4" /> Mark as sold out (today)</>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleHidden(); }}>
           {hidden ? (
             <><Eye className="h-4 w-4" /> Show on live menu</>
@@ -826,7 +845,7 @@ function MenuEditorPage() {
 
       <div className="space-y-6">
         {sections.map((sec, sIdx) => (
-          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""}`}>
+          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sec.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""}`}>
             <CardHeader className="space-y-3">
               <div className="flex items-start gap-2">
                 <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
@@ -879,10 +898,16 @@ function MenuEditorPage() {
                 </div>
                 <RowSettingsMenu
                   hidden={sec.is_hidden}
+                  soldOut={isSoldOutToday(sec.sold_out_date)}
                   onToggleHidden={() => {
                     const next = !sec.is_hidden;
                     patchSection(sec.id, { is_hidden: next });
                     queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next });
+                  }}
+                  onToggleSoldOut={() => {
+                    const next = isSoldOutToday(sec.sold_out_date) ? null : todayISO();
+                    patchSection(sec.id, { sold_out_date: next });
+                    queueEdit("menu_sections", sec.id, sec.version, { sold_out_date: next });
                   }}
                   onDuplicate={() => duplicateSection(sec.id)}
                   onDelete={() => removeRow("menu_sections", sec.id)}
@@ -901,7 +926,7 @@ function MenuEditorPage() {
             {!collapsed.has(sec.id) && (
             <CardContent className="space-y-4">
               {sec.subsections.map((sub, ssIdx) => (
-                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""}`}>
+                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sub.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""}`}>
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col rounded-md border bg-background shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
@@ -950,10 +975,16 @@ function MenuEditorPage() {
                     </div>
                     <RowSettingsMenu
                       hidden={sub.is_hidden}
+                      soldOut={isSoldOutToday(sub.sold_out_date)}
                       onToggleHidden={() => {
                         const next = !sub.is_hidden;
                         patchSubsection(sec.id, sub.id, { is_hidden: next });
                         queueEdit("menu_subsections", sub.id, sub.version, { is_hidden: next });
+                      }}
+                      onToggleSoldOut={() => {
+                        const next = isSoldOutToday(sub.sold_out_date) ? null : todayISO();
+                        patchSubsection(sec.id, sub.id, { sold_out_date: next });
+                        queueEdit("menu_subsections", sub.id, sub.version, { sold_out_date: next });
                       }}
                       onDuplicate={() => duplicateSubsection(sec.id, sub.id)}
                       onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
@@ -972,7 +1003,7 @@ function MenuEditorPage() {
                   {!collapsedSubs.has(sub.id) && (
                   <div className="space-y-2 pl-8">
                     {sub.items.map((item, iIdx) => (
-                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""}`}>
+                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(item.sold_out_date) ? "[&_input]:text-muted-foreground/40 [&_textarea]:text-muted-foreground/40" : ""}`}>
                         <div className="flex items-start gap-2">
                           <div className="flex flex-col rounded-md border bg-background shrink-0">
                             <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
@@ -1026,10 +1057,16 @@ function MenuEditorPage() {
                           <RowSettingsMenu
                             size="sm"
                             hidden={item.is_hidden}
+                            soldOut={isSoldOutToday(item.sold_out_date)}
                             onToggleHidden={() => {
                               const next = !item.is_hidden;
                               patchItem(sec.id, sub.id, item.id, { is_hidden: next });
                               queueEdit("menu_items", item.id, item.version, { is_hidden: next });
+                            }}
+                            onToggleSoldOut={() => {
+                              const next = isSoldOutToday(item.sold_out_date) ? null : todayISO();
+                              patchItem(sec.id, sub.id, item.id, { sold_out_date: next });
+                              queueEdit("menu_items", item.id, item.version, { sold_out_date: next });
                             }}
                             onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
                             onDelete={() => removeRow("menu_items", item.id)}

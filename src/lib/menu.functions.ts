@@ -19,6 +19,7 @@ export type MenuItem = {
   display_order: number;
   version: number;
   is_hidden: boolean;
+  sold_out_date: string | null;
   modifications: MenuModification[];
 };
 
@@ -31,6 +32,7 @@ export type MenuSubsection = {
   version: number;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   items: MenuItem[];
 };
 
@@ -42,6 +44,7 @@ export type MenuSection = {
   version: number;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   subsections: MenuSubsection[];
 };
 
@@ -102,6 +105,7 @@ export const listMenu = createServerFn({ method: "GET" })
         display_order: i.display_order,
         version: i.version,
         is_hidden: (i as { is_hidden?: boolean }).is_hidden ?? false,
+        sold_out_date: (i as { sold_out_date?: string | null }).sold_out_date ?? null,
         modifications: modsByItem.get(i.id) || [],
       });
       itemsBySub.set(i.subsection_id, arr);
@@ -119,6 +123,7 @@ export const listMenu = createServerFn({ method: "GET" })
         version: ss.version,
         visible_menus: (ss as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
         is_hidden: (ss as { is_hidden?: boolean }).is_hidden ?? false,
+        sold_out_date: (ss as { sold_out_date?: string | null }).sold_out_date ?? null,
         items: itemsBySub.get(ss.id) || [],
       });
       subsBySec.set(ss.section_id, arr);
@@ -132,6 +137,7 @@ export const listMenu = createServerFn({ method: "GET" })
       version: s.version,
       visible_menus: (s as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
       is_hidden: (s as { is_hidden?: boolean }).is_hidden ?? false,
+      sold_out_date: (s as { sold_out_date?: string | null }).sold_out_date ?? null,
       subsections: subsBySec.get(s.id) || [],
     }));
 

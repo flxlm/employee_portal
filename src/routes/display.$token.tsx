@@ -41,14 +41,23 @@ type MenuItem = {
   subtext?: string;
   inlineNote?: string;
   hidden?: boolean;
+  soldOut?: boolean;
   modifications?: { name: string; price_modifier_cents: number }[];
 };
-type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean };
-type Menu = { section: string; subsections: Subsection[]; hidden?: boolean };
+type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean; soldOut?: boolean };
+type Menu = { section: string; subsections: Subsection[]; hidden?: boolean; soldOut?: boolean };
 type MenuFilter = string;
 
 function isVisibleOnMenu(visibleMenus: string[], selectedMenu?: MenuFilter) {
   return !selectedMenu || visibleMenus.length === 0 || visibleMenus.includes(selectedMenu);
+}
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function isSoldOutToday(d?: string | null): boolean {
+  return !!d && d === todayISO();
 }
 
 function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: MenuFilter): Menu[] {
@@ -59,16 +68,19 @@ function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: M
     .map((section) => ({
       section: section.name,
       hidden: section.is_hidden,
+      soldOut: isSoldOutToday(section.sold_out_date),
       subsections: section.subsections
         .filter((subsection) => isVisibleOnMenu(subsection.visible_menus, selectedMenu))
         .map((subsection) => ({
           subsection: subsection.name,
           hidden: subsection.is_hidden,
+          soldOut: isSoldOutToday(subsection.sold_out_date),
           items: subsection.items.map((item) => ({
             name: item.title,
             price: item.base_price_cents > 0 ? item.base_price_cents / 100 : undefined,
             description: item.description,
             hidden: item.is_hidden,
+            soldOut: isSoldOutToday(item.sold_out_date),
             modifications: item.modifications.map((modification) => ({
               name: modification.name,
               price_modifier_cents: modification.price_modifier_cents,
@@ -349,9 +361,11 @@ function DisplayPage() {
 
   const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
 
-  const renderItem = (item: MenuItem) => (
-    <div className="menu-item" style={item.hidden ? { opacity: 0.35 } : undefined}>
-      <div className="menu-item-row" style={styleFor("itemTitle")}>
+  const SOLD_OUT_COLOR = "#e5e5e5";
+
+  const renderItem = (item: MenuItem, soldOut: boolean) => (
+    <div className="menu-item" style={{ ...(item.hidden ? { opacity: 0.35 } : {}), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
+      <div className="menu-item-row" style={{ ...styleFor("itemTitle"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
         <span className="menu-item-name">{item.name}</span>
         <span className="menu-item-price">
           {item.priceLabel ? (
@@ -362,17 +376,17 @@ function DisplayPage() {
         </span>
       </div>
       {item.description && (
-        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+        <p className="menu-item-sub" style={{ ...styleFor("itemDescription"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           {item.description}
         </p>
       )}
       {item.subtext && (
-        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+        <p className="menu-item-sub" style={{ ...styleFor("itemDescription"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           {item.subtext}
         </p>
       )}
       {item.inlineNote && (
-        <span className="menu-item-note" style={styleFor("modification")}>
+        <span className="menu-item-note" style={{ ...styleFor("modification"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
           + {item.inlineNote.replace(/^\s*\+\s*/, "").replace(/\+\s*(\d+(?:[.,]\d+)?)\s*$/, "$1").trim()}
         </span>
       )}
@@ -419,13 +433,14 @@ function DisplayPage() {
             </div>
             {menu.subsections.map((sub, si) => {
               const dim = menu.hidden || sub.hidden;
+              const soldOut = !!menu.soldOut || !!sub.soldOut;
               return (
                 <section key={`${menu.section}-${si}`} style={dim ? { opacity: 0.35 } : undefined}>
-                  <h2 className="menu-section-title" style={styleFor("subsection")}>
+                  <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
                     {sub.subsection}
                   </h2>
                   {sub.items.map((item, ii) => (
-                    <div key={ii}>{renderItem(item)}</div>
+                    <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
                   ))}
                 </section>
               );
