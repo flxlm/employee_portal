@@ -21,6 +21,7 @@ import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as ApiPublicWebhookRouteImport } from './routes/api/public/webhook'
+import { Route as ApiPublicMenuRefreshRouteImport } from './routes/api/public/menu-refresh'
 import { Route as ApiPublicJotformEventInquiryRouteImport } from './routes/api/public/jotform-event-inquiry'
 
 const SignupRoute = SignupRouteImport.update({
@@ -82,6 +83,11 @@ const ApiPublicWebhookRoute = ApiPublicWebhookRouteImport.update({
   path: '/api/public/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMenuRefreshRoute = ApiPublicMenuRefreshRouteImport.update({
+  id: '/api/public/menu-refresh',
+  path: '/api/public/menu-refresh',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJotformEventInquiryRoute =
   ApiPublicJotformEventInquiryRouteImport.update({
     id: '/api/public/jotform-event-inquiry',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRoutesById {
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
 export interface FileRouteTypes {
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu-refresh'
     | '/api/public/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu-refresh'
     | '/api/public/webhook'
   id:
     | '__root__'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_app/recipes'
     | '/_app/wines'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu-refresh'
     | '/api/public/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -185,6 +197,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
+  ApiPublicMenuRefreshRoute: typeof ApiPublicMenuRefreshRoute
   ApiPublicWebhookRoute: typeof ApiPublicWebhookRoute
 }
 
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/menu-refresh': {
+      id: '/api/public/menu-refresh'
+      path: '/api/public/menu-refresh'
+      fullPath: '/api/public/menu-refresh'
+      preLoaderRoute: typeof ApiPublicMenuRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jotform-event-inquiry': {
       id: '/api/public/jotform-event-inquiry'
       path: '/api/public/jotform-event-inquiry'
@@ -312,8 +332,19 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
+  ApiPublicMenuRefreshRoute: ApiPublicMenuRefreshRoute,
   ApiPublicWebhookRoute: ApiPublicWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
