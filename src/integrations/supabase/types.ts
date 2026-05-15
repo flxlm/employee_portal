@@ -246,6 +246,7 @@ export type Database = {
           name: string
           updated_at: string
           version: number
+          visible_menus: string[]
         }
         Insert: {
           created_at?: string
@@ -256,6 +257,7 @@ export type Database = {
           name?: string
           updated_at?: string
           version?: number
+          visible_menus?: string[]
         }
         Update: {
           created_at?: string
@@ -266,6 +268,7 @@ export type Database = {
           name?: string
           updated_at?: string
           version?: number
+          visible_menus?: string[]
         }
         Relationships: []
       }
@@ -280,6 +283,7 @@ export type Database = {
           section_id: string
           updated_at: string
           version: number
+          visible_menus: string[]
         }
         Insert: {
           created_at?: string
@@ -291,6 +295,7 @@ export type Database = {
           section_id: string
           updated_at?: string
           version?: number
+          visible_menus?: string[]
         }
         Update: {
           created_at?: string
@@ -302,6 +307,7 @@ export type Database = {
           section_id?: string
           updated_at?: string
           version?: number
+          visible_menus?: string[]
         }
         Relationships: [
           {
