@@ -8,6 +8,7 @@ export type DisplayItem = {
   description: string;
   base_price_cents: number;
   is_hidden: boolean;
+  sold_out_date: string | null;
   modifications: { id: string; name: string; price_modifier_cents: number }[];
 };
 
@@ -17,6 +18,7 @@ export type DisplaySubsection = {
   description: string;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   items: DisplayItem[];
 };
 
@@ -26,6 +28,7 @@ export type DisplaySection = {
   description: string;
   visible_menus: string[];
   is_hidden: boolean;
+  sold_out_date: string | null;
   subsections: DisplaySubsection[];
 };
 
