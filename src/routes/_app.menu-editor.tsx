@@ -547,6 +547,7 @@ function MenuEditorPage() {
                       <Plus className="h-3 w-3" /> Add item
                     </Button>
                   </div>
+                  )}
                 </div>
               ))}
               <Button size="sm" variant="outline" onClick={() => addSubsection(sec.id)}>
