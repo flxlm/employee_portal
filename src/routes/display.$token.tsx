@@ -11,6 +11,7 @@ import {
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
+const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
 
 export const Route = createFileRoute("/display/$token")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean } => {
