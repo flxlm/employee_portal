@@ -82,13 +82,20 @@ function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:sticky md:top-0 md:h-screen border-r border-border bg-card flex-col">
+      <aside
+        className={cn(
+          "hidden md:flex md:sticky md:top-0 md:h-screen border-r border-border bg-card flex-col transition-[width] duration-200",
+          collapsed ? "md:w-14" : "md:w-64"
+        )}
+      >
         <NavContent
           nav={nav}
           location={location}
           email={user?.email}
           onSignOut={handleSignOut}
           onNavigate={() => {}}
+          collapsed={collapsed}
+          onToggleCollapsed={() => setCollapsed((c) => !c)}
         />
       </aside>
 
@@ -109,6 +116,7 @@ function AppLayout() {
             email={user?.email}
             onSignOut={handleSignOut}
             onNavigate={() => setOpen(false)}
+            collapsed={false}
           />
         </SheetContent>
       </Sheet>
