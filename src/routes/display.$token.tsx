@@ -300,10 +300,17 @@ function DisplayPage() {
   const { debug, menu } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
   const fetchDisplayMenu = useServerFn(getDisplayMenu);
+  const fetchSchedule = useServerFn(listMenuSchedulePublic);
   const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
   const [displayMenu, setDisplayMenu] = useState<DisplayMenu | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [scheduleEntries, setScheduleEntries] = useState<
+    Awaited<ReturnType<typeof listMenuSchedulePublic>>["entries"]
+  >([]);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  const isAuto = menu === "auto";
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
@@ -315,6 +322,20 @@ function DisplayPage() {
       .then(setDisplayMenu)
       .catch((error) => console.error("[display] failed to load menu", error));
   }, [fetchFormatting, fetchDisplayMenu, token, refreshKey]);
+
+  useEffect(() => {
+    if (!isAuto) return;
+    fetchSchedule()
+      .then((r) => setScheduleEntries(r.entries))
+      .catch((e) => console.error("[display] failed to load schedule", e));
+  }, [fetchSchedule, isAuto, refreshKey]);
+
+  // Re-evaluate active menu every minute when in auto mode
+  useEffect(() => {
+    if (!isAuto) return;
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [isAuto]);
 
   useEffect(() => {
     let channel: ReturnType<(typeof import("@/integrations/supabase/client"))["supabase"]["channel"]> | null = null;
@@ -360,7 +381,16 @@ function DisplayPage() {
     );
   }, [formatting]);
 
-  const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
+  const activeMenuKey = useMemo(() => {
+    if (!isAuto) return menu;
+    const picked = pickActiveMenuKey(scheduleEntries, new Date(nowTick));
+    return picked ?? undefined;
+  }, [isAuto, menu, scheduleEntries, nowTick]);
+
+  const menus = useMemo(
+    () => mapDisplayMenuToMenus(displayMenu, activeMenuKey),
+    [displayMenu, activeMenuKey],
+  );
 
   const SOLD_OUT_COLOR = "#e5e5e5";
 
