@@ -240,6 +240,7 @@ function DisplayPage() {
   const { debug } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
+  const [activeSection, setActiveSection] = useState<SectionName>("LUNCH");
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
@@ -253,6 +254,11 @@ function DisplayPage() {
     };
     return merged.fontFamily;
   }, [formatting]);
+
+  const visibleSections = useMemo(
+    () => menu.filter((s) => sectionFor(s.section) === activeSection),
+    [activeSection],
+  );
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
