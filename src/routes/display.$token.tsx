@@ -75,6 +75,7 @@ function DisplayPage() {
   };
 
   useEffect(() => {
+    ensureGoogleFontsLoaded();
     load();
     const channel = supabase
       .channel("menu-display")
