@@ -497,6 +497,7 @@ function MenuEditorPage() {
                 <Plus className="h-3 w-3" /> Add subsection
               </Button>
             </CardContent>
+            )}
           </Card>
         ))}
 
