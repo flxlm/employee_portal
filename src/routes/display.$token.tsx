@@ -392,6 +392,7 @@ function DisplayPage() {
           <Fragment key={menu.section}>
             <div className="menu-section-block">
               <video
+                className="section-title-video"
                 src={MENU_ANIMATION_SRC}
                 autoPlay
                 muted
@@ -403,20 +404,10 @@ function DisplayPage() {
                 onError={(e) => {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  border: "none",
-                  display: "block",
-                  zIndex: 0,
-                }}
               />
-              <span style={{ position: "relative", zIndex: 1, ...styleFor("section") }}>
+              <h2 className="section-title-text" style={styleFor("section")}>
                 {menu.section}
-              </span>
+              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
