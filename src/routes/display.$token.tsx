@@ -256,7 +256,7 @@ const COLUMN_CSS = `
   flex: 1 1 auto;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   min-height: 0;
 }
@@ -264,7 +264,7 @@ const COLUMN_CSS = `
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center center;
+  object-position: center bottom;
   display: block;
 }
 .menu-section-block {
