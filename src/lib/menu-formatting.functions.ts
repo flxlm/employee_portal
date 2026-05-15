@@ -11,6 +11,7 @@ export type TextStyle = {
   textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
   color?: string;
   fontStyle?: "normal" | "italic";
+  textAlign?: "justify" | "left" | "center" | "right";
 };
 
 export type FormattingKey =
@@ -53,6 +54,7 @@ export const DEFAULT_FORMATTING: MenuFormatting = {
     fontSize: "0.75vw",
     fontWeight: 400,
     lineHeight: 1.4,
+    textAlign: "justify",
   },
   modification: {
     fontSize: "0.7vw",

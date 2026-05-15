@@ -303,6 +303,7 @@ const COLUMN_CSS = `
   letter-spacing: 0.02em;
   line-height: 1.2;
   margin: 0.1rem 0 0 0;
+  text-align: justify;
 }
 .menu-item-note {
   display: block;
@@ -418,6 +419,7 @@ function DisplayPage() {
         textTransform: merged.textTransform,
         color: merged.color,
         fontStyle: merged.fontStyle,
+        textAlign: merged.textAlign,
       };
     };
   }, [formatting]);
