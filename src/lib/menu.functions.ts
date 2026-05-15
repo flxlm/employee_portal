@@ -28,6 +28,7 @@ export type MenuSubsection = {
   description: string;
   display_order: number;
   version: number;
+  visible_menus: string[];
   items: MenuItem[];
 };
 
@@ -37,6 +38,7 @@ export type MenuSection = {
   description: string;
   display_order: number;
   version: number;
+  visible_menus: string[];
   subsections: MenuSubsection[];
 };
 
