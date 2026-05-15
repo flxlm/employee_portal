@@ -41,14 +41,23 @@ type MenuItem = {
   subtext?: string;
   inlineNote?: string;
   hidden?: boolean;
+  soldOut?: boolean;
   modifications?: { name: string; price_modifier_cents: number }[];
 };
-type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean };
-type Menu = { section: string; subsections: Subsection[]; hidden?: boolean };
+type Subsection = { subsection: string; items: MenuItem[]; hidden?: boolean; soldOut?: boolean };
+type Menu = { section: string; subsections: Subsection[]; hidden?: boolean; soldOut?: boolean };
 type MenuFilter = string;
 
 function isVisibleOnMenu(visibleMenus: string[], selectedMenu?: MenuFilter) {
   return !selectedMenu || visibleMenus.length === 0 || visibleMenus.includes(selectedMenu);
+}
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function isSoldOutToday(d?: string | null): boolean {
+  return !!d && d === todayISO();
 }
 
 function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: MenuFilter): Menu[] {
@@ -59,16 +68,19 @@ function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: M
     .map((section) => ({
       section: section.name,
       hidden: section.is_hidden,
+      soldOut: isSoldOutToday(section.sold_out_date),
       subsections: section.subsections
         .filter((subsection) => isVisibleOnMenu(subsection.visible_menus, selectedMenu))
         .map((subsection) => ({
           subsection: subsection.name,
           hidden: subsection.is_hidden,
+          soldOut: isSoldOutToday(subsection.sold_out_date),
           items: subsection.items.map((item) => ({
             name: item.title,
             price: item.base_price_cents > 0 ? item.base_price_cents / 100 : undefined,
             description: item.description,
             hidden: item.is_hidden,
+            soldOut: isSoldOutToday(item.sold_out_date),
             modifications: item.modifications.map((modification) => ({
               name: modification.name,
               price_modifier_cents: modification.price_modifier_cents,
