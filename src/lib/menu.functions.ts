@@ -123,6 +123,7 @@ export const listMenu = createServerFn({ method: "GET" })
         version: ss.version,
         visible_menus: (ss as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
         is_hidden: (ss as { is_hidden?: boolean }).is_hidden ?? false,
+        sold_out_date: (ss as { sold_out_date?: string | null }).sold_out_date ?? null,
         items: itemsBySub.get(ss.id) || [],
       });
       subsBySec.set(ss.section_id, arr);
