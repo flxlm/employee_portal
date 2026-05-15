@@ -479,8 +479,16 @@ function MenuEditorPage() {
 
                         {item.modifications.length > 0 && (
                           <div className="pl-7 space-y-1">
-                            {item.modifications.map((m) => (
+                            {item.modifications.map((m, mIdx) => (
                               <div key={m.id} className="flex items-center gap-2">
+                                <div className="flex flex-col rounded-md border bg-background shrink-0">
+                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-b-none" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move modification up">
+                                    <ChevronUp className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-t-none" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move modification down">
+                                    <ChevronDown className="h-3 w-3" />
+                                  </Button>
+                                </div>
                                 <Input
                                   className="h-8 flex-1"
                                   value={m.modification_name}
