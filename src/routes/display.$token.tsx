@@ -409,16 +409,19 @@ function DisplayPage() {
     };
     const scheduleUpdate = () => {
       frameIds.forEach((id) => cancelAnimationFrame(id));
+      const timeoutIds = [80, 250, 600].map((delay) => window.setTimeout(updateTrailingColumn, delay));
       frameIds = [
         requestAnimationFrame(updateTrailingColumn),
         requestAnimationFrame(() => requestAnimationFrame(updateTrailingColumn)),
       ];
+      return timeoutIds;
     };
 
-    scheduleUpdate();
+    const timeoutIds = scheduleUpdate();
     document.fonts?.ready.then(scheduleUpdate).catch(() => {});
     window.addEventListener("resize", scheduleUpdate);
     return () => {
+      timeoutIds.forEach((id) => window.clearTimeout(id));
       frameIds.forEach((id) => cancelAnimationFrame(id));
       window.removeEventListener("resize", scheduleUpdate);
     };
