@@ -26,6 +26,12 @@ export const Route = createFileRoute("/_app/menu-editor")({
 
 const DEBOUNCE_MS = 500;
 
+const MENU_OPTIONS = [
+  { key: "breakfast", label: "Breakfast" },
+  { key: "lunch", label: "Lunch" },
+  { key: "dinner", label: "Dinner" },
+] as const;
+
 type Dirty = { table: string; id: string; expectedVersion: number; patch: Record<string, unknown> };
 
 function formatPrice(cents: number) {
@@ -35,6 +41,40 @@ function parsePrice(s: string): number | null {
   const n = Number(s);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
+}
+
+function MenuToggles({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const set = new Set(value);
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-muted-foreground mr-1">Show on:</span>
+      {MENU_OPTIONS.map((m) => {
+        const on = set.has(m.key);
+        return (
+          <Toggle
+            key={m.key}
+            size="sm"
+            pressed={on}
+            onPressedChange={(pressed) => {
+              const next = new Set(set);
+              if (pressed) next.add(m.key);
+              else next.delete(m.key);
+              onChange(MENU_OPTIONS.filter((o) => next.has(o.key)).map((o) => o.key));
+            }}
+            className="h-7 px-2 text-xs"
+          >
+            {m.label}
+          </Toggle>
+        );
+      })}
+    </div>
+  );
 }
 
 function MenuEditorPage() {
