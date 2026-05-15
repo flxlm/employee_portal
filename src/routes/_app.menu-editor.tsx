@@ -143,6 +143,46 @@ function MenuToggles({
   );
 }
 
+function RowSettingsMenu({
+  hidden,
+  onToggleHidden,
+  onDelete,
+  size = "md",
+}: {
+  hidden: boolean;
+  onToggleHidden: () => void;
+  onDelete: () => void;
+  size?: "sm" | "md";
+}) {
+  const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
+  const iconClass = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="ghost" className={btnClass} aria-label="Settings">
+          <Settings2 className={iconClass} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleHidden(); }}>
+          {hidden ? (
+            <><Eye className="h-4 w-4" /> Show on live menu</>
+          ) : (
+            <><EyeOff className="h-4 w-4" /> Hide on live menu</>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={(e) => { e.preventDefault(); onDelete(); }}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function MenuEditorPage() {
   const list = useServerFn(listMenu);
   const insert = useServerFn(insertRow);
