@@ -187,6 +187,7 @@ function MenuEditorPage() {
         toast.error(`${errors} change${errors > 1 ? "s" : ""} failed to save`);
       } else {
         toast.success("Changes saved");
+        triggerRefresh();
       }
     } finally {
       setSavingCount((c) => Math.max(0, c - items.length));
