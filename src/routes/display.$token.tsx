@@ -9,6 +9,7 @@ import {
   type TextStyle,
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
+import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import { supabase } from "@/integrations/supabase/client";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
@@ -74,6 +75,7 @@ function DisplayPage() {
   };
 
   useEffect(() => {
+    ensureGoogleFontsLoaded();
     load();
     const channel = supabase
       .channel("menu-display")
