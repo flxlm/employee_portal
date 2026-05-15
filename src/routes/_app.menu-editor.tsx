@@ -847,6 +847,7 @@ function MenuEditorPage() {
                     patchSection(sec.id, { is_hidden: next });
                     queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next });
                   }}
+                  onDuplicate={() => duplicateSection(sec.id)}
                   onDelete={() => removeRow("menu_sections", sec.id)}
                 />
                 <Button
