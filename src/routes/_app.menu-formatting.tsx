@@ -47,14 +47,30 @@ const STYLE_FIELDS: {
   field: keyof TextStyle;
   label: string;
   placeholder: string;
-  type?: "select";
+  type?: "select" | "unit";
   options?: string[];
+  units?: string[];
+  defaultUnit?: string;
 }[] = [
   { field: "fontFamily", label: "Font family", placeholder: '"Inter", sans-serif' },
-  { field: "fontSize", label: "Font size", placeholder: "1.2vw or 18px" },
+  {
+    field: "fontSize",
+    label: "Font size",
+    placeholder: "1.2",
+    type: "unit",
+    units: ["vw", "px", "rem", "em"],
+    defaultUnit: "vw",
+  },
   { field: "fontWeight", label: "Font weight", placeholder: "100–900" },
-  { field: "letterSpacing", label: "Letter spacing", placeholder: "-0.01em" },
-  { field: "lineHeight", label: "Line height", placeholder: "1.2" },
+  {
+    field: "letterSpacing",
+    label: "Letter spacing",
+    placeholder: "-0.01",
+    type: "unit",
+    units: ["em", "px", "rem"],
+    defaultUnit: "em",
+  },
+  { field: "lineHeight", label: "Line height", placeholder: "1.2 (unitless)" },
   {
     field: "textTransform",
     label: "Text transform",
@@ -71,6 +87,16 @@ const STYLE_FIELDS: {
     options: ["", "normal", "italic"],
   },
 ];
+
+function parseUnit(raw: string, units: string[], fallback: string): { num: string; unit: string } {
+  if (!raw) return { num: "", unit: fallback };
+  const m = String(raw)
+    .trim()
+    .match(/^(-?\d*\.?\d*)\s*([a-z%]*)$/i);
+  if (!m) return { num: String(raw), unit: fallback };
+  const unit = m[2] && units.includes(m[2]) ? m[2] : fallback;
+  return { num: m[1], unit };
+}
 
 function StyleEditor({
   value,
@@ -135,6 +161,45 @@ function StyleEditor({
                   </option>
                 ))}
               </select>
+            ) : f.type === "unit" ? (
+              (() => {
+                const units = f.units || [];
+                const fallback = f.defaultUnit || units[0] || "";
+                const { num, unit } = parseUnit(
+                  current === undefined ? "" : String(current),
+                  units,
+                  fallback,
+                );
+                const commit = (n: string, u: string) => {
+                  if (n === "" || n === "-") {
+                    update(f.field, "");
+                  } else {
+                    update(f.field, `${n}${u}`);
+                  }
+                };
+                return (
+                  <div className="flex gap-1">
+                    <Input
+                      className="flex-1"
+                      inputMode="decimal"
+                      value={num}
+                      onChange={(e) => commit(e.target.value, unit)}
+                      placeholder={placeholder}
+                    />
+                    <select
+                      className="h-9 rounded-md border bg-background px-2 text-sm shrink-0"
+                      value={unit}
+                      onChange={(e) => commit(num, e.target.value)}
+                    >
+                      {units.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()
             ) : (
               <Input
                 value={current === undefined ? "" : String(current)}
