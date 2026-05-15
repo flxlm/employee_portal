@@ -139,15 +139,17 @@ function PriceLabel({ label }: { label: string }) {
 
 const COLUMN_CSS = `
 :root { --menu-scale: 1; }
-body { font-size: calc(16px * var(--menu-scale)); }
 
 .menu-flow {
   column-count: 1;
   column-gap: 2.5rem;
   column-fill: auto;
-  height: calc(100vh - 3rem);
   overflow: hidden;
   position: relative;
+  transform: scale(var(--menu-scale, 1));
+  transform-origin: top left;
+  width: calc(100% / var(--menu-scale, 1));
+  height: calc((100vh - 3rem) / var(--menu-scale, 1));
 }
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
