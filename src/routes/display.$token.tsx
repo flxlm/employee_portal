@@ -277,7 +277,7 @@ const COLUMN_CSS = `
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  border-bottom: 1px solid #000;
+  border-bottom: 2.5px solid #000;
   padding-bottom: 2px;
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
