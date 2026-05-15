@@ -19,6 +19,7 @@ import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
 import { Route as AppMenuFormattingRouteImport } from './routes/_app.menu-formatting'
 import { Route as AppMenuEditorRouteImport } from './routes/_app.menu-editor'
+import { Route as AppLiveMenuTimetableRouteImport } from './routes/_app.live-menu-timetable'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
@@ -76,6 +77,11 @@ const AppMenuEditorRoute = AppMenuEditorRouteImport.update({
   path: '/menu-editor',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLiveMenuTimetableRoute = AppLiveMenuTimetableRouteImport.update({
+  id: '/live-menu-timetable',
+  path: '/live-menu-timetable',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/menu-editor': typeof AppMenuEditorRoute
   '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/menu-editor': typeof AppMenuEditorRoute
   '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_app/events': typeof AppEventsRoute
   '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/_app/menu-editor': typeof AppMenuEditorRoute
   '/_app/menu-formatting': typeof AppMenuFormattingRoute
   '/_app/open-close': typeof AppOpenCloseRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/live-menu-timetable'
     | '/menu-editor'
     | '/menu-formatting'
     | '/open-close'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/live-menu-timetable'
     | '/menu-editor'
     | '/menu-formatting'
     | '/open-close'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_app/events'
     | '/_app/functions'
     | '/_app/home'
+    | '/_app/live-menu-timetable'
     | '/_app/menu-editor'
     | '/_app/menu-formatting'
     | '/_app/open-close'
@@ -310,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMenuEditorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/live-menu-timetable': {
+      id: '/_app/live-menu-timetable'
+      path: '/live-menu-timetable'
+      fullPath: '/live-menu-timetable'
+      preLoaderRoute: typeof AppLiveMenuTimetableRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/home': {
       id: '/_app/home'
       path: '/home'
@@ -367,6 +386,7 @@ interface AppRouteChildren {
   AppEventsRoute: typeof AppEventsRoute
   AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppLiveMenuTimetableRoute: typeof AppLiveMenuTimetableRoute
   AppMenuEditorRoute: typeof AppMenuEditorRoute
   AppMenuFormattingRoute: typeof AppMenuFormattingRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
@@ -379,6 +399,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventsRoute: AppEventsRoute,
   AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
+  AppLiveMenuTimetableRoute: AppLiveMenuTimetableRoute,
   AppMenuEditorRoute: AppMenuEditorRoute,
   AppMenuFormattingRoute: AppMenuFormattingRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
@@ -401,3 +422,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
