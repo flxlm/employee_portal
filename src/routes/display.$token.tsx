@@ -341,9 +341,7 @@ function DisplayPage() {
           }}
         />
       )}
-      <span style={{ position: "relative" }}>
-        {continued ? `${section.name} (CONT.)` : section.name}
-      </span>
+      <span style={{ position: "relative" }}>{section.name}</span>
     </h2>
   );
 
