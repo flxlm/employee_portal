@@ -567,7 +567,7 @@ function MenuEditorPage() {
                         }}
                       />
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => removeRow("menu_subsections", sub.id)}>
+                    <Button size="icon" variant="ghost" onClick={() => requestDeleteSubsection(sec.id, sub.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <Button
