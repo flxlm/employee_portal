@@ -17,6 +17,7 @@ import {
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
 import { FONT_OPTIONS, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
+import { refreshDisplayMenu } from "@/lib/menu-display.functions";
 
 export const Route = createFileRoute("/_app/menu-formatting")({
   beforeLoad: async () => {
