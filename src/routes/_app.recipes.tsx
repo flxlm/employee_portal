@@ -182,6 +182,19 @@ function RecipesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent className="max-w-xl">
+          <NewRecipeForm
+            existingCategories={categories}
+            onCancel={() => setCreating(false)}
+            onCreated={(r) => {
+              setRecipes((prev) => [...prev, r].sort((a, b) => a.sort_order - b.sort_order));
+              setCreating(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
