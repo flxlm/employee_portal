@@ -347,9 +347,22 @@ function MenuEditorPage() {
   };
 
   const removeRow = async (table: string, id: string) => {
-    await del({ data: { table: table as never, id } });
-    await reload();
-    triggerRefresh();
+    try {
+      await del({ data: { table: table as never, id } });
+      await reload();
+      triggerRefresh();
+      const label =
+        table === "menu_items"
+          ? "Item deleted"
+          : table === "item_modifications"
+          ? "Modification deleted"
+          : table === "menu_sections"
+          ? "Section deleted"
+          : "Deleted";
+      toast.success(label);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete");
+    }
   };
 
   // ---- Subsection deletion flow ----
