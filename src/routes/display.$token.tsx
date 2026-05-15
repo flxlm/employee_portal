@@ -249,6 +249,9 @@ const COLUMN_CSS = `
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   line-height: 1.1;
+  break-after: avoid;
+  -webkit-column-break-after: avoid;
+  page-break-after: avoid;
 }
 .menu-item { margin-bottom: 0.55rem; }
 .menu-item-row {
