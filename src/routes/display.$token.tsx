@@ -123,21 +123,44 @@ const menu: MenuSection[] = [
   },
 ];
 
-function FormattedPrice({ price }: { price: number }) {
-  if (!price) return null;
+function Price({ price }: { price: number }) {
   const sign = price < 0 ? "-" : "";
   const abs = Math.abs(price);
   const dollars = Math.floor(abs);
-  const c = Math.round((abs - dollars) * 100);
+  const cents = Math.round((abs - dollars) * 100);
   return (
     <span style={{ whiteSpace: "nowrap" }}>
       {sign}
       {dollars}
-      {c > 0 && (
-        <sup style={{ fontSize: "0.55em", fontWeight: 700, marginLeft: "0.04em" }}>
-          {c.toString().padStart(2, "0")}
+      {cents > 0 && (
+        <sup
+          style={{
+            fontSize: "0.6em",
+            fontWeight: 700,
+            verticalAlign: "super",
+            lineHeight: 0,
+            marginLeft: "0.05em",
+          }}
+        >
+          {cents.toString().padStart(2, "0")}
         </sup>
       )}
+    </span>
+  );
+}
+
+function PriceLabel({ label }: { label: string }) {
+  return (
+    <span
+      style={{
+        fontSize: "0.7em",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.04em",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
     </span>
   );
 }
@@ -152,6 +175,49 @@ const COLUMN_CSS = `
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
+  margin-bottom: 1.5rem;
+}
+.menu-section-title {
+  display: inline-block;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2px;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+.menu-item { margin-bottom: 0.55rem; }
+.menu-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-size: 0.95rem;
+  line-height: 1.15;
+}
+.menu-item-name { flex: 1; }
+.menu-item-price { white-space: nowrap; font-weight: 700; }
+.menu-item-sub {
+  font-size: 0.72rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin: 0.1rem 0 0 0;
+}
+.menu-item-note {
+  display: block;
+  text-align: right;
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 0.1rem;
 }
 `;
 
@@ -165,96 +231,29 @@ function DisplayPage() {
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
   }, [fetchFormatting]);
 
-  const styleFor = useMemo(() => {
-    return (key: FormattingKey, extra?: React.CSSProperties): React.CSSProperties => {
-      const merged: TextStyle = {
-        ...DEFAULT_FORMATTING.global,
-        ...DEFAULT_FORMATTING[key],
-        ...formatting.global,
-        ...formatting[key],
-      };
-      return {
-        fontFamily: merged.fontFamily,
-        fontSize: merged.fontSize,
-        fontWeight: merged.fontWeight as React.CSSProperties["fontWeight"],
-        letterSpacing: merged.letterSpacing,
-        lineHeight: merged.lineHeight as React.CSSProperties["lineHeight"],
-        textTransform: merged.textTransform,
-        color: merged.color,
-        fontStyle: merged.fontStyle,
-        ...extra,
-      };
+  const globalFontFamily = useMemo(() => {
+    const merged: TextStyle = {
+      ...DEFAULT_FORMATTING.global,
+      ...formatting.global,
     };
+    return merged.fontFamily;
   }, [formatting]);
 
-  const renderSectionHeader = (section: MenuSection) => (
-    <h2
-      style={styleFor("section", {
-        position: "relative",
-        aspectRatio: "1 / 1",
-        width: "75%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        margin: "0 0 0.4vw 0",
-        padding: "0.3vw",
-        overflow: "hidden",
-        isolation: "isolate",
-        boxSizing: "border-box",
-      })}
-    >
-      <video
-        src={MENU_ANIMATION_SRC}
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-      <span style={{ position: "relative" }}>{section.section}</span>
-    </h2>
-  );
-
   const renderItem = (item: MenuItem) => (
-    <div style={{ marginBottom: "0.3vw" }}>
-      <div
-        style={styleFor("itemTitle", {
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "0.4vw",
-        })}
-      >
-        <span>{item.name}</span>
-        <span style={{ whiteSpace: "nowrap" }}>
-          {item.priceLabel
-            ? item.priceLabel
-            : typeof item.price === "number"
-              ? <FormattedPrice price={item.price} />
-              : null}
-          {item.inlineNote && (
-            <span style={{ marginLeft: "0.4vw", opacity: 0.75 }}>{item.inlineNote}</span>
-          )}
+    <div className="menu-item">
+      <div className="menu-item-row">
+        <span className="menu-item-name">{item.name}</span>
+        <span className="menu-item-price">
+          {item.priceLabel ? (
+            <PriceLabel label={item.priceLabel} />
+          ) : typeof item.price === "number" ? (
+            <Price price={item.price} />
+          ) : null}
         </span>
       </div>
-      {item.subtext && (
-        <p style={styleFor("itemDescription", { margin: "0.05vw 0 0 0", opacity: 0.75 })}>
-          {item.subtext}
-        </p>
-      )}
-      {item.description && (
-        <p style={styleFor("itemDescription", { margin: "0.1vw 0 0 0" })}>
-          {item.description}
-        </p>
-      )}
+      {item.description && <p className="menu-item-sub">{item.description}</p>}
+      {item.subtext && <p className="menu-item-sub">{item.subtext}</p>}
+      {item.inlineNote && <span className="menu-item-note">{item.inlineNote}</span>}
     </div>
   );
 
@@ -263,17 +262,18 @@ function DisplayPage() {
       style={{
         minHeight: "100vh",
         background: "#fff",
-        ...styleFor("global"),
+        color: "#000",
+        fontFamily: globalFontFamily,
         position: "relative",
-        padding: "0.8vw 0.8vw 3vw 0.8vw",
+        padding: "1.5rem 1.5rem 4rem 1.5rem",
         boxSizing: "border-box",
       }}
     >
       <style>{COLUMN_CSS}</style>
       <div className="menu-flow">
         {menu.map((sec, si) => (
-          <section key={si} style={{ marginBottom: "1rem" }}>
-            {renderSectionHeader(sec)}
+          <section key={si}>
+            <h2 className="menu-section-title">{sec.section}</h2>
             {sec.items.map((item, ii) => (
               <div key={ii}>{renderItem(item)}</div>
             ))}
@@ -303,17 +303,26 @@ function DisplayPage() {
       <div
         style={{
           position: "fixed",
-          bottom: "0.6vw",
-          right: "0.8vw",
+          bottom: "1rem",
+          right: "1.25rem",
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "0.3vw",
-          lineHeight: 1,
+          alignItems: "baseline",
+          gap: "0.4rem",
+          color: "#000",
+          fontFamily: globalFontFamily,
         }}
       >
-        <span style={styleFor("brand", { fontSize: "2.4vw", fontStyle: "normal" })}>✱</span>
-        <span style={styleFor("brand")}>Savsav</span>
+        <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>✱</span>
+        <span
+          style={{
+            fontSize: "0.85rem",
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          Savsav
+        </span>
       </div>
     </div>
   );
