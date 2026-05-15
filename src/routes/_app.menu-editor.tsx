@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -235,6 +235,15 @@ function MenuEditorPage() {
           ) : (
             <span className="text-xs text-muted-foreground">All changes saved</span>
           )}
+          <Button asChild size="sm" variant="outline">
+            <a
+              href="/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4" /> Live menu
+            </a>
+          </Button>
           <Button onClick={addSection} size="sm">
             <Plus className="h-4 w-4" /> Section
           </Button>
