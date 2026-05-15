@@ -61,9 +61,51 @@ function formatPrice(cents: number) {
   return (cents / 100).toFixed(2);
 }
 function parsePrice(s: string): number | null {
-  const n = Number(s);
+  const trimmed = s.trim();
+  if (trimmed === "") return 0;
+  const n = Number(trimmed);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
+}
+
+function PriceInput({
+  cents,
+  onCommit,
+  className,
+}: {
+  cents: number;
+  onCommit: (cents: number) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState<string>(formatPrice(cents));
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setDraft(formatPrice(cents));
+  }, [cents, focused]);
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      className={className}
+      value={draft}
+      onFocus={() => setFocused(true)}
+      onChange={(e) => {
+        const v = e.target.value;
+        if (v !== "" && !/^\d*\.?\d*$/.test(v)) return;
+        setDraft(v);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        const parsed = parsePrice(draft);
+        if (parsed === null) {
+          setDraft(formatPrice(cents));
+          return;
+        }
+        if (parsed !== cents) onCommit(parsed);
+        setDraft(formatPrice(parsed));
+      }}
+    />
+  );
 }
 
 function MenuToggles({
