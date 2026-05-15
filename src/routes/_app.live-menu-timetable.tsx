@@ -122,7 +122,7 @@ function LiveMenuTimetablePage() {
         </CardHeader>
         <CardContent>
           <form
-            className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_120px_120px_120px_auto] gap-3 items-end"
             onSubmit={(e) => {
               e.preventDefault();
               if (!menuKey) {
