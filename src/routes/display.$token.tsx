@@ -259,20 +259,10 @@ function DisplayPage() {
           cur.used += h;
           continue;
         }
-        // Start a new column
+        // Start a new column. Don't repeat the section header — subsections
+        // continue flowing into the next column without the animated header.
         cols.push({ items: [], used: 0 });
         const newCol = cols[cols.length - 1];
-        if (atom.kind === "subsection") {
-          const headerHeight = heights[`h-${atom.sectionId}`] ?? 0;
-          newCol.items.push({
-            kind: "section-header",
-            key: `cont-${atom.sectionId}-${cols.length}`,
-            sectionId: atom.sectionId,
-            section: atom.section,
-            continued: true,
-          });
-          newCol.used += headerHeight;
-        }
         newCol.items.push(atom);
         newCol.used += h;
       } else {
