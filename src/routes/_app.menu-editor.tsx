@@ -293,15 +293,32 @@ function MenuEditorPage() {
           ) : (
             <span className="text-xs text-muted-foreground">All changes saved</span>
           )}
-          <Button asChild size="sm" variant="outline">
-            <a
-              href="/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4" /> Live menu
-            </a>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline">
+                <ExternalLink className="h-4 w-4" /> Live menu
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {[
+                { key: "all", label: "Full menu", qs: "" },
+                { key: "breakfast", label: "Breakfast", qs: "?menu=breakfast" },
+                { key: "lunch", label: "Lunch", qs: "?menu=lunch" },
+                { key: "dinner", label: "Dinner", qs: "?menu=dinner" },
+              ].map((opt) => (
+                <DropdownMenuItem key={opt.key} asChild>
+                  <a
+                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU${opt.qs}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {opt.label}
+                  </a>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
             {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
           </Button>
