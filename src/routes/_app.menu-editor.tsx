@@ -926,7 +926,7 @@ function MenuEditorPage() {
             {!collapsed.has(sec.id) && (
             <CardContent className="space-y-4">
               {sec.subsections.map((sub, ssIdx) => (
-                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""}`}>
+                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sub.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""}`}>
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col rounded-md border bg-background shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
