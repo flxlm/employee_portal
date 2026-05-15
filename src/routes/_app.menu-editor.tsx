@@ -1001,6 +1001,8 @@ function MenuEditorPage() {
                       }}
                       onDuplicate={() => duplicateSubsection(sec.id, sub.id)}
                       onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
+                      onAddDescription={() => revealDesc(sub.id)}
+                      canAddDescription={!hasDesc(sub.id, sub.description)}
                     />
                     <Button
                       size="icon"
