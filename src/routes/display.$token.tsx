@@ -396,12 +396,15 @@ function DisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    const eventName = "fullscreenchange" in document ? "fullscreenchange" : "webkitfullscreenchange";
     const onChange = () => {
       setIsFullscreen(!!document.fullscreenElement || !!(document as any).webkitFullscreenElement);
     };
-    document.addEventListener(eventName, onChange);
-    return () => document.removeEventListener(eventName, onChange);
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
   }, []);
 
   const enterFullscreen = async () => {
@@ -548,6 +551,7 @@ function DisplayPage() {
             padding: "0.5rem 1rem",
             cursor: "pointer",
             fontFamily: globalFontFamily,
+            boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
           }}
         >
           Play Fullscreen
