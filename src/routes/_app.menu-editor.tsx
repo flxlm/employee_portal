@@ -805,18 +805,18 @@ function MenuEditorPage() {
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
                 <ExternalLink className="h-4 w-4" />
-                <span className="hidden xs:inline sm:inline">Live menu</span>
+                <span className="hidden xs:inline sm:inline">View Menus</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <a
-                  href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU`}
+                  href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=auto`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Full menu
+                  Live Menu
                 </a>
               </DropdownMenuItem>
               {menus.map((opt) => (
