@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMenuFormatting,
@@ -296,17 +296,36 @@ function DisplayPage() {
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
   }, [fetchFormatting]);
 
-  const globalFontFamily = useMemo(() => {
-    const merged: TextStyle = {
-      ...DEFAULT_FORMATTING.global,
-      ...formatting.global,
+  const styleFor = useMemo(() => {
+    return (key: FormattingKey): React.CSSProperties => {
+      const merged: TextStyle = {
+        ...DEFAULT_FORMATTING.global,
+        ...formatting.global,
+        ...DEFAULT_FORMATTING[key],
+        ...formatting[key],
+      };
+      return {
+        fontFamily: merged.fontFamily,
+        fontSize: merged.fontSize,
+        fontWeight: merged.fontWeight as React.CSSProperties["fontWeight"],
+        letterSpacing: merged.letterSpacing,
+        lineHeight: merged.lineHeight,
+        textTransform: merged.textTransform,
+        color: merged.color,
+        fontStyle: merged.fontStyle,
+      };
     };
-    return merged.fontFamily;
+  }, [formatting]);
+
+  const globalFontFamily = useMemo(() => {
+    return (
+      formatting.global?.fontFamily ?? DEFAULT_FORMATTING.global?.fontFamily
+    );
   }, [formatting]);
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
-      <div className="menu-item-row">
+      <div className="menu-item-row" style={styleFor("itemTitle")}>
         <span className="menu-item-name">{item.name}</span>
         <span className="menu-item-price">
           {item.priceLabel ? (
@@ -316,9 +335,21 @@ function DisplayPage() {
           ) : null}
         </span>
       </div>
-      {item.description && <p className="menu-item-sub">{item.description}</p>}
-      {item.subtext && <p className="menu-item-sub">{item.subtext}</p>}
-      {item.inlineNote && <span className="menu-item-note">{item.inlineNote}</span>}
+      {item.description && (
+        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+          {item.description}
+        </p>
+      )}
+      {item.subtext && (
+        <p className="menu-item-sub" style={styleFor("itemDescription")}>
+          {item.subtext}
+        </p>
+      )}
+      {item.inlineNote && (
+        <span className="menu-item-note" style={styleFor("modification")}>
+          {item.inlineNote}
+        </span>
+      )}
     </div>
   );
 
@@ -365,11 +396,15 @@ function DisplayPage() {
                   zIndex: 0,
                 }}
               />
-              <span style={{ position: "relative", zIndex: 1 }}>{menu.section}</span>
+              <span style={{ position: "relative", zIndex: 1, ...styleFor("section") }}>
+                {menu.section}
+              </span>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
-                <h2 className="menu-section-title">{sub.subsection}</h2>
+                <h2 className="menu-section-title" style={styleFor("subsection")}>
+                  {sub.subsection}
+                </h2>
                 {sub.items.map((item, ii) => (
                   <div key={ii}>{renderItem(item)}</div>
                 ))}
@@ -422,21 +457,11 @@ function DisplayPage() {
           display: "flex",
           alignItems: "baseline",
           gap: "0.4rem",
-          color: "#000",
-          fontFamily: globalFontFamily,
+          ...styleFor("brand"),
         }}
       >
-        <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>✱</span>
-        <span
-          style={{
-            fontSize: "0.85rem",
-            fontWeight: 800,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          Savsav
-        </span>
+        <span style={{ lineHeight: 1 }}>✱</span>
+        <span>Savsav</span>
       </div>
     </div>
   );
