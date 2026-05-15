@@ -531,6 +531,28 @@ function DisplayPage() {
           {menus.length} sections
         </div>
       )}
+      {!isFullscreen && (
+        <button
+          onClick={enterFullscreen}
+          style={{
+            position: "fixed",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 100,
+            background: "#fff",
+            color: "#000",
+            border: "1px solid #000",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: "0.75rem",
+            padding: "0.5rem 1rem",
+            cursor: "pointer",
+            fontFamily: globalFontFamily,
+          }}
+        >
+          Play Fullscreen
+        </button>
+      )}
     </div>
   );
 }
