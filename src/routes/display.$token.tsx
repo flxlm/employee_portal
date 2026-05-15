@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
+import {
+  getMenuFormatting,
+  DEFAULT_FORMATTING,
+  type MenuFormatting,
+  type TextStyle,
+  type FormattingKey,
+} from "@/lib/menu-formatting.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
