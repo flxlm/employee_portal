@@ -344,7 +344,8 @@ function DisplayPage() {
     });
     return () => {
       if (channel) {
-        import("@/integrations/supabase/client").then(({ supabase }) => supabase.removeChannel(channel));
+        const activeChannel = channel;
+        import("@/integrations/supabase/client").then(({ supabase }) => supabase.removeChannel(activeChannel));
       }
     };
   }, []);
