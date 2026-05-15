@@ -479,7 +479,7 @@ function DisplayPage() {
                 flexDirection: "column",
                 justifyContent: "space-between",
                 height: "100%",
-                paddingRight: ci < NUM_COLUMNS - 1 ? "1.6vw" : 0,
+                paddingRight: ci < NUM_COLUMNS - 1 ? "0.6vw" : 0,
                 overflow: "hidden",
               }}
             >
