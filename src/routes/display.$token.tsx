@@ -11,6 +11,7 @@ import {
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
+const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
 
 export const Route = createFileRoute("/display/$token")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean } => {
@@ -186,12 +187,32 @@ const COLUMN_CSS = `
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
 .menu-flow > section,
-.menu-flow > .menu-section-block {
+.menu-flow > .menu-section-block,
+.menu-flow > .menu-footer-block {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
   margin-bottom: 1rem;
+}
+.menu-footer-block {
+  width: 100%;
+  min-height: 35vh;
+  max-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-top: 0.5rem;
+}
+.menu-footer-block video {
+  width: 100%;
+  height: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  border: none;
 }
 .menu-section-block {
   width: 100%;
@@ -345,6 +366,22 @@ function DisplayPage() {
             ))}
           </Fragment>
         ))}
+        <div className="menu-footer-block">
+          <video
+            src={MENU_FOOTER_ANIMATION_SRC}
+            autoPlay
+            muted
+            playsInline
+            loop
+            controls={false}
+            preload="metadata"
+            aria-hidden="true"
+            onError={(e) => {
+              const c = (e.currentTarget as HTMLVideoElement).parentElement;
+              if (c) c.style.display = "none";
+            }}
+          />
+        </div>
       </div>
 
       {debug && (
