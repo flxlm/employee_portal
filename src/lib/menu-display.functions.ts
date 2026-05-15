@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type DisplayItem = {
   id: string;
@@ -127,4 +128,22 @@ export const getDisplayMenu = createServerFn({ method: "GET" })
     const fresh = await buildMenu();
     cache.set("menu", { data: fresh, expires: now + TTL_MS });
     return fresh;
+  });
+
+export const refreshDisplayMenu = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    clearDisplayCache();
+    try {
+      const channel = supabaseAdmin.channel("menu-display");
+      await channel.send({
+        type: "broadcast",
+        event: "refresh",
+        payload: { at: new Date().toISOString() },
+      });
+      await supabaseAdmin.removeChannel(channel);
+    } catch (e) {
+      console.error("[refreshDisplayMenu] broadcast failed", e);
+    }
+    return { ok: true };
   });

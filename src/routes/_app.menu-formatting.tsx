@@ -17,6 +17,7 @@ import {
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
 import { FONT_OPTIONS, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
+import { refreshDisplayMenu } from "@/lib/menu-display.functions";
 
 export const Route = createFileRoute("/_app/menu-formatting")({
   beforeLoad: async () => {
@@ -217,6 +218,7 @@ function StyleEditor({
 function MenuFormattingPage() {
   const fetchSettings = useServerFn(getMenuFormatting);
   const save = useServerFn(saveMenuFormatting);
+  const refreshDisplay = useServerFn(refreshDisplayMenu);
   const [settings, setSettings] = useState<MenuFormatting>({});
   const [savedSettings, setSavedSettings] = useState<MenuFormatting>({});
   const [loading, setLoading] = useState(true);
@@ -263,6 +265,7 @@ function MenuFormattingPage() {
     try {
       await save({ data: { settings } });
       setSavedSettings(settings);
+      refreshDisplay({}).catch((e) => console.error("[formatting] refresh failed", e));
       toast.success("Formatting saved");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
