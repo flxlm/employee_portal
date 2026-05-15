@@ -296,12 +296,31 @@ function DisplayPage() {
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
   }, [fetchFormatting]);
 
-  const globalFontFamily = useMemo(() => {
-    const merged: TextStyle = {
-      ...DEFAULT_FORMATTING.global,
-      ...formatting.global,
+  const styleFor = useMemo(() => {
+    return (key: FormattingKey): React.CSSProperties => {
+      const merged: TextStyle = {
+        ...DEFAULT_FORMATTING.global,
+        ...formatting.global,
+        ...DEFAULT_FORMATTING[key],
+        ...formatting[key],
+      };
+      return {
+        fontFamily: merged.fontFamily,
+        fontSize: merged.fontSize,
+        fontWeight: merged.fontWeight as React.CSSProperties["fontWeight"],
+        letterSpacing: merged.letterSpacing,
+        lineHeight: merged.lineHeight,
+        textTransform: merged.textTransform,
+        color: merged.color,
+        fontStyle: merged.fontStyle,
+      };
     };
-    return merged.fontFamily;
+  }, [formatting]);
+
+  const globalFontFamily = useMemo(() => {
+    return (
+      formatting.global?.fontFamily ?? DEFAULT_FORMATTING.global?.fontFamily
+    );
   }, [formatting]);
 
   const renderItem = (item: MenuItem) => (
