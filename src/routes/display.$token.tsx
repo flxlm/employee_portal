@@ -248,7 +248,7 @@ const COLUMN_CSS = `
 }
 
 .menu-section-title {
-  display: inline-block;
+  display: block;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
