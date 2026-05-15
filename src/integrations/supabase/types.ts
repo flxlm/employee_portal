@@ -209,6 +209,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_hidden: boolean
+          sold_out_date: string | null
           subsection_id: string
           title: string
           updated_at: string
@@ -222,6 +223,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
+          sold_out_date?: string | null
           subsection_id: string
           title?: string
           updated_at?: string
@@ -235,6 +237,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
+          sold_out_date?: string | null
           subsection_id?: string
           title?: string
           updated_at?: string
@@ -266,6 +269,7 @@ export type Database = {
           is_deleted: boolean
           is_hidden: boolean
           name: string
+          sold_out_date: string | null
           updated_at: string
           version: number
           visible_menus: string[]
@@ -278,6 +282,7 @@ export type Database = {
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          sold_out_date?: string | null
           updated_at?: string
           version?: number
           visible_menus?: string[]
@@ -290,6 +295,7 @@ export type Database = {
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          sold_out_date?: string | null
           updated_at?: string
           version?: number
           visible_menus?: string[]
@@ -306,6 +312,7 @@ export type Database = {
           is_hidden: boolean
           name: string
           section_id: string
+          sold_out_date: string | null
           updated_at: string
           version: number
           visible_menus: string[]
@@ -319,6 +326,7 @@ export type Database = {
           is_hidden?: boolean
           name?: string
           section_id: string
+          sold_out_date?: string | null
           updated_at?: string
           version?: number
           visible_menus?: string[]
@@ -332,6 +340,7 @@ export type Database = {
           is_hidden?: boolean
           name?: string
           section_id?: string
+          sold_out_date?: string | null
           updated_at?: string
           version?: number
           visible_menus?: string[]
