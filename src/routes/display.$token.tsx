@@ -433,13 +433,14 @@ function DisplayPage() {
             </div>
             {menu.subsections.map((sub, si) => {
               const dim = menu.hidden || sub.hidden;
+              const soldOut = !!menu.soldOut || !!sub.soldOut;
               return (
                 <section key={`${menu.section}-${si}`} style={dim ? { opacity: 0.35 } : undefined}>
-                  <h2 className="menu-section-title" style={styleFor("subsection")}>
+                  <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
                     {sub.subsection}
                   </h2>
                   {sub.items.map((item, ii) => (
-                    <div key={ii}>{renderItem(item)}</div>
+                    <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
                   ))}
                 </section>
               );
