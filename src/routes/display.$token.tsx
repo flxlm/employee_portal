@@ -159,7 +159,7 @@ function DisplayPage() {
           }}
         >
           {col.map((section) => (
-            <section key={section.id}>
+            <section key={section.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <h2
                 style={{
                   position: "relative",
