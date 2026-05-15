@@ -219,8 +219,8 @@ const COLUMN_CSS = `
 .section-title-text {
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 1rem;
+  transform: translateY(-50%);
   z-index: 2;
   color: #fff;
   font-weight: 900;
@@ -229,7 +229,7 @@ const COLUMN_CSS = `
   text-transform: uppercase;
   margin: 0;
   padding: 0;
-  text-align: center;
+  text-align: left;
   line-height: 1;
   pointer-events: none;
 }
