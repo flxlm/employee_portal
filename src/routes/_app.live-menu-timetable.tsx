@@ -162,7 +162,7 @@ function LiveMenuTimetablePage() {
               <Label>End</Label>
               <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
-            <Button type="submit" disabled={addMut.isPending}>
+            <Button type="submit" disabled={addMut.isPending} className="w-full md:w-auto">
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </form>
