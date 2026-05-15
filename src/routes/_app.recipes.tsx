@@ -61,6 +61,7 @@ function RecipesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [selected, setSelected] = useState<Recipe | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     (async () => {
