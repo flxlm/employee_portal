@@ -379,6 +379,7 @@ function DisplayPage() {
   }, [fetchFormatting]);
 
   useEffect(() => {
+    let frameIds: number[] = [];
     const updateTrailingColumn = () => {
       const flow = flowRef.current;
       if (!flow) return;
@@ -387,16 +388,35 @@ function DisplayPage() {
       const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
       const lastSection = sections.at(-1);
       const lastSectionRect = lastSection?.getBoundingClientRect();
-      const remainingHeight = lastSectionRect
-        ? Math.max(128, flowRect.bottom - lastSectionRect.bottom - 16)
-        : flowRect.height * 0.35;
+      const computed = window.getComputedStyle(flow);
+      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
+      const columnGap = Number.parseFloat(computed.columnGap) || 0;
+      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
+      const lastColumnLeft = (columnWidth + columnGap) * (columnCount - 1);
+      const measuredTop = lastSectionRect
+        ? lastSectionRect.bottom - flowRect.top + 10
+        : flowRect.height * 0.65;
+      const top = Math.max(0, Math.min(measuredTop, flowRect.height - 128));
 
-      flow.style.setProperty("--trailing-height", `${remainingHeight}px`);
+      flow.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
+      flow.style.setProperty("--trailing-width", `${columnWidth}px`);
+      flow.style.setProperty("--trailing-top", `${top}px`);
+    };
+    const scheduleUpdate = () => {
+      frameIds.forEach((id) => cancelAnimationFrame(id));
+      frameIds = [
+        requestAnimationFrame(updateTrailingColumn),
+        requestAnimationFrame(() => requestAnimationFrame(updateTrailingColumn)),
+      ];
     };
 
-    updateTrailingColumn();
-    window.addEventListener("resize", updateTrailingColumn);
-    return () => window.removeEventListener("resize", updateTrailingColumn);
+    scheduleUpdate();
+    document.fonts?.ready.then(scheduleUpdate).catch(() => {});
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      frameIds.forEach((id) => cancelAnimationFrame(id));
+      window.removeEventListener("resize", scheduleUpdate);
+    };
   }, [formatting]);
 
   const styleFor = useMemo(() => {
