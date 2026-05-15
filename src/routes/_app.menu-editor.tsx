@@ -431,6 +431,7 @@ function MenuEditorPage() {
     next.splice(to, 0, moved);
     await reorder({ data: { table: table as never, orderedIds: next } });
     await reload();
+    triggerRefresh();
   };
 
   const totalItems = useMemo(
