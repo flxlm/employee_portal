@@ -291,7 +291,10 @@ const COLUMN_CSS = `
   z-index: 1;
 }
 .section-title-text {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 2;
   color: #fff;
   font-weight: 900;
@@ -299,6 +302,7 @@ const COLUMN_CSS = `
   letter-spacing: 0.02em;
   text-transform: uppercase;
   margin: 0;
+  padding: 0;
   text-align: center;
   line-height: 1;
   pointer-events: none;
