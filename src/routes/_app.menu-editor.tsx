@@ -61,9 +61,51 @@ function formatPrice(cents: number) {
   return (cents / 100).toFixed(2);
 }
 function parsePrice(s: string): number | null {
-  const n = Number(s);
+  const trimmed = s.trim();
+  if (trimmed === "") return 0;
+  const n = Number(trimmed);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
+}
+
+function PriceInput({
+  cents,
+  onCommit,
+  className,
+}: {
+  cents: number;
+  onCommit: (cents: number) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState<string>(formatPrice(cents));
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setDraft(formatPrice(cents));
+  }, [cents, focused]);
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      className={className}
+      value={draft}
+      onFocus={() => setFocused(true)}
+      onChange={(e) => {
+        const v = e.target.value;
+        if (v !== "" && !/^\d*\.?\d*$/.test(v)) return;
+        setDraft(v);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        const parsed = parsePrice(draft);
+        if (parsed === null) {
+          setDraft(formatPrice(cents));
+          return;
+        }
+        if (parsed !== cents) onCommit(parsed);
+        setDraft(formatPrice(parsed));
+      }}
+    />
+  );
 }
 
 function MenuToggles({
@@ -670,14 +712,9 @@ function MenuEditorPage() {
                                 </button>
                               )}
                             </div>
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              value={formatPrice(item.base_price_cents)}
-                              onChange={(e) => {
-                                const cents = parsePrice(e.target.value);
-                                if (cents === null) return;
+                            <PriceInput
+                              cents={item.base_price_cents}
+                              onCommit={(cents) => {
                                 patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
                                 queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
                               }}
@@ -721,14 +758,10 @@ function MenuEditorPage() {
                                   }}
                                   placeholder="Modification"
                                 />
-                                <Input
+                                <PriceInput
                                   className="h-8 w-24"
-                                  type="number"
-                                  step="0.01"
-                                  value={formatPrice(m.price_modifier_cents)}
-                                  onChange={(e) => {
-                                    const cents = parsePrice(e.target.value);
-                                    if (cents === null) return;
+                                  cents={m.price_modifier_cents}
+                                  onCommit={(cents) => {
                                     patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
                                     queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
                                   }}
