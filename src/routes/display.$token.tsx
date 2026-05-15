@@ -229,26 +229,22 @@ const COLUMN_CSS = `
   display: block;
   border: none;
 }
-.menu-flow > .trailing-block {
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
-  break-before: avoid;
-  -webkit-column-break-before: avoid;
-  page-break-before: avoid;
-}
 .trailing-block {
+  position: absolute;
+  left: var(--trailing-left, 0px);
+  top: var(--trailing-top, 65%);
+  bottom: 0;
+  z-index: 4;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: var(--trailing-height, 35vh);
-  min-height: clamp(8rem, 28vh, 18rem);
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
+  width: var(--trailing-width, 100%);
+  height: auto;
+  min-height: 0;
   gap: 0.5rem;
   margin-top: 0;
-  padding-bottom: 0;
+  padding-bottom: 0.5rem;
   box-sizing: border-box;
+  pointer-events: none;
 }
 .trailing-asterisk {
   flex: 1 1 0;
@@ -383,24 +379,52 @@ function DisplayPage() {
   }, [fetchFormatting]);
 
   useEffect(() => {
+    let frameIds: number[] = [];
     const updateTrailingColumn = () => {
       const flow = flowRef.current;
       if (!flow) return;
 
       const flowRect = flow.getBoundingClientRect();
       const sections = Array.from(flow.querySelectorAll<HTMLElement>("section"));
-      const lastSection = sections.at(-1);
-      const lastSectionRect = lastSection?.getBoundingClientRect();
-      const remainingHeight = lastSectionRect
-        ? Math.max(128, flowRect.bottom - lastSectionRect.bottom - 16)
-        : flowRect.height * 0.35;
+      const computed = window.getComputedStyle(flow);
+      const columnCount = Math.max(1, Number.parseInt(computed.columnCount, 10) || 1);
+      const columnGap = Number.parseFloat(computed.columnGap) || 0;
+      const columnWidth = (flowRect.width - columnGap * (columnCount - 1)) / columnCount;
+      const lastColumnLeft = (columnWidth + columnGap) * (columnCount - 1);
+      const lastColumnStart = flowRect.left + lastColumnLeft - 1;
+      const lastColumnEnd = lastColumnStart + columnWidth + 2;
+      const lastVisibleInLastColumn = sections
+        .map((section) => section.getBoundingClientRect())
+        .filter((rect) => rect.left >= lastColumnStart && rect.right <= lastColumnEnd)
+        .sort((a, b) => b.bottom - a.bottom)[0];
+      const measuredTop = lastVisibleInLastColumn
+        ? lastVisibleInLastColumn.bottom - flowRect.top + 10
+        : flowRect.height * 0.65;
+      const top = Math.max(0, Math.min(measuredTop, flowRect.height - 128));
 
-      flow.style.setProperty("--trailing-height", `${remainingHeight}px`);
+      const styleTarget = flow.parentElement ?? flow;
+      styleTarget.style.setProperty("--trailing-left", `${lastColumnLeft}px`);
+      styleTarget.style.setProperty("--trailing-width", `${columnWidth}px`);
+      styleTarget.style.setProperty("--trailing-top", `${top}px`);
+    };
+    const scheduleUpdate = () => {
+      frameIds.forEach((id) => cancelAnimationFrame(id));
+      const timeoutIds = [80, 250, 600].map((delay) => window.setTimeout(updateTrailingColumn, delay));
+      frameIds = [
+        requestAnimationFrame(updateTrailingColumn),
+        requestAnimationFrame(() => requestAnimationFrame(updateTrailingColumn)),
+      ];
+      return timeoutIds;
     };
 
-    updateTrailingColumn();
-    window.addEventListener("resize", updateTrailingColumn);
-    return () => window.removeEventListener("resize", updateTrailingColumn);
+    const timeoutIds = scheduleUpdate();
+    document.fonts?.ready.then(scheduleUpdate).catch(() => {});
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+      frameIds.forEach((id) => cancelAnimationFrame(id));
+      window.removeEventListener("resize", scheduleUpdate);
+    };
   }, [formatting]);
 
   const styleFor = useMemo(() => {
@@ -510,33 +534,33 @@ function DisplayPage() {
             ))}
           </Fragment>
         ))}
-        <div className="trailing-block">
-          <div className="trailing-asterisk">
-            <video
-              src={MENU_FOOTER_ANIMATION_SRC}
-              autoPlay
-              muted
-              playsInline
-              loop
-              controls={false}
-              preload="metadata"
-              aria-hidden="true"
-              onError={(e) => {
-                const c = (e.currentTarget as HTMLVideoElement).parentElement;
-                if (c) c.style.display = "none";
-              }}
-            />
-          </div>
-          <div className="trailing-logo">
-            <img
-              src={savsavLogoSvg}
-              alt="SAVSAV"
-              onError={(e) => {
-                const c = (e.currentTarget as HTMLImageElement).parentElement;
-                if (c) c.style.display = "none";
-              }}
-            />
-          </div>
+      </div>
+      <div className="trailing-block">
+        <div className="trailing-asterisk">
+          <video
+            src={MENU_FOOTER_ANIMATION_SRC}
+            autoPlay
+            muted
+            playsInline
+            loop
+            controls={false}
+            preload="metadata"
+            aria-hidden="true"
+            onError={(e) => {
+              const c = (e.currentTarget as HTMLVideoElement).parentElement;
+              if (c) c.style.display = "none";
+            }}
+          />
+        </div>
+        <div className="trailing-logo">
+          <img
+            src={savsavLogoSvg}
+            alt="SAVSAV"
+            onError={(e) => {
+              const c = (e.currentTarget as HTMLImageElement).parentElement;
+              if (c) c.style.display = "none";
+            }}
+          />
         </div>
       </div>
 
