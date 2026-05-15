@@ -351,7 +351,7 @@ function DisplayPage() {
               listStyle: "none",
               padding: 0,
               margin: 0,
-              lineHeight: 1.6,
+              lineHeight: 1.35,
             })}
           >
             {sub.items.map((item) => (
