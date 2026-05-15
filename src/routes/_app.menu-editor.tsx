@@ -430,6 +430,16 @@ function MenuEditorPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      {dirtyCount > 0 && (
+        <div className="sticky top-0 z-40 -mx-6 md:-mx-10 mb-4 px-6 md:px-10 py-3 border-b bg-background/95 backdrop-blur flex items-center justify-between gap-3 shadow-sm">
+          <span className="text-sm">
+            {dirtyCount} unsaved change{dirtyCount > 1 ? "s" : ""}
+          </span>
+          <Button size="sm" onClick={flush} disabled={savingCount > 0}>
+            <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      )}
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
@@ -437,16 +447,14 @@ function MenuEditorPage() {
           </Link>
           <h1 className="text-3xl md:text-4xl">Menu Editor</h1>
           <p className="text-muted-foreground mt-1">
-            {sections.length} sections · {totalItems} items · auto-saves as you type
+            {sections.length} sections · {totalItems} items
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {savingCount > 0 ? (
+          {savingCount > 0 && (
             <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
               <Save className="h-3 w-3 animate-pulse" /> Saving…
             </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">All changes saved</span>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
