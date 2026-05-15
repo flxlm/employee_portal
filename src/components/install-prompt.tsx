@@ -71,7 +71,7 @@ export function InstallPrompt() {
   };
 
   const onDismiss = () => {
-    sessionStorage.setItem(DISMISS_KEY, "1");
+    localStorage.setItem(DISMISS_KEY, "1");
     setDismissed(true);
   };
 
