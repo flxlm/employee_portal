@@ -758,14 +758,10 @@ function MenuEditorPage() {
                                   }}
                                   placeholder="Modification"
                                 />
-                                <Input
+                                <PriceInput
                                   className="h-8 w-24"
-                                  type="number"
-                                  step="0.01"
-                                  value={formatPrice(m.price_modifier_cents)}
-                                  onChange={(e) => {
-                                    const cents = parsePrice(e.target.value);
-                                    if (cents === null) return;
+                                  cents={m.price_modifier_cents}
+                                  onCommit={(cents) => {
                                     patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
                                     queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
                                   }}
