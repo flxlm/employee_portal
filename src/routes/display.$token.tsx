@@ -240,8 +240,7 @@ const COLUMN_CSS = `
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 22vh;
-  max-height: 38vh;
+  height: calc(100vh - 3rem);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   gap: 0.75rem;
@@ -269,6 +268,7 @@ const COLUMN_CSS = `
   align-items: flex-end;
   justify-content: center;
   min-height: 8vh;
+  padding-bottom: 0;
 }
 .trailing-logo img {
   width: 100%;
