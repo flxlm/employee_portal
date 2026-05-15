@@ -145,6 +145,7 @@ function MenuFormattingPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    ensureGoogleFontsLoaded();
     fetchSettings({})
       .then((s) => setSettings(s || {}))
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
