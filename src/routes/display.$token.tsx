@@ -190,7 +190,7 @@ const COLUMN_CSS = `
   min-height: 0;
   gap: 0.5rem;
   margin-top: 0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0;
   box-sizing: border-box;
   pointer-events: none;
 }
