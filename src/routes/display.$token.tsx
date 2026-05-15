@@ -303,7 +303,6 @@ function DisplayPage() {
   // ---------- block renderers ----------
   const renderSectionHeader = (
     section: DisplaySection,
-    continued?: boolean,
     measuring?: boolean,
   ) => (
     <h2
