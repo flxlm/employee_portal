@@ -284,8 +284,8 @@ const COLUMN_CSS = `
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: left center;
+  object-fit: cover;
+  object-position: center center;
   display: block;
   border: none;
   z-index: 1;
