@@ -207,7 +207,7 @@ const COLUMN_CSS = `
 }
 .menu-section-block {
   position: relative;
-  width: 75%;
+  width: 85%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: transparent;
