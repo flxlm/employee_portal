@@ -350,10 +350,6 @@ function MenuEditorPage() {
     setDeleteSubBusy(true);
     try {
       // Flush any pending edits so version numbers are current
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
       await flush();
 
       if (deleteSubMode === "move") {
