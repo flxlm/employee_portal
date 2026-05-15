@@ -732,9 +732,14 @@ function MenuEditorPage() {
           <span className="text-sm">
             {dirtyCount} unsaved change{dirtyCount > 1 ? "s" : ""}
           </span>
-          <Button size="sm" onClick={flush} disabled={savingCount > 0}>
-            <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={discardChanges} disabled={savingCount > 0}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={flush} disabled={savingCount > 0}>
+              <Save className="h-4 w-4" /> {savingCount > 0 ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
         </div>
       )}
       <header className="mb-6 flex items-center justify-between gap-4">
