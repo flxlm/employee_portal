@@ -418,7 +418,7 @@ function DisplayPage() {
       <div className="menu-flow">
         {menus.map((menu) => (
           <Fragment key={menu.section}>
-            <div className="menu-section-block">
+            <div className="menu-section-block" aria-label={menu.section}>
               <video
                 className="section-title-video"
                 src={MENU_ANIMATION_SRC}
@@ -433,9 +433,6 @@ function DisplayPage() {
                   (e.currentTarget as HTMLVideoElement).style.display = "none";
                 }}
               />
-              <h2 className="section-title-text" style={styleFor("section")}>
-                {menu.section}
-              </h2>
             </div>
             {menu.subsections.map((sub, si) => (
               <section key={`${menu.section}-${si}`}>
