@@ -87,6 +87,17 @@ function MenuEditorPage() {
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingCount, setSavingCount] = useState(0);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleCollapsed = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const collapseAll = () => setCollapsed(new Set(sections.map((s) => s.id)));
+  const expandAll = () => setCollapsed(new Set());
 
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
