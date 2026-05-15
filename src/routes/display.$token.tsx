@@ -181,10 +181,8 @@ const COLUMN_CSS = `
 }
 .menu-end-logo img {
   width: 100%;
-  max-width: 12rem;
   height: auto;
   display: block;
-  margin: 0 auto;
   object-fit: contain;
 }
 .menu-section-block {
