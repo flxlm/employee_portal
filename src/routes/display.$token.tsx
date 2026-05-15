@@ -8,6 +8,7 @@ import {
   type TextStyle,
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
+import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
 import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
@@ -15,9 +16,10 @@ const MENU_ANIMATION_SRC = "/menu-animation.webm";
 const MENU_FOOTER_ANIMATION_SRC = "/menu-footer-animation.webm";
 
 export const Route = createFileRoute("/display/$token")({
-  validateSearch: (s: Record<string, unknown>): { debug?: boolean } => {
+  validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
-    return debug ? { debug: true } : {};
+    const menu = isMenuFilter(s.menu) ? s.menu : undefined;
+    return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
   },
   head: () => ({
     meta: [
@@ -38,101 +40,45 @@ type MenuItem = {
   description?: string;
   subtext?: string;
   inlineNote?: string;
+  modifications?: { name: string; price_modifier_cents: number }[];
 };
 type Subsection = { subsection: string; items: MenuItem[] };
 type Menu = { section: string; subsections: Subsection[] };
+type MenuFilter = "breakfast" | "lunch" | "dinner";
 
-const menus: Menu[] = [
-  {
-    section: "LUNCH",
-    subsections: [
-      {
-        subsection: "PLATS",
-        items: [
-          { name: "GRILLED CHEESE", price: 10.75, description: "PAIN PULLMAN, MÉLANGE QUATRES-FROMAGES" },
-          { name: "BREAKY SANDO", price: 12.75, description: "SAUCISSE MAISON, OEUF CARRÉ, ICEBERG, FROMAGE ORANGE, AIOLI ÉPICÉ" },
-          { name: "ASSIETTE DU MATIN", price: 13.75, description: "ŒUF MOLLET, LÉGUMES DE SAISON, CAROTTES MARINÉES, PURÉE D'AVOCAT, RICOTTA MAISON, TOAST" },
-          { name: "TARTINE SAUMON & AVO", price: 15.75, description: "PAIN AU LEVAIN, AVOCAT, CÂPRES, GRAVLAX DE SAUMON, OIGNONS ROUGES MARINÉS, ANETH, FROMAGE À LA CRÈME" },
-          { name: "BAGEL HUMMOUS", price: 14.75, description: "HOUMOUS À L'AIL, POIS CHICHES RÔTIS, JALAPENOS MARINÉS, OIGNONS ROUGES MARINÉS, ROQUETTE" },
-          { name: "SALADE DE POULET SUR BAGEL", price: 13.75, description: "POULET, AÏOLI, POMMES, NOIX DE GRENOBLE, OIGNONS VERTS, BAGEL" },
-          { name: "\"TUNA MELT\"", price: 13.75, description: "THON, PROVOLONE (GRATINÉ), RADIS, ROQUETTE, FETA, HERBES" },
-          { name: "BAGEL CLASSICO + SAUMON", price: 9.5, description: "FROMAGE À LA CRÈME FOUETTÉ, ASSAISONNEMENT EVERYTHING BAGEL" },
-          { name: "SALADE ROQUETTE", price: 14.75, description: "VINAIGRETTE À LA LEVURE ALIMENTAIRE, CRAQUELIN AUX GRAINS, PARMESAN" },
-          { name: "SALADE PRESQUE CÉSAR", price: 16.75, description: "POULET MARINÉ, ROMAINE, HERBES FRAÎCHES, AVOCAT, CROÛTONS AU PARMESAN, VINAIGRETTE AU BABEURRE" },
-        ],
-      },
-      {
-        subsection: "SPÉCIAL DE LA SEMAINE",
-        items: [
-          { name: "BOL HALLOUMI", price: 17.75, description: "HALLOUMI GRILLÉ AU MIEL PIQUANT, QUINOA, CONCOMBRES, TOMATES, YOGOURT GREC, ROQUETTE, FINES HERBES" },
-        ],
-      },
-      {
-        subsection: "SIDES",
-        items: [
-          { name: "TOAST / BAGEL", price: 3, inlineNote: "+ BAGEL +2" },
-          { name: "DEMI AVOCAT", price: 3 },
-          { name: "SCOOP DE SALADE DE POULET", price: 6 },
-          { name: "OEUF MOLLET", price: 2 },
-          { name: "GRAVLAX DE SAUMON", price: 5.75, subtext: "100G" },
-          { name: "SOUPE AUX TOMATES", price: 4 },
-          { name: "SALADE VERTE", price: 5 },
-        ],
-      },
-    ],
-  },
-  {
-    section: "DRINKS",
-    subsections: [
-      {
-        subsection: "BIÈRES EN FÛT",
-        items: [
-          { name: "DDC! BLONDE", price: 9 },
-          { name: "DDC! IPA", price: 9 },
-        ],
-      },
-      {
-        subsection: "COCKTAILS",
-        items: [
-          { name: "TINTO DE VERANO", price: 9 },
-          { name: "MIMOSA", price: 9 },
-        ],
-      },
-      {
-        subsection: "VINS AU VERRE",
-        items: [
-          { name: "BLANC", priceLabel: "PRIX DU MARCHÉ" },
-          { name: "ROUGE", priceLabel: "PRIX DU MARCHÉ" },
-          { name: "MACÉRATION", priceLabel: "PRIX DU MARCHÉ" },
-        ],
-      },
-      {
-        subsection: "CLASSIQUES",
-        items: [
-          { name: "NOIR", price: 3 },
-          { name: "PETIT BLANC", price: 4.5 },
-          { name: "BLANC", price: 6 },
-          { name: "THÉ", price: 3 },
-          { name: "MATCHA / ESPRESSO TONIC", price: 6 },
-          { name: "MOCHA", price: 7 },
-          { name: "MATCHA / HOJICHA / CHAI", price: 6.5 },
-          { name: "\"FRESH PRESSED OJ\"", price: 4 },
-        ],
-      },
-      {
-        subsection: "SPÉCIALITÉS",
-        items: [
-          { name: "\"MATCHA CLOUD\"", price: 5, subtext: "EAU DE COCO + MATCHA FOAM" },
-          { name: "MATCHA AUX FRAISES", price: 9 },
-          { name: "LIMOMATCHA", price: 7 },
-          { name: "LATTÉ HCMC", price: 7, subtext: "LAIT CONDENSÉ SUCRÉ" },
-          { name: "THÉ THAÏLANDAIS", price: 5, inlineNote: "+ LARGE +2" },
-          { name: "COLD BREW!!!", price: 6 },
-        ],
-      },
-    ],
-  },
-];
+function isMenuFilter(value: unknown): value is MenuFilter {
+  return value === "breakfast" || value === "lunch" || value === "dinner";
+}
+
+function isVisibleOnMenu(visibleMenus: string[], selectedMenu?: MenuFilter) {
+  return !selectedMenu || visibleMenus.length === 0 || visibleMenus.includes(selectedMenu);
+}
+
+function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: MenuFilter): Menu[] {
+  if (!displayMenu) return [];
+
+  return displayMenu.sections
+    .filter((section) => isVisibleOnMenu(section.visible_menus, selectedMenu))
+    .map((section) => ({
+      section: section.name,
+      subsections: section.subsections
+        .filter((subsection) => isVisibleOnMenu(subsection.visible_menus, selectedMenu))
+        .map((subsection) => ({
+          subsection: subsection.name,
+          items: subsection.items.map((item) => ({
+            name: item.title,
+            price: item.base_price_cents / 100,
+            description: item.description,
+            modifications: item.modifications.map((modification) => ({
+              name: modification.name,
+              price_modifier_cents: modification.price_modifier_cents,
+            })),
+          })),
+        }))
+        .filter((subsection) => subsection.items.length > 0),
+    }))
+    .filter((section) => section.subsections.length > 0);
+}
 
 function Price({ price }: { price: number }) {
   const sign = price < 0 ? "-" : "";
@@ -368,15 +314,41 @@ const COLUMN_CSS = `
 `;
 
 function DisplayPage() {
-  const { debug } = Route.useSearch();
+  const { token } = Route.useParams();
+  const { debug, menu } = Route.useSearch();
   const fetchFormatting = useServerFn(getMenuFormatting);
+  const fetchDisplayMenu = useServerFn(getDisplayMenu);
   const flowRef = useRef<HTMLDivElement | null>(null);
   const [formatting, setFormatting] = useState<MenuFormatting>({});
+  const [displayMenu, setDisplayMenu] = useState<DisplayMenu | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     ensureGoogleFontsLoaded();
+  }, []);
+
+  useEffect(() => {
     fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
-  }, [fetchFormatting]);
+    fetchDisplayMenu({ data: { token, refreshKey } })
+      .then(setDisplayMenu)
+      .catch((error) => console.error("[display] failed to load menu", error));
+  }, [fetchFormatting, fetchDisplayMenu, token, refreshKey]);
+
+  useEffect(() => {
+    let channel: ReturnType<(typeof import("@/integrations/supabase/client"))["supabase"]["channel"]> | null = null;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      channel = supabase
+        .channel("menu-display")
+        .on("broadcast", { event: "refresh" }, () => setRefreshKey(Date.now()))
+        .subscribe();
+    });
+    return () => {
+      if (channel) {
+        const activeChannel = channel;
+        import("@/integrations/supabase/client").then(({ supabase }) => supabase.removeChannel(activeChannel));
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let frameIds: number[] = [];
@@ -425,7 +397,7 @@ function DisplayPage() {
       frameIds.forEach((id) => cancelAnimationFrame(id));
       window.removeEventListener("resize", scheduleUpdate);
     };
-  }, [formatting]);
+  }, [formatting, displayMenu]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
@@ -453,6 +425,8 @@ function DisplayPage() {
       formatting.global?.fontFamily ?? DEFAULT_FORMATTING.global?.fontFamily
     );
   }, [formatting]);
+
+  const menus = useMemo(() => mapDisplayMenuToMenus(displayMenu, menu), [displayMenu, menu]);
 
   const renderItem = (item: MenuItem) => (
     <div className="menu-item">
