@@ -473,6 +473,22 @@ function DisplayPage() {
           </Fragment>
         ))}
         <div className="trailing-block">
+          <div className="trailing-asterisk">
+            <video
+              src={MENU_FOOTER_ANIMATION_SRC}
+              autoPlay
+              muted
+              playsInline
+              loop
+              controls={false}
+              preload="metadata"
+              aria-hidden="true"
+              onError={(e) => {
+                const c = (e.currentTarget as HTMLVideoElement).parentElement;
+                if (c) c.style.display = "none";
+              }}
+            />
+          </div>
           <div className="trailing-logo">
             <img
               src={savsavLogoSvg}
