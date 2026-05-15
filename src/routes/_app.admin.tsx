@@ -72,6 +72,20 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Live Menu timetable</CardTitle>
+          <CardDescription>Schedule which menu shows on the Live Menu display by day and time.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to="/live-menu-timetable">
+              <Clock className="h-4 w-4 mr-2" /> Open timetable
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Allowed emails</CardTitle>
