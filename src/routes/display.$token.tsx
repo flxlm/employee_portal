@@ -560,6 +560,77 @@ function DisplayPage() {
     };
   }, [menus, displayMenu, activeMenuKey]);
 
+  // Dynamic asterisk placement: measure trailing column gaps and place asterisks
+  useEffect(() => {
+    const measure = () => {
+      const flow = flowRef.current;
+      if (!flow) return;
+      const flowRect = flow.getBoundingClientRect();
+      const cs = getComputedStyle(flow);
+      const columnGap = parseFloat(cs.columnGap) || 0;
+      const columnCount = parseInt(cs.columnCount) || 1;
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--menu-scale")) || 1;
+      const unscaledWidth = flowRect.width / scale;
+      const unscaledHeight = flowRect.height / scale;
+      const columnWidth = (unscaledWidth - columnGap * (columnCount - 1)) / columnCount;
+
+      const lastElements = flow.querySelectorAll<HTMLElement>(".subsection-last-of-section");
+      const placements: AsteriskPlacement[] = [];
+
+      lastElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const elBottomUnscaled = (rect.bottom - flowRect.top) / scale;
+        const elLeftUnscaled = (rect.left - flowRect.left) / scale;
+        const gap = unscaledHeight - elBottomUnscaled;
+        if (gap < MIN_GAP_PX) return;
+
+        const columnIndex = Math.max(
+          0,
+          Math.min(columnCount - 1, Math.floor((elLeftUnscaled + 1) / (columnWidth + columnGap))),
+        );
+        const columnLeft = columnIndex * (columnWidth + columnGap);
+        const height = Math.min(gap - 16, MAX_ASTERISK_PX);
+        const top = elBottomUnscaled + 8;
+        placements.push({ top, left: columnLeft, width: columnWidth, height });
+      });
+
+      setAsteriskPlacements((prev) => {
+        if (prev.length !== placements.length) return placements;
+        const same = prev.every((p, i) =>
+          Math.abs(p.top - placements[i].top) < 1 &&
+          Math.abs(p.left - placements[i].left) < 1 &&
+          Math.abs(p.width - placements[i].width) < 1 &&
+          Math.abs(p.height - placements[i].height) < 1,
+        );
+        return same ? prev : placements;
+      });
+    };
+
+    let raf1 = 0, raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => window.setTimeout(measure, 50));
+    });
+
+    if ((document as unknown as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready) {
+      (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready
+        .then(() => window.setTimeout(measure, 100))
+        .catch(() => {});
+    }
+
+    let resizeTimer: number | null = null;
+    const onResize = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 250);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [menus, displayMenu, activeMenuKey]);
+
   useEffect(() => {
     const onChange = () => {
       setIsFullscreen(!!document.fullscreenElement || !!(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement);
