@@ -38,10 +38,11 @@ const TEXT_KEYS: { key: FormattingKey; label: string; sample: string }[] = [
   { key: "global", label: "Global (defaults)", sample: "Applies to everything unless overridden" },
   { key: "section", label: "Section title", sample: "BREAKFAST" },
   { key: "subsection", label: "Subsection title", sample: "Pastries" },
-  { key: "itemTitle", label: "Item title", sample: "Avocado Toast 14" },
+  { key: "itemTitle", label: "Item title", sample: "Avocado Toast" },
   { key: "itemDescription", label: "Item description", sample: "Sourdough, smashed avocado, lemon, chili oil" },
   { key: "modification", label: "Modification", sample: "+ Add egg +3" },
-  { key: "brand", label: "Brand badge", sample: "Savsav" },
+  { key: "price", label: "Price", sample: "14" },
+  { key: "priceSuperscript", label: "Price superscript (cents)", sample: "50" },
 ];
 
 const STYLE_FIELDS: {
