@@ -507,23 +507,24 @@ function DisplayPage() {
       requestAnimationFrame(() => {
         const flowEl = flowRef.current;
         if (!flowEl) return;
-        const flowRect = flowEl.getBoundingClientRect();
-        const lastChild = flowEl.lastElementChild as HTMLElement | null;
-        if (!lastChild) return;
-        const lastRect = lastChild.getBoundingClientRect();
 
-        const contentBottom = lastRect.bottom - flowRect.top;
-        const contentRight = lastRect.right - flowRect.left;
-        const verticalRatio = flowRect.height / Math.max(flowRect.height, contentBottom);
-        const horizontalRatio = flowRect.width / Math.max(flowRect.width, contentRight);
-        const ratio = Math.min(verticalRatio, horizontalRatio, 1);
+        // Measure natural content extent. With overflow:hidden, scrollWidth/scrollHeight
+        // still report the unclipped size of children, which is what we want.
+        const naturalWidth = flowEl.scrollWidth;
+        const naturalHeight = flowEl.scrollHeight;
+        const availableWidth = flowEl.clientWidth;
+        const availableHeight = flowEl.clientHeight;
+
+        const widthRatio = availableWidth / Math.max(availableWidth, naturalWidth);
+        const heightRatio = availableHeight / Math.max(availableHeight, naturalHeight);
+        const ratio = Math.min(widthRatio, heightRatio, 1);
 
         const scale = Math.max(MIN_SCALE, ratio);
         apply(scale);
 
         if (scale <= MIN_SCALE + 0.001 && ratio < MIN_SCALE) {
           setIsOverflowing(true);
-          const overflowPx = Math.max(0, contentBottom - flowRect.height, contentRight - flowRect.width);
+          const overflowPx = Math.max(0, naturalHeight - availableHeight, naturalWidth - availableWidth);
           setHiddenCount(Math.max(1, Math.ceil(overflowPx / 60)));
           if (import.meta.env.DEV) {
             console.warn("[Menu] Content overflows viewport. Scale floor reached.");
