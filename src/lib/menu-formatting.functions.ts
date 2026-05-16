@@ -63,6 +63,13 @@ export const DEFAULT_FORMATTING: MenuFormatting = {
     fontWeight: 400,
     lineHeight: 1.4,
   },
+  price: {
+    fontWeight: 700,
+  },
+  priceSuperscript: {
+    fontSize: "0.55em",
+    fontWeight: 700,
+  },
   brand: {
     fontSize: "1.6vw",
     fontWeight: 700,
