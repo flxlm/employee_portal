@@ -100,8 +100,14 @@ export function pickActiveMenuKey(
     if (e.day_of_week !== day) continue;
     const s = toMin(e.start_time);
     const en = toMin(e.end_time);
-    // support wrap-around (e.g., 22:00 -> 02:00)
-    const inWindow = s <= en ? cur >= s && cur < en : cur >= s || cur < en;
+    // start == end is treated as "all day" (24h window)
+    // otherwise support wrap-around (e.g., 22:00 -> 02:00)
+    const inWindow =
+      s === en
+        ? true
+        : s < en
+          ? cur >= s && cur < en
+          : cur >= s || cur < en;
     if (inWindow) return e.menu_key;
   }
   return null;
