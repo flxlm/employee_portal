@@ -671,6 +671,20 @@ function DisplayPage() {
                 </section>
               );
             })}
+            <div className="section-asterisk-filler" aria-hidden="true">
+              <video
+                src={ASTERISK_ANIMATION_SRC}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onError={(e) => {
+                  const p = (e.currentTarget as HTMLVideoElement).parentElement as HTMLElement | null;
+                  if (p) p.style.display = "none";
+                }}
+              />
+            </div>
           </Fragment>
         ))}
         <div className="menu-end-logo">
