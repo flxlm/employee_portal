@@ -641,9 +641,9 @@ function DisplayPage() {
       <style>{COLUMN_CSS}</style>
 
       <div className="menu-flow" ref={flowRef}>
-        {menus.map((menu) => (
+        {menus.map((menu, mi) => (
           <Fragment key={menu.section}>
-            <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
+            <div className={`menu-section-block${mi > 0 ? " new-column" : ""}`} aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
               <video
                 className="section-title-video"
                 src={MENU_ANIMATION_SRC}
