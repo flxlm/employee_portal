@@ -21,6 +21,8 @@ export type FormattingKey =
   | "itemTitle"
   | "itemDescription"
   | "modification"
+  | "price"
+  | "priceSuperscript"
   | "brand";
 
 export type MenuFormatting = Partial<Record<FormattingKey, TextStyle>>;
