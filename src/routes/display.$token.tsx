@@ -741,8 +741,17 @@ function DisplayPage() {
             {menu.subsections.map((sub, si) => {
               const dim = menu.hidden || sub.hidden;
               const soldOut = !!menu.soldOut || !!sub.soldOut;
+              const isLast = si === menu.subsections.length - 1;
+              const isFinalSection = mi === menus.length - 1;
+              // Tag last subsection of every section EXCEPT the final one (whose logo carries the tag instead)
+              const tagAsLast = isLast && !isFinalSection;
               return (
-                <section key={`${menu.section}-${si}`} style={dim ? { opacity: 0.35 } : undefined}>
+                <section
+                  key={`${menu.section}-${si}`}
+                  className={tagAsLast ? "subsection-last-of-section" : undefined}
+                  data-section-index={mi}
+                  style={dim ? { opacity: 0.35 } : undefined}
+                >
                   <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
                     {sub.subsection}
                   </h2>
@@ -754,7 +763,7 @@ function DisplayPage() {
             })}
           </Fragment>
         ))}
-        <div className="menu-end-logo">
+        <div className="menu-end-logo subsection-last-of-section" data-section-index={Math.max(0, menus.length - 1)}>
           <img
             src={savsavLogoSvg}
             alt="SAVSAV"
@@ -764,7 +773,43 @@ function DisplayPage() {
             }}
           />
         </div>
+        {asteriskPlacements.map((p, i) => (
+          <div
+            key={i}
+            className="floating-asterisk"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: p.top,
+              left: p.left,
+              width: p.width,
+              height: p.height,
+              pointerEvents: "none",
+            }}
+          >
+            <video
+              src={ASTERISK_ANIMATION_SRC}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                objectPosition: "center center",
+                display: "block",
+              }}
+              onError={(e) => {
+                const parent = (e.currentTarget as HTMLVideoElement).parentElement as HTMLElement | null;
+                if (parent) parent.style.display = "none";
+              }}
+            />
+          </div>
+        ))}
       </div>
+
 
       {debug && (
         <div
