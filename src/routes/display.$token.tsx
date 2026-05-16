@@ -22,6 +22,7 @@ import { collectUsedFonts, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
 const MENU_ANIMATION_SRC = "/menu-animation-v2.webm";
+const ASTERISK_ANIMATION_SRC = "/asterisk-animation.webm";
 
 
 export const Route = createFileRoute("/display/$token")({
@@ -351,6 +352,27 @@ const COLUMN_CSS = `
   letter-spacing: 0.03em;
   margin-top: 0.1rem;
 }
+.section-asterisk-filler {
+  width: 100%;
+  min-height: 8vh;
+  max-height: 35vh;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+.section-asterisk-filler video {
+  width: 100%;
+  height: 100%;
+  max-height: 35vh;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
 `;
 
 function DisplayPage() {
@@ -649,6 +671,20 @@ function DisplayPage() {
                 </section>
               );
             })}
+            <div className="section-asterisk-filler" aria-hidden="true">
+              <video
+                src={ASTERISK_ANIMATION_SRC}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onError={(e) => {
+                  const p = (e.currentTarget as HTMLVideoElement).parentElement as HTMLElement | null;
+                  if (p) p.style.display = "none";
+                }}
+              />
+            </div>
           </Fragment>
         ))}
         <div className="menu-end-logo">
