@@ -785,8 +785,8 @@ function MenuEditorPage() {
           </div>
         </div>
       )}
-      <header className="mb-6 space-y-4 md:flex md:items-end md:justify-between md:gap-6 md:space-y-0">
-        <div className="min-w-0">
+      <header className="mb-6 space-y-4 lg:flex lg:items-end lg:justify-between lg:gap-6 lg:space-y-0">
+        <div>
           <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
             <ArrowLeft className="h-4 w-4" /> Back to Functions
           </Link>
@@ -800,57 +800,59 @@ function MenuEditorPage() {
             )}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 md:justify-end md:shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
-                <ExternalLink className="h-4 w-4" />
-                <span className="hidden xs:inline sm:inline">View Menus</span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <a
-                  href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=auto`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Live Menu
-                </a>
-              </DropdownMenuItem>
-              {menus.map((opt) => (
-                <DropdownMenuItem key={opt.key} asChild>
+        <div className="overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end lg:shrink-0 whitespace-nowrap">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="hidden xs:inline sm:inline">View Menus</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
                   <a
-                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=${encodeURIComponent(opt.key)}`}
+                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=auto`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {opt.label}
+                    Live Menu
                   </a>
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
-            {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" className="flex-1 sm:flex-none min-w-0">
-                <Plus className="h-4 w-4" /> Add
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); addSection(); }}>
-                <Plus className="h-4 w-4" /> New section
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setNewMenuLabel(""); setAddMenuOpen(true); }}>
-                <Plus className="h-4 w-4" /> New menu
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {menus.map((opt) => (
+                  <DropdownMenuItem key={opt.key} asChild>
+                    <a
+                      href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=${encodeURIComponent(opt.key)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {opt.label}
+                    </a>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
+              {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4" /> Add
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); addSection(); }}>
+                  <Plus className="h-4 w-4" /> New section
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setNewMenuLabel(""); setAddMenuOpen(true); }}>
+                  <Plus className="h-4 w-4" /> New menu
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
