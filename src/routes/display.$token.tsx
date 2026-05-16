@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -8,9 +8,17 @@ import {
   type TextStyle,
   type FormattingKey,
 } from "@/lib/menu-formatting.functions";
-import { getDisplayMenu, type DisplayMenu } from "@/lib/menu-display.functions";
-import { listMenuSchedulePublic, pickActiveMenuKey } from "@/lib/menu-schedule.functions";
-import { ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
+import {
+  getDisplayMenu,
+  invalidateDisplayMenuCache,
+  type DisplayMenu,
+} from "@/lib/menu-display.functions";
+import {
+  listMenuSchedulePublic,
+  pickActiveMenuKey,
+  type ScheduleEntry,
+} from "@/lib/menu-schedule.functions";
+import { collectUsedFonts, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
 const MENU_ANIMATION_SRC = "/menu-animation.webm";
@@ -22,12 +30,74 @@ export const Route = createFileRoute("/display/$token")({
     const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
     return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
   },
+  loaderDeps: ({ search }) => ({ menu: search.menu }),
+  loader: async ({ params, deps }) => {
+    const isAuto = deps.menu === "auto";
+    const [formatting, displayMenu, schedule] = await Promise.all([
+      getMenuFormatting().catch(() => ({} as MenuFormatting)),
+      getDisplayMenu({ data: { token: params.token } }),
+      isAuto
+        ? listMenuSchedulePublic().catch(() => ({ entries: [] as ScheduleEntry[] }))
+        : Promise.resolve({ entries: [] as ScheduleEntry[] }),
+    ]);
+    return {
+      formatting: (formatting ?? {}) as MenuFormatting,
+      displayMenu,
+      scheduleEntries: schedule.entries,
+    };
+  },
+  staleTime: 60_000,
   head: () => ({
     meta: [
       { title: "Menu Display" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
+  pendingComponent: () => (
+    <div style={{ height: "100vh", background: "#fff" }} aria-hidden="true" />
+  ),
+  errorComponent: ({ error }) => (
+    <div
+      style={{
+        height: "100vh",
+        background: "#fff",
+        color: "#000",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily:
+          '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+        textTransform: "uppercase",
+        letterSpacing: "0.02em",
+        textAlign: "center",
+        padding: "2rem",
+      }}
+    >
+      <div>
+        <div style={{ fontWeight: 700, marginBottom: "0.5rem" }}>Menu unavailable</div>
+        <div style={{ fontSize: "0.85rem", fontWeight: 400, opacity: 0.7 }}>
+          {error?.message || "Please try again in a moment."}
+        </div>
+      </div>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div
+      style={{
+        height: "100vh",
+        background: "#fff",
+        color: "#000",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily:
+          '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+        textTransform: "uppercase",
+      }}
+    >
+      Menu not found
+    </div>
+  ),
   component: DisplayPage,
 });
 
@@ -286,37 +356,19 @@ const COLUMN_CSS = `
 function DisplayPage() {
   const { token } = Route.useParams();
   const { debug, menu } = Route.useSearch();
-  const fetchFormatting = useServerFn(getMenuFormatting);
-  const fetchDisplayMenu = useServerFn(getDisplayMenu);
-  const fetchSchedule = useServerFn(listMenuSchedulePublic);
+  const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
+  const router = useRouter();
+  const invalidateCache = useServerFn(invalidateDisplayMenuCache);
   const flowRef = useRef<HTMLDivElement | null>(null);
-  const [formatting, setFormatting] = useState<MenuFormatting>({});
-  const [displayMenu, setDisplayMenu] = useState<DisplayMenu | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [scheduleEntries, setScheduleEntries] = useState<
-    Awaited<ReturnType<typeof listMenuSchedulePublic>>["entries"]
-  >([]);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   const isAuto = menu === "auto";
 
+  // Load only the Google Fonts actually referenced by the saved formatting.
   useEffect(() => {
-    ensureGoogleFontsLoaded();
-  }, []);
-
-  useEffect(() => {
-    fetchFormatting({}).then((f) => setFormatting(f || {})).catch(() => {});
-    fetchDisplayMenu({ data: { token, refreshKey } })
-      .then(setDisplayMenu)
-      .catch((error) => console.error("[display] failed to load menu", error));
-  }, [fetchFormatting, fetchDisplayMenu, token, refreshKey]);
-
-  useEffect(() => {
-    if (!isAuto) return;
-    fetchSchedule()
-      .then((r) => setScheduleEntries(r.entries))
-      .catch((e) => console.error("[display] failed to load schedule", e));
-  }, [fetchSchedule, isAuto, refreshKey]);
+    const { families, weights } = collectUsedFonts(formatting, DEFAULT_FORMATTING);
+    ensureGoogleFontsLoaded(families, weights);
+  }, [formatting]);
 
   // Re-evaluate active menu every minute when in auto mode
   useEffect(() => {
@@ -325,21 +377,32 @@ function DisplayPage() {
     return () => clearInterval(id);
   }, [isAuto]);
 
+  // Realtime: on broadcast, clear server cache then re-run the loader.
   useEffect(() => {
-    let channel: ReturnType<(typeof import("@/integrations/supabase/client"))["supabase"]["channel"]> | null = null;
+    let cancelled = false;
+    let cleanup: (() => void) | null = null;
     import("@/integrations/supabase/client").then(({ supabase }) => {
-      channel = supabase
+      if (cancelled) return;
+      const channel = supabase
         .channel("menu-display")
-        .on("broadcast", { event: "refresh" }, () => setRefreshKey(Date.now()))
+        .on("broadcast", { event: "refresh" }, async () => {
+          try {
+            await invalidateCache({ data: { token } });
+          } catch (e) {
+            console.error("[display] cache invalidation failed", e);
+          }
+          router.invalidate();
+        })
         .subscribe();
+      cleanup = () => {
+        supabase.removeChannel(channel);
+      };
     });
     return () => {
-      if (channel) {
-        const activeChannel = channel;
-        import("@/integrations/supabase/client").then(({ supabase }) => supabase.removeChannel(activeChannel));
-      }
+      cancelled = true;
+      if (cleanup) cleanup();
     };
-  }, []);
+  }, [router, invalidateCache, token]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
@@ -385,75 +448,89 @@ function DisplayPage() {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [hiddenCount, setHiddenCount] = useState(0);
 
+  // Single-pass auto-fit: measure once, calculate scale, apply.
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const MIN_SCALE = 0.75;
-    const STEP = 0.02;
-    let raf: number | null = null;
     let timer: number | null = null;
+    let lastScale: number | null = null;
+    let lastSignature: string | null = null;
 
-    const overflows = () => {
+    const computeSignature = () => {
+      // Cheap content+viewport fingerprint so we can bail when nothing changed.
+      return `${displayMenu?.generated_at ?? ""}|${activeMenuKey ?? ""}|${window.innerWidth}x${window.innerHeight}`;
+    };
+
+    const apply = (scale: number) => {
+      if (lastScale !== null && Math.abs(scale - lastScale) < 0.001) return;
+      lastScale = scale;
+      document.documentElement.style.setProperty("--menu-scale", String(scale));
+    };
+
+    const fit = (force = false) => {
       const flow = flowRef.current;
-      if (!flow) return false;
-      const lastChild = flow.lastElementChild as HTMLElement | null;
-      if (!lastChild) return false;
-      const flowRect = flow.getBoundingClientRect();
-      const lastRect = lastChild.getBoundingClientRect();
-      return lastRect.bottom > flowRect.bottom + 2 || lastRect.right > flowRect.right + 2;
-    };
+      if (!flow) return;
+      const sig = computeSignature();
+      if (!force && sig === lastSignature) return;
+      lastSignature = sig;
 
-    const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-
-    const fit = async () => {
+      // Reset to natural size, then measure on the next frame so layout settles.
       document.documentElement.style.setProperty("--menu-scale", "1");
-      await nextFrame();
-      let scale = 1;
-      while (overflows() && scale > MIN_SCALE) {
-        scale = Math.max(MIN_SCALE, scale - STEP);
-        document.documentElement.style.setProperty("--menu-scale", String(scale));
-        await nextFrame();
-      }
-      if (overflows()) {
-        const flow = flowRef.current;
-        const overflowPx = flow
-          ? Math.max(
-              0,
-              (flow.lastElementChild as HTMLElement).getBoundingClientRect().bottom -
-                flow.getBoundingClientRect().bottom,
-            )
-          : 0;
-        const est = Math.max(1, Math.ceil(overflowPx / 60));
-        setIsOverflowing(true);
-        setHiddenCount(est);
-        if (import.meta.env.DEV) {
-          console.warn("[Menu] Content overflows viewport. Scale floor reached.");
+      lastScale = 1;
+      requestAnimationFrame(() => {
+        const flowEl = flowRef.current;
+        if (!flowEl) return;
+        const flowRect = flowEl.getBoundingClientRect();
+        const lastChild = flowEl.lastElementChild as HTMLElement | null;
+        if (!lastChild) return;
+        const lastRect = lastChild.getBoundingClientRect();
+
+        const contentBottom = lastRect.bottom - flowRect.top;
+        const contentRight = lastRect.right - flowRect.left;
+        const verticalRatio = flowRect.height / Math.max(flowRect.height, contentBottom);
+        const horizontalRatio = flowRect.width / Math.max(flowRect.width, contentRight);
+        const ratio = Math.min(verticalRatio, horizontalRatio, 1);
+
+        const scale = Math.max(MIN_SCALE, ratio);
+        apply(scale);
+
+        if (scale <= MIN_SCALE + 0.001 && ratio < MIN_SCALE) {
+          setIsOverflowing(true);
+          const overflowPx = Math.max(0, contentBottom - flowRect.height, contentRight - flowRect.width);
+          setHiddenCount(Math.max(1, Math.ceil(overflowPx / 60)));
+          if (import.meta.env.DEV) {
+            console.warn("[Menu] Content overflows viewport. Scale floor reached.");
+          }
+        } else {
+          setIsOverflowing(false);
+          setHiddenCount(0);
         }
-      } else {
-        setIsOverflowing(false);
-        setHiddenCount(0);
-      }
+      });
     };
 
-    fit();
-    // Re-fit once webfonts finish loading (Safari first-load: layout measured with fallback metrics)
-    if (typeof document !== "undefined" && (document as any).fonts?.ready) {
-      (document as any).fonts.ready.then(() => fit()).catch(() => {});
+    fit(true);
+
+    // Re-fit once webfonts finish loading (Safari first-load: layout measured with fallback metrics).
+    if ((document as unknown as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready) {
+      (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready
+        .then(() => fit(true))
+        .catch(() => {});
     }
 
     const onResize = () => {
       if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(fit, 150);
+      timer = window.setTimeout(() => fit(false), 150);
     };
     window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("resize", onResize);
-      if (raf) cancelAnimationFrame(raf);
       if (timer) window.clearTimeout(timer);
     };
-  }, [menus]);
+  }, [menus, displayMenu, activeMenuKey]);
 
   useEffect(() => {
     const onChange = () => {
-      setIsFullscreen(!!document.fullscreenElement || !!(document as any).webkitFullscreenElement);
+      setIsFullscreen(!!document.fullscreenElement || !!(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement);
     };
     document.addEventListener("fullscreenchange", onChange);
     document.addEventListener("webkitfullscreenchange", onChange);
@@ -472,7 +549,9 @@ function DisplayPage() {
   }, [isFullscreen]);
 
   const enterFullscreen = async () => {
-    const el = document.documentElement as any;
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+    };
     try {
       if (el.requestFullscreen) {
         await el.requestFullscreen();

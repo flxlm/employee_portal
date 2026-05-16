@@ -112,57 +112,6 @@
   font-display: swap;
 }
 
-/* Per-variant aliases for selection by name */
-@font-face {
-  font-family: "PP Neue Corp Condensed Ultralight";
-  src: url("/fonts/PPNeueCorp-CondensedUltralight.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Ultralight Italic";
-  src: url("/fonts/PPNeueCorp-CondensedUltralightItalic.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Thin";
-  src: url("/fonts/PPNeueCorp-CondensedThin.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Thin Italic";
-  src: url("/fonts/PPNeueCorp-CondensedThinItalic.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Medium";
-  src: url("/fonts/PPNeueCorp-CondensedMedium.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Medium Italic";
-  src: url("/fonts/PPNeueCorp-CondensedMediumItalic.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Ultrabold";
-  src: url("/fonts/PPNeueCorp-CondensedUltrabold.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Ultrabold Italic";
-  src: url("/fonts/PPNeueCorp-CondensedUltraboldItalic.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Black";
-  src: url("/fonts/PPNeueCorp-CondensedBlack.otf") format("opentype");
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Corp Condensed Black Italic";
-  src: url("/fonts/PPNeueCorp-CondensedBlackItalic.otf") format("opentype");
-  font-display: swap;
-}
 
 
 /*

@@ -71,25 +71,106 @@ export const FONT_OPTIONS: FontOption[] = [
   { label: "Fira Code", value: '"Fira Code", monospace', google: "Fira+Code", weights: [400, 500, 600, 700] },
 ];
 
+/** Extract the first quoted family name from a CSS font-family value, e.g. `'"Inter", sans-serif'` → `Inter`. */
+function firstFamilyName(value: string | undefined): string | null {
+  if (!value) return null;
+  const m = value.match(/"([^"]+)"|'([^']+)'/);
+  if (m) return (m[1] || m[2]).trim();
+  const first = value.split(",")[0]?.trim();
+  return first || null;
+}
+
 /**
- * Build a single Google Fonts URL that loads every Google-hosted family above.
+ * Build a Google Fonts URL for ONLY the families/weights actually used.
+ * Returns null if nothing Google-hosted is needed.
  */
-export function buildGoogleFontsHref(): string {
-  const families = FONT_OPTIONS.filter((f) => f.google).map((f) => {
-    const weights = (f.weights || [400, 700]).join(";");
-    return `family=${f.google}:wght@${weights}`;
-  });
+/**
+ * Build a Google Fonts URL. If `usedFamilies` is undefined, load every
+ * Google-hosted family (used by the formatting picker for previews).
+ * If provided, only those families with their used weights are loaded.
+ */
+export function buildGoogleFontsHref(
+  usedFamilies?: string[],
+  usedWeights: Record<string, Set<number>> = {},
+): string | null {
+  const families: string[] = [];
+  if (usedFamilies === undefined) {
+    for (const opt of FONT_OPTIONS) {
+      if (!opt.google) continue;
+      const weights = (opt.weights ?? [400, 700]).join(";");
+      families.push(`family=${opt.google}:wght@${weights}`);
+    }
+  } else {
+    for (const familyName of usedFamilies) {
+      const opt = FONT_OPTIONS.find((f) => f.label === familyName);
+      if (!opt?.google) continue;
+      const supported = new Set(opt.weights ?? [400, 700]);
+      const wanted = Array.from(usedWeights[familyName] ?? new Set<number>())
+        .filter((w) => supported.has(w))
+        .sort((a, b) => a - b);
+      const weights = wanted.length > 0 ? wanted : (opt.weights ?? [400, 700]);
+      families.push(`family=${opt.google}:wght@${weights.join(";")}`);
+    }
+  }
+  if (families.length === 0) return null;
   return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
 }
 
 const LINK_ID = "menu-google-fonts";
 
-export function ensureGoogleFontsLoaded() {
+/**
+ * Inject a stylesheet for the Google Fonts referenced by the given formatting.
+ * If called with no arguments, loads every Google font in FONT_OPTIONS — use
+ * that only on the formatting picker page.
+ */
+export function ensureGoogleFontsLoaded(
+  usedFamilies?: string[],
+  usedWeights: Record<string, Set<number>> = {},
+) {
   if (typeof document === "undefined") return;
-  if (document.getElementById(LINK_ID)) return;
+  const href = buildGoogleFontsHref(usedFamilies, usedWeights);
+  const existing = document.getElementById(LINK_ID) as HTMLLinkElement | null;
+  if (!href) {
+    if (existing) existing.remove();
+    return;
+  }
+  if (existing) {
+    if (existing.href !== href) existing.href = href;
+    return;
+  }
   const link = document.createElement("link");
   link.id = LINK_ID;
   link.rel = "stylesheet";
-  link.href = buildGoogleFontsHref();
+  link.href = href;
   document.head.appendChild(link);
+}
+
+/**
+ * Walk a MenuFormatting-shaped record and return the set of family names + per-family weights
+ * referenced. Family names are matched against FONT_OPTIONS labels (the part before the comma).
+ */
+export function collectUsedFonts(
+  formatting: Record<string, { fontFamily?: string; fontWeight?: number | string } | undefined> | null | undefined,
+  defaults: Record<string, { fontFamily?: string; fontWeight?: number | string } | undefined> = {},
+): { families: string[]; weights: Record<string, Set<number>> } {
+  const families = new Set<string>();
+  const weights: Record<string, Set<number>> = {};
+  const allKeys = new Set([...Object.keys(defaults), ...Object.keys(formatting ?? {})]);
+  for (const key of allKeys) {
+    const merged = { ...(defaults[key] ?? {}), ...((formatting?.[key]) ?? {}) };
+    const fam = firstFamilyName(merged.fontFamily);
+    if (!fam) continue;
+    // Map family back to a FONT_OPTIONS label
+    const opt = FONT_OPTIONS.find((f) => f.label === fam || f.value.startsWith(`"${fam}"`));
+    if (!opt) continue;
+    families.add(opt.label);
+    const w = typeof merged.fontWeight === "number"
+      ? merged.fontWeight
+      : typeof merged.fontWeight === "string" && /^\d+$/.test(merged.fontWeight)
+        ? Number(merged.fontWeight)
+        : 400;
+    if (!weights[opt.label]) weights[opt.label] = new Set();
+    weights[opt.label].add(w);
+  }
+  return { families: Array.from(families), weights };
 }

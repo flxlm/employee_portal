@@ -50,71 +50,56 @@ export function clearDisplayCache() {
 }
 
 async function buildMenu(): Promise<DisplayMenu> {
-  const [{ data, error }, secMeta, subMeta, itemMeta] = await Promise.all([
-    supabaseAdmin.from("menu_display_view").select("*"),
-    supabaseAdmin.from("menu_sections").select("id, visible_menus, is_hidden, sold_out_date"),
-    supabaseAdmin.from("menu_subsections").select("id, visible_menus, is_hidden, sold_out_date"),
-    supabaseAdmin.from("menu_items").select("id, is_hidden, sold_out_date").eq("is_deleted", false),
-  ]);
+  const { data, error } = await supabaseAdmin.from("menu_display_view").select("*");
   if (error) throw error;
 
-  type SecMeta = { id: string; visible_menus: string[] | null; is_hidden?: boolean | null; sold_out_date?: string | null };
-  type SubMeta = SecMeta;
-  type ItemMeta = { id: string; is_hidden?: boolean | null; sold_out_date?: string | null };
-
-  const secVisMap = new Map<string, string[]>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, r.visible_menus || []]));
-  const subVisMap = new Map<string, string[]>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, r.visible_menus || []]));
-  const secHiddenMap = new Map<string, boolean>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, !!r.is_hidden]));
-  const subHiddenMap = new Map<string, boolean>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, !!r.is_hidden]));
-  const itemHiddenMap = new Map<string, boolean>(((itemMeta.data || []) as ItemMeta[]).map((r) => [r.id, !!r.is_hidden]));
-  const secSoldMap = new Map<string, string | null>(((secMeta.data || []) as SecMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
-  const subSoldMap = new Map<string, string | null>(((subMeta.data || []) as SubMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
-  const itemSoldMap = new Map<string, string | null>(((itemMeta.data || []) as ItemMeta[]).map((r) => [r.id, r.sold_out_date ?? null]));
-
   const sections = new Map<string, DisplaySection>();
-  for (const row of data || []) {
-    if (!row.section_id) continue;
-    let sec = sections.get(row.section_id);
+  for (const row of (data || []) as Array<Record<string, unknown>>) {
+    const sectionId = row.section_id as string | null;
+    if (!sectionId) continue;
+    let sec = sections.get(sectionId);
     if (!sec) {
       sec = {
-        id: row.section_id,
-        name: row.section_name || "",
-        description: row.section_description || "",
-        visible_menus: secVisMap.get(row.section_id) || [],
-        is_hidden: secHiddenMap.get(row.section_id) || false,
-        sold_out_date: secSoldMap.get(row.section_id) ?? null,
+        id: sectionId,
+        name: (row.section_name as string) || "",
+        description: (row.section_description as string) || "",
+        visible_menus: (row.section_visible_menus as string[] | null) || [],
+        is_hidden: !!row.section_is_hidden,
+        sold_out_date: (row.section_sold_out_date as string | null) ?? null,
         subsections: [],
       };
-      sections.set(row.section_id, sec);
+      sections.set(sectionId, sec);
     }
-    if (!row.subsection_id) continue;
-    let sub = sec.subsections.find((s) => s.id === row.subsection_id);
+    const subId = row.subsection_id as string | null;
+    if (!subId) continue;
+    let sub = sec.subsections.find((s) => s.id === subId);
     if (!sub) {
       sub = {
-        id: row.subsection_id,
-        name: row.subsection_name || "",
-        description: row.subsection_description || "",
-        visible_menus: subVisMap.get(row.subsection_id) || [],
-        is_hidden: subHiddenMap.get(row.subsection_id) || false,
-        sold_out_date: subSoldMap.get(row.subsection_id) ?? null,
+        id: subId,
+        name: (row.subsection_name as string) || "",
+        description: (row.subsection_description as string) || "",
+        visible_menus: (row.subsection_visible_menus as string[] | null) || [],
+        is_hidden: !!row.subsection_is_hidden,
+        sold_out_date: (row.subsection_sold_out_date as string | null) ?? null,
         items: [],
       };
       sec.subsections.push(sub);
     }
-    if (!row.item_id) continue;
-    if (!sub.items.find((i) => i.id === row.item_id)) {
+    const itemId = row.item_id as string | null;
+    if (!itemId) continue;
+    if (!sub.items.find((i) => i.id === itemId)) {
       const mods = (Array.isArray(row.modifications) ? row.modifications : []) as Array<{
         id: string;
         name: string;
         price_modifier_cents: number;
       }>;
       sub.items.push({
-        id: row.item_id,
-        title: row.item_title || "",
-        description: row.item_description || "",
-        base_price_cents: row.base_price_cents || 0,
-        is_hidden: itemHiddenMap.get(row.item_id) || false,
-        sold_out_date: itemSoldMap.get(row.item_id) ?? null,
+        id: itemId,
+        title: (row.item_title as string) || "",
+        description: (row.item_description as string) || "",
+        base_price_cents: (row.base_price_cents as number) || 0,
+        is_hidden: !!row.item_is_hidden,
+        sold_out_date: (row.item_sold_out_date as string | null) ?? null,
         modifications: mods.map((m) => ({
           id: m.id,
           name: m.name,
@@ -164,5 +149,21 @@ export const refreshDisplayMenu = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[refreshDisplayMenu] broadcast failed", e);
     }
+    return { ok: true };
+  });
+
+/**
+ * Public cache-buster: lets the client tell the server "the cached menu is stale, rebuild it".
+ * Used by the display screen after it receives a realtime "refresh" broadcast so any other
+ * warm worker that didn't process the write still serves fresh data on the next loader run.
+ */
+export const invalidateDisplayMenuCache = createServerFn({ method: "POST" })
+  .inputValidator((input: { token: string }) => {
+    if (typeof input?.token !== "string") throw new Error("token required");
+    return input;
+  })
+  .handler(async ({ data }) => {
+    if (data.token !== DISPLAY_TOKEN) throw new Error("Invalid display token");
+    clearDisplayCache();
     return { ok: true };
   });

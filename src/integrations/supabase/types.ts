@@ -636,17 +636,25 @@ export type Database = {
           base_price_cents: number | null
           item_description: string | null
           item_id: string | null
+          item_is_hidden: boolean | null
           item_order: number | null
+          item_sold_out_date: string | null
           item_title: string | null
           modifications: Json | null
           section_description: string | null
           section_id: string | null
+          section_is_hidden: boolean | null
           section_name: string | null
           section_order: number | null
+          section_sold_out_date: string | null
+          section_visible_menus: string[] | null
           subsection_description: string | null
           subsection_id: string | null
+          subsection_is_hidden: boolean | null
           subsection_name: string | null
           subsection_order: number | null
+          subsection_sold_out_date: string | null
+          subsection_visible_menus: string[] | null
         }
         Relationships: []
       }
