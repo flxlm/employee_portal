@@ -172,8 +172,9 @@ function StyleEditor({
                   fallback,
                 );
                 const commit = (n: string, u: string) => {
-                  if (n === "" || n === "-") {
-                    update(f.field, "");
+                  // Allow transient values while typing a negative number
+                  if (n === "" || n === "-" || n === "." || n === "-.") {
+                    update(f.field, n);
                   } else {
                     update(f.field, `${n}${u}`);
                   }
