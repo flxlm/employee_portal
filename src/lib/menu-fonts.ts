@@ -84,17 +84,33 @@ function firstFamilyName(value: string | undefined): string | null {
  * Build a Google Fonts URL for ONLY the families/weights actually used.
  * Returns null if nothing Google-hosted is needed.
  */
-export function buildGoogleFontsHref(usedFamilies: string[], usedWeights: Record<string, Set<number>>): string | null {
+/**
+ * Build a Google Fonts URL. If `usedFamilies` is undefined, load every
+ * Google-hosted family (used by the formatting picker for previews).
+ * If provided, only those families with their used weights are loaded.
+ */
+export function buildGoogleFontsHref(
+  usedFamilies?: string[],
+  usedWeights: Record<string, Set<number>> = {},
+): string | null {
   const families: string[] = [];
-  for (const familyName of usedFamilies) {
-    const opt = FONT_OPTIONS.find((f) => f.label === familyName);
-    if (!opt?.google) continue;
-    const supported = new Set(opt.weights ?? [400, 700]);
-    const wanted = Array.from(usedWeights[familyName] ?? new Set<number>())
-      .filter((w) => supported.has(w))
-      .sort((a, b) => a - b);
-    const weights = wanted.length > 0 ? wanted : (opt.weights ?? [400, 700]);
-    families.push(`family=${opt.google}:wght@${weights.join(";")}`);
+  if (usedFamilies === undefined) {
+    for (const opt of FONT_OPTIONS) {
+      if (!opt.google) continue;
+      const weights = (opt.weights ?? [400, 700]).join(";");
+      families.push(`family=${opt.google}:wght@${weights}`);
+    }
+  } else {
+    for (const familyName of usedFamilies) {
+      const opt = FONT_OPTIONS.find((f) => f.label === familyName);
+      if (!opt?.google) continue;
+      const supported = new Set(opt.weights ?? [400, 700]);
+      const wanted = Array.from(usedWeights[familyName] ?? new Set<number>())
+        .filter((w) => supported.has(w))
+        .sort((a, b) => a - b);
+      const weights = wanted.length > 0 ? wanted : (opt.weights ?? [400, 700]);
+      families.push(`family=${opt.google}:wght@${weights.join(";")}`);
+    }
   }
   if (families.length === 0) return null;
   return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
@@ -103,12 +119,12 @@ export function buildGoogleFontsHref(usedFamilies: string[], usedWeights: Record
 const LINK_ID = "menu-google-fonts";
 
 /**
- * Inject a stylesheet for only the Google Fonts referenced by the given formatting.
- * Pass families/weights extracted from the saved MenuFormatting. Safe to call repeatedly;
- * it will replace the previous link tag if the URL changed.
+ * Inject a stylesheet for the Google Fonts referenced by the given formatting.
+ * If called with no arguments, loads every Google font in FONT_OPTIONS — use
+ * that only on the formatting picker page.
  */
 export function ensureGoogleFontsLoaded(
-  usedFamilies: string[] = [],
+  usedFamilies?: string[],
   usedWeights: Record<string, Set<number>> = {},
 ) {
   if (typeof document === "undefined") return;
