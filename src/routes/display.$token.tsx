@@ -352,6 +352,27 @@ const COLUMN_CSS = `
   letter-spacing: 0.03em;
   margin-top: 0.1rem;
 }
+.section-asterisk-filler {
+  width: 100%;
+  min-height: 8vh;
+  max-height: 35vh;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+.section-asterisk-filler video {
+  width: 100%;
+  height: 100%;
+  max-height: 35vh;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
 `;
 
 function DisplayPage() {
