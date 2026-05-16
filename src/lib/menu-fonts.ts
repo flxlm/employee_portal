@@ -10,15 +10,10 @@ export type FontOption = {
 
 export const FONT_OPTIONS: FontOption[] = [
   {
-    label: "System default (PP Neue Montreal Mono)",
+    label: "PP Neue Montreal Mono",
     value:
       '"PP Neue Montreal Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
   },
-  { label: "PP Neue Montreal Mono Light", value: '"PP Neue Montreal Mono Light", ui-monospace, monospace' },
-  { label: "PP Neue Montreal Mono Book", value: '"PP Neue Montreal Mono Book", ui-monospace, monospace' },
-  { label: "PP Neue Montreal Mono Regular", value: '"PP Neue Montreal Mono Regular", ui-monospace, monospace' },
-  { label: "PP Neue Montreal Mono Medium", value: '"PP Neue Montreal Mono Medium", ui-monospace, monospace' },
-  { label: "PP Neue Montreal Mono Bold", value: '"PP Neue Montreal Mono Bold", ui-monospace, monospace' },
 
   // PP Neue Corp Condensed
   { label: "PP Neue Corp Condensed Ultralight", value: '"PP Neue Corp Condensed Ultralight", sans-serif' },
