@@ -785,12 +785,12 @@ function MenuEditorPage() {
           </div>
         </div>
       )}
-      <header className="mb-6 space-y-3 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:space-y-0">
+      <header className="mb-6 space-y-4 md:flex md:items-end md:justify-between md:gap-6 md:space-y-0">
         <div className="min-w-0">
           <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
             <ArrowLeft className="h-4 w-4" /> Back to Functions
           </Link>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl">Menu Editor</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Menu Editor</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {sections.length} sections · {totalItems} items
             {savingCount > 0 && (
@@ -800,7 +800,7 @@ function MenuEditorPage() {
             )}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:shrink-0">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end md:shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0">
