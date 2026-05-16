@@ -7,21 +7,21 @@
 @font-face {
   font-family: "PP Neue Montreal Mono";
   src: url("/fonts/PPNeueMontrealMono-Light.otf") format("opentype");
-  font-weight: 300;
+  font-weight: 200;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PP Neue Montreal Mono";
   src: url("/fonts/PPNeueMontrealMono-Book.otf") format("opentype");
-  font-weight: 400;
+  font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "PP Neue Montreal Mono";
   src: url("/fonts/PPNeueMontrealMono-Regular.otf") format("opentype");
-  font-weight: 450;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -36,43 +36,6 @@
   font-family: "PP Neue Montreal Mono";
   src: url("/fonts/PPNeueMontrealMono-Bold.otf") format("opentype");
   font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Per-variant aliases so each weight is selectable by name. */
-@font-face {
-  font-family: "PP Neue Montreal Mono Light";
-  src: url("/fonts/PPNeueMontrealMono-Light.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal Mono Book";
-  src: url("/fonts/PPNeueMontrealMono-Book.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal Mono Regular";
-  src: url("/fonts/PPNeueMontrealMono-Regular.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal Mono Medium";
-  src: url("/fonts/PPNeueMontrealMono-Medium.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal Mono Bold";
-  src: url("/fonts/PPNeueMontrealMono-Bold.otf") format("opentype");
-  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
