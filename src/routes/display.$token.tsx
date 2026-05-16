@@ -474,6 +474,10 @@ function DisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [hiddenCount, setHiddenCount] = useState(0);
+  type AsteriskPlacement = { top: number; left: number; width: number; height: number };
+  const [asteriskPlacements, setAsteriskPlacements] = useState<AsteriskPlacement[]>([]);
+  const MIN_GAP_PX = 120;
+  const MAX_ASTERISK_PX = 320;
 
   // Single-pass auto-fit: measure once, calculate scale, apply.
   useEffect(() => {
@@ -553,6 +557,77 @@ function DisplayPage() {
     return () => {
       window.removeEventListener("resize", onResize);
       if (timer) window.clearTimeout(timer);
+    };
+  }, [menus, displayMenu, activeMenuKey]);
+
+  // Dynamic asterisk placement: measure trailing column gaps and place asterisks
+  useEffect(() => {
+    const measure = () => {
+      const flow = flowRef.current;
+      if (!flow) return;
+      const flowRect = flow.getBoundingClientRect();
+      const cs = getComputedStyle(flow);
+      const columnGap = parseFloat(cs.columnGap) || 0;
+      const columnCount = parseInt(cs.columnCount) || 1;
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--menu-scale")) || 1;
+      const unscaledWidth = flowRect.width / scale;
+      const unscaledHeight = flowRect.height / scale;
+      const columnWidth = (unscaledWidth - columnGap * (columnCount - 1)) / columnCount;
+
+      const lastElements = flow.querySelectorAll<HTMLElement>(".subsection-last-of-section");
+      const placements: AsteriskPlacement[] = [];
+
+      lastElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const elBottomUnscaled = (rect.bottom - flowRect.top) / scale;
+        const elLeftUnscaled = (rect.left - flowRect.left) / scale;
+        const gap = unscaledHeight - elBottomUnscaled;
+        if (gap < MIN_GAP_PX) return;
+
+        const columnIndex = Math.max(
+          0,
+          Math.min(columnCount - 1, Math.floor((elLeftUnscaled + 1) / (columnWidth + columnGap))),
+        );
+        const columnLeft = columnIndex * (columnWidth + columnGap);
+        const height = Math.min(gap - 16, MAX_ASTERISK_PX);
+        const top = elBottomUnscaled + 8;
+        placements.push({ top, left: columnLeft, width: columnWidth, height });
+      });
+
+      setAsteriskPlacements((prev) => {
+        if (prev.length !== placements.length) return placements;
+        const same = prev.every((p, i) =>
+          Math.abs(p.top - placements[i].top) < 1 &&
+          Math.abs(p.left - placements[i].left) < 1 &&
+          Math.abs(p.width - placements[i].width) < 1 &&
+          Math.abs(p.height - placements[i].height) < 1,
+        );
+        return same ? prev : placements;
+      });
+    };
+
+    let raf1 = 0, raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => window.setTimeout(measure, 50));
+    });
+
+    if ((document as unknown as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready) {
+      (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready
+        .then(() => window.setTimeout(measure, 100))
+        .catch(() => {});
+    }
+
+    let resizeTimer: number | null = null;
+    const onResize = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 250);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
     };
   }, [menus, displayMenu, activeMenuKey]);
 
@@ -666,8 +741,17 @@ function DisplayPage() {
             {menu.subsections.map((sub, si) => {
               const dim = menu.hidden || sub.hidden;
               const soldOut = !!menu.soldOut || !!sub.soldOut;
+              const isLast = si === menu.subsections.length - 1;
+              const isFinalSection = mi === menus.length - 1;
+              // Tag last subsection of every section EXCEPT the final one (whose logo carries the tag instead)
+              const tagAsLast = isLast && !isFinalSection;
               return (
-                <section key={`${menu.section}-${si}`} style={dim ? { opacity: 0.35 } : undefined}>
+                <section
+                  key={`${menu.section}-${si}`}
+                  className={tagAsLast ? "subsection-last-of-section" : undefined}
+                  data-section-index={mi}
+                  style={dim ? { opacity: 0.35 } : undefined}
+                >
                   <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
                     {sub.subsection}
                   </h2>
@@ -679,7 +763,7 @@ function DisplayPage() {
             })}
           </Fragment>
         ))}
-        <div className="menu-end-logo">
+        <div className="menu-end-logo subsection-last-of-section" data-section-index={Math.max(0, menus.length - 1)}>
           <img
             src={savsavLogoSvg}
             alt="SAVSAV"
@@ -689,7 +773,43 @@ function DisplayPage() {
             }}
           />
         </div>
+        {asteriskPlacements.map((p, i) => (
+          <div
+            key={i}
+            className="floating-asterisk"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: p.top,
+              left: p.left,
+              width: p.width,
+              height: p.height,
+              pointerEvents: "none",
+            }}
+          >
+            <video
+              src={ASTERISK_ANIMATION_SRC}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                objectPosition: "center center",
+                display: "block",
+              }}
+              onError={(e) => {
+                const parent = (e.currentTarget as HTMLVideoElement).parentElement as HTMLElement | null;
+                if (parent) parent.style.display = "none";
+              }}
+            />
+          </div>
+        ))}
       </div>
+
 
       {debug && (
         <div
