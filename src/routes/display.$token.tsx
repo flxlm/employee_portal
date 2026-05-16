@@ -21,7 +21,7 @@ import {
 import { collectUsedFonts, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
 
-const MENU_ANIMATION_SRC = "/menu-animation.webm";
+const MENU_ANIMATION_SRC = "/menu-animation-v2.webm";
 
 
 export const Route = createFileRoute("/display/$token")({
