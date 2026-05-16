@@ -303,9 +303,19 @@ function MenuFormattingPage() {
       {isDirty && (
         <div className="sticky top-0 z-40 -mx-4 sm:-mx-6 mb-4 px-4 sm:px-6 py-3 border-b bg-background/95 backdrop-blur flex items-center justify-between gap-3 shadow-sm">
           <span className="text-sm">Unsaved formatting changes</span>
-          <Button size="sm" onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSettings(savedSettings)}
+              disabled={saving}
+            >
+              Discard changes
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
         </div>
       )}
       <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
