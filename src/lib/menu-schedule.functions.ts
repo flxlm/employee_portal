@@ -91,24 +91,31 @@ export function pickActiveMenuKey(
   now: Date = new Date(),
 ): string | null {
   const day = now.getDay(); // 0=Sun..6=Sat
+  const yesterday = (day + 6) % 7;
   const cur = now.getHours() * 60 + now.getMinutes();
   const toMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   };
   for (const e of entries) {
-    if (e.day_of_week !== day) continue;
     const s = toMin(e.start_time);
     const en = toMin(e.end_time);
-    // start == end is treated as "all day" (24h window)
-    // otherwise support wrap-around (e.g., 22:00 -> 02:00)
-    const inWindow =
-      s === en
-        ? true
-        : s < en
-          ? cur >= s && cur < en
-          : cur >= s || cur < en;
-    if (inWindow) return e.menu_key;
+    // Case 1: all-day window (start == end)
+    if (s === en) {
+      if (e.day_of_week === day) return e.menu_key;
+      continue;
+    }
+    // Case 2: same-day window (start < end), no wrap
+    if (s < en) {
+      if (e.day_of_week === day && cur >= s && cur < en) return e.menu_key;
+      continue;
+    }
+    // Case 3: wrap-around window (start > end), spans midnight.
+    // day_of_week is the START day:
+    //   (a) we are still on the start day, after start time
+    //   (b) we are on the day after the start day, before end time
+    if (e.day_of_week === day && cur >= s) return e.menu_key;
+    if (e.day_of_week === yesterday && cur < en) return e.menu_key;
   }
   return null;
 }
