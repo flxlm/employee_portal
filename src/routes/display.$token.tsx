@@ -474,6 +474,10 @@ function DisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [hiddenCount, setHiddenCount] = useState(0);
+  type AsteriskPlacement = { top: number; left: number; width: number; height: number };
+  const [asteriskPlacements, setAsteriskPlacements] = useState<AsteriskPlacement[]>([]);
+  const MIN_GAP_PX = 120;
+  const MAX_ASTERISK_PX = 320;
 
   // Single-pass auto-fit: measure once, calculate scale, apply.
   useEffect(() => {
