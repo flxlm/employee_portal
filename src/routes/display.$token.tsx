@@ -492,7 +492,11 @@ function DisplayPage() {
           {item.priceLabel ? (
             <PriceLabel label={item.priceLabel} />
           ) : typeof item.price === "number" ? (
-            <Price price={item.price} />
+            <Price
+              price={item.price}
+              style={styleFor("price")}
+              supStyle={styleFor("priceSuperscript")}
+            />
           ) : null}
         </span>
       </div>
