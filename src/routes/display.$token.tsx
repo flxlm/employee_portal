@@ -244,6 +244,11 @@ const COLUMN_CSS = `
   -webkit-column-break-after: avoid;
   page-break-after: avoid;
 }
+.menu-flow > .menu-section-block.new-column {
+  break-before: column;
+  -webkit-column-break-before: always;
+  page-break-before: always;
+}
 .menu-flow > section {
   display: block;
   margin-bottom: 1rem;
@@ -636,9 +641,9 @@ function DisplayPage() {
       <style>{COLUMN_CSS}</style>
 
       <div className="menu-flow" ref={flowRef}>
-        {menus.map((menu) => (
+        {menus.map((menu, mi) => (
           <Fragment key={menu.section}>
-            <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
+            <div className={`menu-section-block${mi > 0 ? " new-column" : ""}`} aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
               <video
                 className="section-title-video"
                 src={MENU_ANIMATION_SRC}
