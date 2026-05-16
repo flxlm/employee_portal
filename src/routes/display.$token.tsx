@@ -93,13 +93,21 @@ function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: M
     .filter((section) => section.subsections.length > 0);
 }
 
-function Price({ price }: { price: number }) {
+function Price({
+  price,
+  style,
+  supStyle,
+}: {
+  price: number;
+  style?: React.CSSProperties;
+  supStyle?: React.CSSProperties;
+}) {
   const sign = price < 0 ? "-" : "";
   const abs = Math.abs(price);
   const dollars = Math.floor(abs);
   const cents = Math.round((abs - dollars) * 100);
   return (
-    <span style={{ whiteSpace: "nowrap" }}>
+    <span style={{ whiteSpace: "nowrap", ...style }}>
       {sign}
       {dollars}
       {cents > 0 && (
@@ -112,6 +120,7 @@ function Price({ price }: { price: number }) {
             position: "relative",
             top: "-0.5em",
             marginLeft: "0.08em",
+            ...supStyle,
           }}
         >
           {cents.toString().padStart(2, "0")}
