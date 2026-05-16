@@ -21,6 +21,8 @@ export type FormattingKey =
   | "itemTitle"
   | "itemDescription"
   | "modification"
+  | "price"
+  | "priceSuperscript"
   | "brand";
 
 export type MenuFormatting = Partial<Record<FormattingKey, TextStyle>>;
@@ -60,6 +62,13 @@ export const DEFAULT_FORMATTING: MenuFormatting = {
     fontSize: "0.7vw",
     fontWeight: 400,
     lineHeight: 1.4,
+  },
+  price: {
+    fontWeight: 700,
+  },
+  priceSuperscript: {
+    fontSize: "0.55em",
+    fontWeight: 700,
   },
   brand: {
     fontSize: "1.6vw",
