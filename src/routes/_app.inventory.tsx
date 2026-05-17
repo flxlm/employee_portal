@@ -311,30 +311,6 @@ function InventoryPage() {
                                   {status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {(() => {
-                                  const best = bestSupplierByItem[it.id];
-                                  const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={() => setSuppliersItem(it)}
-                                      className="text-left hover:bg-accent/40 rounded px-1 -mx-1 py-0.5 w-full"
-                                    >
-                                      {best ? (
-                                        <>
-                                          <div className="text-sm">{best.supplier}</div>
-                                          <div className="text-xs text-muted-foreground tabular-nums">
-                                            €{Number(best.cost).toFixed(2)}
-                                            {count > 1 && <span className="ml-1 opacity-70">· +{count - 1}</span>}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <span className="text-muted-foreground text-sm">+ Add supplier</span>
-                                      )}
-                                    </button>
-                                  );
-                                })()}
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center gap-1 justify-end">
