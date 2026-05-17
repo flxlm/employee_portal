@@ -233,7 +233,6 @@ function BilingualField({
         />
         <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
           <span>FR</span>
-          {!doNotTranslate && sourceLang === "fr" && <span className="text-primary">· source</span>}
           {!doNotTranslate && sourceLang === "en" && isManualOverrideFr && <span>· manual</span>}
         </div>
       </div>
@@ -256,7 +255,6 @@ function BilingualField({
               <span>same as FR</span>
             </>
           )}
-          {!doNotTranslate && sourceLang === "en" && <span className="text-primary">· source</span>}
           {!doNotTranslate && sourceLang === "fr" && isManualOverrideEn && <span>· manual</span>}
         </div>
       </div>
