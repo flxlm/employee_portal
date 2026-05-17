@@ -354,6 +354,25 @@ function MenuEditorPage() {
   const update = useServerFn(updateRow);
   const del = useServerFn(softDeleteRow);
   const reorder = useServerFn(reorderRows);
+  const translateMissing = useServerFn(translateMissingRow);
+  const handleTranslateMissing = async (
+    table: "menu_sections" | "menu_subsections" | "menu_items",
+    id: string,
+  ) => {
+    try {
+      const r = await translateMissing({ data: { table, id } });
+      if (r.translated > 0) {
+        toast.success(`Translated ${r.translated} field${r.translated > 1 ? "s" : ""}`);
+        await reload();
+        triggerRefresh();
+      } else {
+        toast.info("Nothing to translate");
+      }
+    } catch (e) {
+      console.error("[menu] translateMissing failed", e);
+      toast.error("Translation failed");
+    }
+  };
   const refreshDisplay = useServerFn(refreshDisplayMenu);
   const triggerRefresh = () => {
     refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
