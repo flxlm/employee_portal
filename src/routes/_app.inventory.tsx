@@ -267,6 +267,7 @@ function InventoryPage() {
                   items={items}
                   categories={categories}
                   userName={userName}
+                  onReceived={(id) => setOrderRequests((prev) => prev.filter((r) => r.id !== id))}
                 />
               )}
 
