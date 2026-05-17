@@ -143,6 +143,12 @@ function InventoryPage() {
     return map;
   }, [itemSuppliers]);
 
+  const categoryMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const c of categories) m[c.id] = c.name;
+    return m;
+  }, [categories]);
+
   const visibleItems = useMemo(() => {
     let rows = items.filter((i) => i.category_id === activeCategory);
     const q = search.trim().toLowerCase();
@@ -247,18 +253,19 @@ function InventoryPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-8" />
-                        <TableHead>Item</TableHead>
-                        <TableHead className="w-24">Qty</TableHead>
-                        <TableHead className="w-20">Unit</TableHead>
-                        <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="w-[180px] text-right">Actions</TableHead>
+                        <TableHead className="w-10" />
+                        <TableHead className="min-w-[180px]">Item</TableHead>
+                        <TableHead className="w-32">Category</TableHead>
+                        <TableHead className="w-20 text-right">Qty</TableHead>
+                        <TableHead className="w-16">Unit</TableHead>
+                        <TableHead className="w-28">Status</TableHead>
+                        <TableHead className="w-[170px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {visibleItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                             No items. Click "Add item" to start.
                           </TableCell>
                         </TableRow>
@@ -295,7 +302,10 @@ function InventoryPage() {
                                 />
                                 {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-sm text-muted-foreground truncate">
+                                {categoryMap[it.category_id] ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right">
                                 <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
                               </TableCell>
                               <TableCell>
@@ -351,7 +361,7 @@ function InventoryPage() {
                             {expandedRows.has(it.id) && (
                               <TableRow className="bg-muted/30 hover:bg-muted/30">
                                 <TableCell />
-                                <TableCell colSpan={5}>
+                                <TableCell colSpan={6}>
                                   <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1 items-center">
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Par:</span>
