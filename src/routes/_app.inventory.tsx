@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, MoreVertical, Search, Minus, Settings2, X } from "lucide-react";
+import { Plus, MoreVertical, Search, Minus, Settings2, X, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   computeStatus,
@@ -57,6 +57,14 @@ function InventoryPage() {
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
@@ -239,21 +247,19 @@ function InventoryPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-8" />
                         <TableHead>Item</TableHead>
                         <TableHead className="w-24">Qty</TableHead>
                         <TableHead className="w-20">Unit</TableHead>
-                        <TableHead className="w-20">Par</TableHead>
-                        <TableHead className="w-24 whitespace-nowrap">Reorder ≤</TableHead>
                         <TableHead className="w-24">Status</TableHead>
                         <TableHead className="hidden md:table-cell">Supplier / cost</TableHead>
-                        <TableHead className="hidden md:table-cell">Updated</TableHead>
                         <TableHead className="w-[180px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {visibleItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                             No items. Click "Add item" to start.
                           </TableCell>
                         </TableRow>
@@ -262,106 +268,133 @@ function InventoryPage() {
                         const status = computeStatus(it);
                         const onList = flaggedItemIds.has(it.id);
                         return (
-                          <TableRow key={it.id}>
-                            <TableCell>
-                              <InlineText
-                                value={it.name}
-                                onSave={(v) => {
-                                  if (v && v !== it.name && window.confirm("Rename this item? History references the name."))
-                                    updateField(it.id, { name: v });
-                                }}
-                                className="font-medium"
-                              />
-                              {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
-                            </TableCell>
-                            <TableCell>
-                              <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
-                            </TableCell>
-                            <TableCell>
-                              <InlineText
-                                value={it.unit}
-                                onSave={(v) => {
-                                  if (window.confirm("Change unit?")) updateField(it.id, { unit: v });
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
-                            </TableCell>
-                            <TableCell>
-                              <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={statusBadgeClass(status)}>
-                                {status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {(() => {
-                                const best = bestSupplierByItem[it.id];
-                                const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
-                                return (
-                                  <button
-                                    type="button"
-                                    onClick={() => setSuppliersItem(it)}
-                                    className="text-left hover:bg-accent/40 rounded px-1 -mx-1 py-0.5 w-full"
-                                  >
-                                    {best ? (
-                                      <>
-                                        <div className="text-sm">{best.supplier}</div>
-                                        <div className="text-xs text-muted-foreground tabular-nums">
-                                          €{Number(best.cost).toFixed(2)}
-                                          {count > 1 && <span className="ml-1 opacity-70">· +{count - 1}</span>}
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <span className="text-muted-foreground text-sm">+ Add supplier</span>
-                                    )}
-                                  </button>
-                                );
-                              })()}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                              {timeAgo(it.updated_at)}
-                              <div className="opacity-70">{userName(it.updated_by)}</div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center gap-1 justify-end">
-                                <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
-                                  Adjust
-                                </Button>
+                          <React.Fragment key={it.id}>
+                            <TableRow>
+                              <TableCell className="pr-0">
                                 <Button
-                                  size="sm"
-                                  variant={onList ? "ghost" : "default"}
-                                  disabled={onList}
-                                  onClick={() => setFlagItem(it)}
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => toggleExpanded(it.id)}
+                                  aria-label="More info"
                                 >
-                                  {onList ? "On order list" : "Flag"}
+                                  {expandedRows.has(it.id) ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
                                 </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-8 w-8">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
-                                    {isAdmin && (
-                                      <DropdownMenuItem
-                                        className="text-destructive"
-                                        onClick={() => {
-                                          if (window.confirm("Permanently delete this item?")) deleteItem(it.id);
-                                        }}
-                                      >
-                                        Delete
-                                      </DropdownMenuItem>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                              </TableCell>
+                              <TableCell>
+                                <InlineText
+                                  value={it.name}
+                                  onSave={(v) => {
+                                    if (v && v !== it.name && window.confirm("Rename this item? History references the name."))
+                                      updateField(it.id, { name: v });
+                                  }}
+                                  className="font-medium"
+                                />
+                                {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
+                              </TableCell>
+                              <TableCell>
+                                <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
+                              </TableCell>
+                              <TableCell>
+                                <InlineText
+                                  value={it.unit}
+                                  onSave={(v) => {
+                                    if (window.confirm("Change unit?")) updateField(it.id, { unit: v });
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={statusBadgeClass(status)}>
+                                  {status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {(() => {
+                                  const best = bestSupplierByItem[it.id];
+                                  const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => setSuppliersItem(it)}
+                                      className="text-left hover:bg-accent/40 rounded px-1 -mx-1 py-0.5 w-full"
+                                    >
+                                      {best ? (
+                                        <>
+                                          <div className="text-sm">{best.supplier}</div>
+                                          <div className="text-xs text-muted-foreground tabular-nums">
+                                            €{Number(best.cost).toFixed(2)}
+                                            {count > 1 && <span className="ml-1 opacity-70">· +{count - 1}</span>}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="text-muted-foreground text-sm">+ Add supplier</span>
+                                      )}
+                                    </button>
+                                  );
+                                })()}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center gap-1 justify-end">
+                                  <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
+                                    Adjust
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant={onList ? "ghost" : "default"}
+                                    disabled={onList}
+                                    onClick={() => setFlagItem(it)}
+                                  >
+                                    {onList ? "On order list" : "Flag"}
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
+                                      {isAdmin && (
+                                        <DropdownMenuItem
+                                          className="text-destructive"
+                                          onClick={() => {
+                                            if (window.confirm("Permanently delete this item?")) deleteItem(it.id);
+                                          }}
+                                        >
+                                          Delete
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                            {expandedRows.has(it.id) && (
+                              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                <TableCell />
+                                <TableCell colSpan={6}>
+                                  <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Par:</span>
+                                      <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Reorder ≤:</span>
+                                      <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Updated {timeAgo(it.updated_at)} · {userName(it.updated_by)}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                     </TableBody>
