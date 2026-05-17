@@ -348,7 +348,7 @@ function InventoryPage() {
                                     size="sm"
                                     variant={onList ? "ghost" : "default"}
                                     disabled={onList}
-                                    onClick={() => setFlagItem(it)}
+                                    onClick={() => flagForReorder(it)}
                                   >
                                     {onList ? "On order list" : "Flag"}
                                   </Button>
