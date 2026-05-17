@@ -581,11 +581,13 @@ function PendingPanel({
   items,
   categories,
   userName,
+  onReceived,
 }: {
   requests: OrderRequest[];
   items: InventoryItem[];
   categories: InventoryCategory[];
   userName: (id: string | null) => string;
+  onReceived: (id: string) => void;
 }) {
   const [groupBy, setGroupBy] = useState<"category" | "supplier">("category");
   const itemMap = useMemo(() => {
@@ -600,6 +602,7 @@ function PendingPanel({
   }, [categories]);
 
   const markReceived = async (r: OrderRequest) => {
+    onReceived(r.id);
     const { error } = await supabase
       .from("order_requests")
       .update({ status: "received" })
