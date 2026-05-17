@@ -240,27 +240,6 @@ function InventoryPage() {
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Select value={activeCategory} onValueChange={setActiveCategory}>
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="name">Sort: Name</option>
-                  <option value="status">Sort: Status</option>
-                  <option value="updated">Sort: Last updated</option>
-                </select>
                 <Button size="sm" variant="outline" onClick={() => setAdHocOpen(true)}>
                   <Plus className="h-4 w-4" /> Ad-hoc request
                 </Button>
