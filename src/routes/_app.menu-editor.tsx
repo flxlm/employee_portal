@@ -255,7 +255,6 @@ function BilingualField({
               <span>same as FR</span>
             </>
           )}
-          {!doNotTranslate && sourceLang === "en" && <span className="text-primary">· source</span>}
           {!doNotTranslate && sourceLang === "fr" && isManualOverrideEn && <span>· manual</span>}
         </div>
       </div>
