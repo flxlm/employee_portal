@@ -15,8 +15,10 @@ import {
 } from "@/lib/menu-display.functions";
 import {
   listMenuSchedulePublic,
+  listMenuSpecialsPublic,
   pickActiveMenuKey,
   type ScheduleEntry,
+  type SpecialEntry,
 } from "@/lib/menu-schedule.functions";
 import { collectUsedFonts, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
