@@ -321,7 +321,7 @@ function LiveMenuTimetablePage() {
       <Card>
         <CardHeader>
           <CardTitle>Schedule</CardTitle>
-          <CardDescription>The first matching slot wins. Times are in the restaurant's local time.</CardDescription>
+          <CardDescription>Recurring weekly schedule. Special slots above take priority. Times are in the restaurant's local time.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
