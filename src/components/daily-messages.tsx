@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Megaphone, Trash2, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Megaphone, Trash2, Plus, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type DailyMessage = {
   id: string;
