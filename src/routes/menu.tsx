@@ -264,6 +264,11 @@ const COLUMN_CSS = `
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
 }
+.menu-flow .subsection-title-with-first {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
 .menu-end-logo {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
