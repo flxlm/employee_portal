@@ -673,6 +673,7 @@ function AddItemDialog({
           item_id: inserted.id,
           supplier: s.supplier.trim(),
           cost: Number(s.cost) || 0,
+          pack_size: Number(s.pack_size) > 0 ? Number(s.pack_size) : 1,
           notes: s.notes.trim() || null,
         })),
       );
