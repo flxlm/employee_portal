@@ -486,6 +486,7 @@ function MenuEditorPage() {
   const [savingTempIds, setSavingTempIds] = useState<Set<string>>(new Set());
   const [failedTempIds, setFailedTempIds] = useState<Set<string>>(new Set());
   const isPendingTemp = (id: string) => pendingInsertsRef.current.has(id);
+  const isTempUnresolved = (id: string) => pendingInsertsRef.current.has(id) || failedTempIds.has(id);
 
   const dismissTemp = (tempId: string) => {
     setSections((s) =>
