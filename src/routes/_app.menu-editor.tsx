@@ -153,6 +153,116 @@ function MenuToggles({
   );
 }
 
+function BilingualField({
+  multiline = false,
+  rows = 1,
+  fr,
+  en,
+  sourceLang,
+  isManualOverrideFr,
+  isManualOverrideEn,
+  doNotTranslate,
+  placeholderFr,
+  placeholderEn,
+  inputClassName,
+  onChange,
+}: {
+  multiline?: boolean;
+  rows?: number;
+  fr: string;
+  en: string | null;
+  sourceLang: Lang;
+  isManualOverrideFr: boolean;
+  isManualOverrideEn: boolean;
+  doNotTranslate: boolean;
+  placeholderFr?: string;
+  placeholderEn?: string;
+  inputClassName?: string;
+  onChange: (next: { fr: string; en: string; hint: Lang }) => void;
+}) {
+  const enVal = en ?? "";
+  const handleFr = (v: string) => {
+    if (doNotTranslate) onChange({ fr: v, en: v, hint: "fr" });
+    else onChange({ fr: v, en: enVal, hint: "fr" });
+  };
+  const handleEn = (v: string) => {
+    if (doNotTranslate) onChange({ fr: v, en: v, hint: "en" });
+    else onChange({ fr, en: v, hint: "en" });
+  };
+  const Renderer = ({
+    value,
+    onValue,
+    placeholder,
+    className,
+    disabled,
+  }: {
+    value: string;
+    onValue: (v: string) => void;
+    placeholder?: string;
+    className?: string;
+    disabled?: boolean;
+  }) =>
+    multiline ? (
+      <Textarea
+        rows={rows}
+        value={value}
+        onChange={(e) => onValue(e.target.value)}
+        placeholder={placeholder}
+        className={className}
+        disabled={disabled}
+      />
+    ) : (
+      <Input
+        value={value}
+        onChange={(e) => onValue(e.target.value)}
+        placeholder={placeholder}
+        className={className}
+        disabled={disabled}
+      />
+    );
+  const srcAccent = "border-l-[3px] border-l-primary";
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      <div className="space-y-0.5">
+        <Renderer
+          value={fr}
+          onValue={handleFr}
+          placeholder={placeholderFr}
+          className={cn(inputClassName, sourceLang === "fr" && !doNotTranslate && srcAccent)}
+        />
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
+          <span>FR</span>
+          {!doNotTranslate && sourceLang === "fr" && <span className="text-primary">· source</span>}
+          {!doNotTranslate && sourceLang === "en" && isManualOverrideFr && <span>· manual</span>}
+        </div>
+      </div>
+      <div className="space-y-0.5">
+        <Renderer
+          value={enVal}
+          onValue={handleEn}
+          placeholder={placeholderEn}
+          className={cn(
+            inputClassName,
+            sourceLang === "en" && !doNotTranslate && srcAccent,
+            doNotTranslate && "opacity-70",
+          )}
+        />
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
+          <span>EN</span>
+          {doNotTranslate && (
+            <>
+              <Lock className="h-2.5 w-2.5" />
+              <span>same as FR</span>
+            </>
+          )}
+          {!doNotTranslate && sourceLang === "en" && <span className="text-primary">· source</span>}
+          {!doNotTranslate && sourceLang === "fr" && isManualOverrideEn && <span>· manual</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RowSettingsMenu({
   hidden,
   soldOut,
@@ -162,6 +272,8 @@ function RowSettingsMenu({
   onDelete,
   onAddDescription,
   canAddDescription,
+  doNotTranslate,
+  onToggleDoNotTranslate,
   size = "md",
 }: {
   hidden: boolean;
@@ -172,6 +284,8 @@ function RowSettingsMenu({
   onDelete: () => void;
   onAddDescription?: () => void;
   canAddDescription?: boolean;
+  doNotTranslate?: boolean;
+  onToggleDoNotTranslate?: () => void;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -187,6 +301,12 @@ function RowSettingsMenu({
         {onAddDescription && canAddDescription && (
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
             <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
+        {onToggleDoNotTranslate && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleDoNotTranslate(); }}>
+            <Languages className="h-4 w-4" />
+            {doNotTranslate ? "Allow translation" : "Same in both languages"}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
