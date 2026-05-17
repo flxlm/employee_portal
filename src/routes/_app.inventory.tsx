@@ -414,14 +414,6 @@ function InventoryPage() {
                                 <TableCell colSpan={6}>
                                   <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1 items-center">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground">Par:</span>
-                                      <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground">Reorder ≤:</span>
-                                      <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
-                                    </div>
-                                    <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Supplier / cost:</span>
                                       {(() => {
                                         const best = bestSupplierByItem[it.id];
