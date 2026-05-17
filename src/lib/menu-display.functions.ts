@@ -174,3 +174,26 @@ export const invalidateDisplayMenuCache = createServerFn({ method: "POST" })
     clearDisplayCache();
     return { ok: true };
   });
+
+export const refreshWebsiteMenu = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const url = process.env.WEBSITE_REFRESH_URL;
+    const secret = process.env.WEBSITE_REFRESH_SECRET;
+    if (!url || !secret) {
+      throw new Error("Website refresh is not configured");
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Refresh-Secret": secret,
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Website refresh failed: ${res.status} ${text.slice(0, 200)}`);
+    }
+    const data = (await res.json().catch(() => ({}))) as { refreshed_at?: string };
+    return { ok: true as const, refreshed_at: data.refreshed_at ?? new Date().toISOString() };
+  });
