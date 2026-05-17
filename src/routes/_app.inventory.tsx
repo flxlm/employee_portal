@@ -622,17 +622,17 @@ function AddItemDialog({
   const [par, setPar] = useState("0");
   const [threshold, setThreshold] = useState("0");
   const [notes, setNotes] = useState("");
-  const [suppliers, setSuppliers] = useState<Array<{ supplier: string; cost: string; notes: string }>>([
-    { supplier: "", cost: "", notes: "" },
+  const [suppliers, setSuppliers] = useState<Array<{ supplier: string; cost: string; pack_size: string; notes: string }>>([
+    { supplier: "", cost: "", pack_size: "1", notes: "" },
   ]);
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
     setName(""); setUnit(""); setQty("0"); setPar("0"); setThreshold("0"); setNotes("");
-    setSuppliers([{ supplier: "", cost: "", notes: "" }]);
+    setSuppliers([{ supplier: "", cost: "", pack_size: "1", notes: "" }]);
   };
 
-  const updateSupplier = (i: number, patch: Partial<{ supplier: string; cost: string; notes: string }>) => {
+  const updateSupplier = (i: number, patch: Partial<{ supplier: string; cost: string; pack_size: string; notes: string }>) => {
     setSuppliers((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   };
 
