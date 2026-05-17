@@ -83,7 +83,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setText("");
-    setExpiresOn(todayInputValue());
+    setExpiresOn(startOfToday());
     toast.success("Message posted");
     load();
   };
