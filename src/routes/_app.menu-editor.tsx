@@ -1051,6 +1051,18 @@ function MenuEditorPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefreshWebsite}
+              disabled={refreshingWebsite}
+              title={lastWebsiteRefresh ? `Last refreshed: ${new Date(lastWebsiteRefresh).toLocaleTimeString()}` : undefined}
+            >
+              <RefreshCw className={`h-4 w-4${refreshingWebsite ? " animate-spin" : ""}`} />
+              <span className="hidden xs:inline sm:inline">
+                {refreshingWebsite ? "Refreshing…" : "Refresh website"}
+              </span>
+            </Button>
             <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
               {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
             </Button>
