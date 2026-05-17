@@ -1139,23 +1139,43 @@ function MenuEditorPage() {
                       </Button>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Input
-                        className="font-medium"
-                        value={sub.name}
-                        onChange={(e) => {
-                          patchSubsection(sec.id, sub.id, { name: e.target.value });
-                          queueEdit("menu_subsections", sub.id, sub.version, { name: e.target.value });
+                      <BilingualField
+                        fr={sub.name}
+                        en={sub.name_en}
+                        sourceLang={sub.name_source_lang}
+                        isManualOverrideFr={sub.name_source_lang === "en" && sub.name_is_manual_override}
+                        isManualOverrideEn={sub.name_source_lang === "fr" && sub.name_is_manual_override}
+                        doNotTranslate={sub.do_not_translate}
+                        placeholderFr="Nom de sous-section"
+                        placeholderEn="Subsection name"
+                        inputClassName="font-medium"
+                        onChange={({ fr, en, hint }) => {
+                          patchSubsection(sec.id, sub.id, { name: fr, name_en: en });
+                          queueEdit("menu_subsections", sub.id, sub.version, {
+                            name: fr,
+                            name_en: en,
+                            name_source_lang_hint: hint,
+                          });
                         }}
-                        placeholder="Subsection name"
                       />
                       {hasDesc(sub.id, sub.description) ? (
-                        <Input
-                          value={sub.description}
-                          onChange={(e) => {
-                            patchSubsection(sec.id, sub.id, { description: e.target.value });
-                            queueEdit("menu_subsections", sub.id, sub.version, { description: e.target.value });
+                        <BilingualField
+                          fr={sub.description}
+                          en={sub.description_en}
+                          sourceLang={sub.description_source_lang}
+                          isManualOverrideFr={sub.description_source_lang === "en" && sub.description_is_manual_override}
+                          isManualOverrideEn={sub.description_source_lang === "fr" && sub.description_is_manual_override}
+                          doNotTranslate={sub.do_not_translate}
+                          placeholderFr="Description (FR)"
+                          placeholderEn="Description (EN)"
+                          onChange={({ fr, en, hint }) => {
+                            patchSubsection(sec.id, sub.id, { description: fr, description_en: en });
+                            queueEdit("menu_subsections", sub.id, sub.version, {
+                              description: fr,
+                              description_en: en,
+                              description_source_lang_hint: hint,
+                            });
                           }}
-                          placeholder="Subsection description"
                         />
                       ) : (
                         <button
@@ -1178,6 +1198,12 @@ function MenuEditorPage() {
                     <RowSettingsMenu
                       hidden={sub.is_hidden}
                       soldOut={isSoldOutToday(sub.sold_out_date)}
+                      doNotTranslate={sub.do_not_translate}
+                      onToggleDoNotTranslate={() => {
+                        const next = !sub.do_not_translate;
+                        patchSubsection(sec.id, sub.id, { do_not_translate: next });
+                        queueEdit("menu_subsections", sub.id, sub.version, { do_not_translate: next });
+                      }}
                       onToggleHidden={() => {
                         const next = !sub.is_hidden;
                         patchSubsection(sec.id, sub.id, { is_hidden: next });
