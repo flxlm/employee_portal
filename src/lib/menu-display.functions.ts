@@ -149,14 +149,8 @@ async function buildMenu(): Promise<DisplayMenu> {
 }
 
 export const getDisplayMenu = createServerFn({ method: "GET" })
-  .inputValidator((input: { token: string; refreshKey?: number }) => {
-    if (typeof input?.token !== "string") throw new Error("token required");
-    return input;
-  })
+  .inputValidator((input: { refreshKey?: number } | undefined) => input ?? {})
   .handler(async ({ data }) => {
-    if (data.token !== DISPLAY_TOKEN) {
-      throw new Error("Invalid display token");
-    }
     const now = Date.now();
     const hit = cache.get("menu");
     if (!data.refreshKey && hit && hit.expires > now) {
