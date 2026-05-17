@@ -9,6 +9,9 @@ import {
   listMenuSchedule,
   updateScheduleEntry,
   type ScheduleEntry,
+  addMenuSpecial,
+  deleteMenuSpecial,
+  listMenuSpecials,
 } from "@/lib/menu-schedule.functions";
 import { listMenus } from "@/lib/menus.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/live-menu-timetable")({
@@ -105,6 +108,50 @@ function LiveMenuTimetablePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // ============ Specials ============
+  const listSpecials = useServerFn(listMenuSpecials);
+  const addSpecial = useServerFn(addMenuSpecial);
+  const removeSpecial = useServerFn(deleteMenuSpecial);
+
+  const { data: specialsRes } = useQuery({
+    queryKey: ["menu-specials"],
+    queryFn: () => listSpecials(),
+  });
+  const specials = specialsRes?.specials ?? [];
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [spMenuKey, setSpMenuKey] = useState<string>("");
+  const [spDate, setSpDate] = useState(todayStr);
+  const [spStart, setSpStart] = useState("12:00");
+  const [spEnd, setSpEnd] = useState("14:00");
+
+  const addSpecialMut = useMutation({
+    mutationFn: () =>
+      addSpecial({
+        data: {
+          menu_key: spMenuKey,
+          slot_date: spDate,
+          start_time: spStart,
+          end_time: spEnd,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["menu-specials"] });
+      toast.success("Special slot added");
+      setSpMenuKey("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeSpecialMut = useMutation({
+    mutationFn: (id: string) => removeSpecial({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["menu-specials"] });
+      toast.success("Removed");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
@@ -177,10 +224,104 @@ function LiveMenuTimetablePage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6 border-primary/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Add a Special Time Slot
+          </CardTitle>
+          <CardDescription>
+            One-off slot for a specific date. Overrides the regular schedule and disappears automatically after the day passes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_150px_120px_120px_auto] md:grid-rows-[auto_auto] gap-x-3 gap-y-1.5 items-center"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!spMenuKey) {
+                toast.error("Pick a menu");
+                return;
+              }
+              if (spDate < todayStr) {
+                toast.error("Date must be today or later");
+                return;
+              }
+              addSpecialMut.mutate();
+            }}
+          >
+            <Label className="md:row-start-1 md:col-start-1">Menu</Label>
+            <Label className="md:row-start-1 md:col-start-2">Date</Label>
+            <Label className="md:row-start-1 md:col-start-3">Start</Label>
+            <Label className="md:row-start-1 md:col-start-4">End</Label>
+            <span className="hidden md:block md:row-start-1 md:col-start-5" aria-hidden />
+
+            <Select value={spMenuKey} onValueChange={setSpMenuKey}>
+              <SelectTrigger className="md:row-start-2 md:col-start-1"><SelectValue placeholder="Select menu" /></SelectTrigger>
+              <SelectContent>
+                {menus.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="md:row-start-2 md:col-start-2"
+              type="date"
+              value={spDate}
+              min={todayStr}
+              onChange={(e) => setSpDate(e.target.value)}
+            />
+            <Input
+              className="md:row-start-2 md:col-start-3"
+              type="time"
+              value={spStart}
+              onChange={(e) => setSpStart(e.target.value)}
+            />
+            <Input
+              className="md:row-start-2 md:col-start-4"
+              type="time"
+              value={spEnd}
+              onChange={(e) => setSpEnd(e.target.value)}
+            />
+            <Button
+              type="submit"
+              disabled={addSpecialMut.isPending}
+              className="w-full md:w-auto md:row-start-2 md:col-start-5"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
+          </form>
+
+          {specials.length > 0 && (
+            <ul className="mt-4 divide-y divide-border">
+              {specials.map((s) => {
+                const menuLabel = menus.find((m) => m.key === s.menu_key)?.label ?? s.menu_key;
+                const d = new Date(s.slot_date + "T00:00:00");
+                return (
+                  <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="font-medium">{menuLabel}</span>
+                      <span className="text-muted-foreground">
+                        {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                        {" · "}
+                        {fmtTime(s.start_time)}–{fmtTime(s.end_time)}
+                      </span>
+                    </div>
+                    <Button size="icon" variant="ghost" onClick={() => removeSpecialMut.mutate(s.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Schedule</CardTitle>
-          <CardDescription>The first matching slot wins. Times are in the restaurant's local time.</CardDescription>
+          <CardDescription>Recurring weekly schedule. Special slots above take priority. Times are in the restaurant's local time.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (

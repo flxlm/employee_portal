@@ -82,38 +82,120 @@ export const deleteScheduleEntry = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ============ Special one-off slots ============
+
+export type SpecialEntry = {
+  id: string;
+  menu_key: string;
+  slot_date: string; // YYYY-MM-DD
+  start_time: string;
+  end_time: string;
+  notes: string | null;
+};
+
+export const listMenuSpecialsPublic = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ specials: SpecialEntry[] }> => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseAdmin
+      .from("menu_schedule_specials")
+      .select("id, menu_key, slot_date, start_time, end_time, notes")
+      .gte("slot_date", today)
+      .order("slot_date", { ascending: true })
+      .order("start_time", { ascending: true });
+    if (error) throw error;
+    return { specials: (data ?? []) as SpecialEntry[] };
+  },
+);
+
+export const listMenuSpecials = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ specials: SpecialEntry[] }> => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await context.supabase
+      .from("menu_schedule_specials")
+      .select("id, menu_key, slot_date, start_time, end_time, notes")
+      .gte("slot_date", today)
+      .order("slot_date", { ascending: true })
+      .order("start_time", { ascending: true });
+    if (error) throw error;
+    return { specials: (data ?? []) as SpecialEntry[] };
+  });
+
+const SpecialInput = z.object({
+  menu_key: z.string().min(1).max(40),
+  slot_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  notes: z.string().max(500).optional().nullable(),
+});
+
+export const addMenuSpecial = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => SpecialInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("menu_schedule_specials")
+      .insert(data)
+      .select("id, menu_key, slot_date, start_time, end_time, notes")
+      .single();
+    if (error) throw error;
+    return { special: row as SpecialEntry };
+  });
+
+export const deleteMenuSpecial = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("menu_schedule_specials")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 /**
- * Pick the active menu key from a schedule given the current local time.
- * Uses the first matching window (ordered by day, then start_time).
+ * Pick the active menu key. Specials take priority over the recurring schedule.
  */
 export function pickActiveMenuKey(
   entries: ScheduleEntry[],
   now: Date = new Date(),
+  specials: SpecialEntry[] = [],
 ): string | null {
-  const day = now.getDay(); // 0=Sun..6=Sat
+  const day = now.getDay();
   const yesterday = (day + 6) % 7;
   const cur = now.getHours() * 60 + now.getMinutes();
   const toMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   };
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  // Specials first — exact-date match
+  for (const s of specials) {
+    if (s.slot_date !== todayStr) continue;
+    const st = toMin(s.start_time);
+    const en = toMin(s.end_time);
+    if (st === en) return s.menu_key;
+    if (st < en) {
+      if (cur >= st && cur < en) return s.menu_key;
+    } else {
+      // wrap-around (start > end), spans midnight
+      if (cur >= st) return s.menu_key;
+    }
+  }
+
   for (const e of entries) {
     const s = toMin(e.start_time);
     const en = toMin(e.end_time);
-    // Case 1: all-day window (start == end)
     if (s === en) {
       if (e.day_of_week === day) return e.menu_key;
       continue;
     }
-    // Case 2: same-day window (start < end), no wrap
     if (s < en) {
       if (e.day_of_week === day && cur >= s && cur < en) return e.menu_key;
       continue;
     }
-    // Case 3: wrap-around window (start > end), spans midnight.
-    // day_of_week is the START day:
-    //   (a) we are still on the start day, after start time
-    //   (b) we are on the day after the start day, before end time
     if (e.day_of_week === day && cur >= s) return e.menu_key;
     if (e.day_of_week === yesterday && cur < en) return e.menu_key;
   }

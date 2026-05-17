@@ -15,8 +15,10 @@ import {
 } from "@/lib/menu-display.functions";
 import {
   listMenuSchedulePublic,
+  listMenuSpecialsPublic,
   pickActiveMenuKey,
   type ScheduleEntry,
+  type SpecialEntry,
 } from "@/lib/menu-schedule.functions";
 import { collectUsedFonts, ensureGoogleFontsLoaded } from "@/lib/menu-fonts";
 import savsavLogoSvg from "@/assets/logo.svg";
@@ -35,17 +37,21 @@ export const Route = createFileRoute("/menu")({
   loaderDeps: ({ search }) => ({ menu: search.menu }),
   loader: async ({ deps }) => {
     const isAuto = deps.menu === "auto";
-    const [formatting, displayMenu, schedule] = await Promise.all([
+    const [formatting, displayMenu, schedule, specials] = await Promise.all([
       getMenuFormatting().catch(() => ({} as MenuFormatting)),
       getDisplayMenu({ data: {} }),
       isAuto
         ? listMenuSchedulePublic().catch(() => ({ entries: [] as ScheduleEntry[] }))
         : Promise.resolve({ entries: [] as ScheduleEntry[] }),
+      isAuto
+        ? listMenuSpecialsPublic().catch(() => ({ specials: [] as SpecialEntry[] }))
+        : Promise.resolve({ specials: [] as SpecialEntry[] }),
     ]);
     return {
       formatting: (formatting ?? {}) as MenuFormatting,
       displayMenu,
       scheduleEntries: schedule.entries,
+      specialEntries: specials.specials,
     };
   },
   staleTime: 60_000,
@@ -393,7 +399,7 @@ const COLUMN_CSS = `
 
 function DisplayPage() {
   const { debug, menu, lang } = Route.useSearch();
-  const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
+  const { formatting, displayMenu, scheduleEntries, specialEntries } = Route.useLoaderData();
   const router = useRouter();
   const invalidateCache = useServerFn(invalidateDisplayMenuCache);
   const flowRef = useRef<HTMLDivElement | null>(null);
@@ -471,9 +477,9 @@ function DisplayPage() {
 
   const activeMenuKey = useMemo(() => {
     if (!isAuto) return menu;
-    const picked = pickActiveMenuKey(scheduleEntries, new Date(nowTick));
+    const picked = pickActiveMenuKey(scheduleEntries, new Date(nowTick), specialEntries);
     return picked ?? undefined;
-  }, [isAuto, menu, scheduleEntries, nowTick]);
+  }, [isAuto, menu, scheduleEntries, specialEntries, nowTick]);
 
   const menus = useMemo(
     () => mapDisplayMenuToMenus(displayMenu, activeMenuKey, lang),
