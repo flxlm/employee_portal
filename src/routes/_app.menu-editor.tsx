@@ -1011,6 +1011,12 @@ function MenuEditorPage() {
             <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
               {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
             </Button>
+            <Button size="sm" variant="outline" onClick={handleTranslateAll} disabled={translatingAll}>
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden xs:inline sm:inline">
+                {translatingAll ? "Translating…" : "Translate missing"}
+              </span>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm">
