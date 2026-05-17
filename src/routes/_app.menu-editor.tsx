@@ -1040,7 +1040,11 @@ function MenuEditorPage() {
             <Button size="sm" variant="outline" onClick={handleTranslateAll} disabled={translatingAll}>
               <Sparkles className="h-4 w-4" />
               <span className="hidden xs:inline sm:inline">
-                {translatingAll ? "Translating…" : "Translate missing"}
+                {translatingAll
+                  ? translateProgress
+                    ? `Translating ${translateProgress.done}/${translateProgress.total}…`
+                    : "Translating…"
+                  : "Translate missing"}
               </span>
             </Button>
             <DropdownMenu>
