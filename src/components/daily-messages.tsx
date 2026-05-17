@@ -14,14 +14,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
-import { Megaphone, Trash2, Plus, CalendarIcon, RotateCcw, CheckCircle2 } from "lucide-react";
+  Megaphone,
+  Trash2,
+  Plus,
+  CalendarIcon,
+  RotateCcw,
+  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
