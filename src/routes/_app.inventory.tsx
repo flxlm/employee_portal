@@ -303,9 +303,7 @@ function InventoryPage() {
                           <span className="inline-flex items-center">Item <SortIcon column="name" /></span>
                         </TableHead>
                         <TableHead className="w-32">Category</TableHead>
-                        <TableHead className="w-20 text-right cursor-pointer select-none" onClick={() => handleSort("status")}>
-                          <span className="inline-flex items-center">Qty <SortIcon column="status" /></span>
-                        </TableHead>
+                        <TableHead className="w-20 text-right">Qty</TableHead>
                         <TableHead className="w-16">Unit</TableHead>
                         <TableHead className="w-28 cursor-pointer select-none" onClick={() => handleSort("status")}>
                           <span className="inline-flex items-center">Status <SortIcon column="status" /></span>
