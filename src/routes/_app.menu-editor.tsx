@@ -195,63 +195,56 @@ function BilingualField({
     if (doNotTranslate) onChange({ fr: v, en: v, hint: "en" });
     else onChange({ fr, en: v, hint: "en" });
   };
-  const Renderer = ({
-    value,
-    onValue,
-    placeholder,
-    className,
-    disabled,
-  }: {
-    value: string;
-    onValue: (v: string) => void;
-    placeholder?: string;
-    className?: string;
-    disabled?: boolean;
-  }) =>
-    multiline ? (
-      <Textarea
-        rows={rows}
-        value={value}
-        onChange={(e) => onValue(e.target.value)}
-        placeholder={placeholder}
-        className={className}
-        disabled={disabled}
-      />
-    ) : (
-      <Input
-        value={value}
-        onChange={(e) => onValue(e.target.value)}
-        placeholder={placeholder}
-        className={className}
-        disabled={disabled}
-      />
-    );
   const srcAccent = "border-l-[3px] border-l-primary";
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       <div className="space-y-0.5">
-        <Renderer
-          value={fr}
-          onValue={handleFr}
-          placeholder={placeholderFr}
-          className={cn(inputClassName, sourceLang === "fr" && !doNotTranslate && srcAccent)}
-        />
+        {multiline ? (
+          <Textarea
+            rows={rows}
+            value={fr}
+            onChange={(e) => handleFr(e.target.value)}
+            placeholder={placeholderFr}
+            className={cn(inputClassName, sourceLang === "fr" && !doNotTranslate && srcAccent)}
+          />
+        ) : (
+          <Input
+            value={fr}
+            onChange={(e) => handleFr(e.target.value)}
+            placeholder={placeholderFr}
+            className={cn(inputClassName, sourceLang === "fr" && !doNotTranslate && srcAccent)}
+          />
+        )}
         <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
           <span>FR</span>
           {!doNotTranslate && sourceLang === "en" && isManualOverrideFr && <span>· manual</span>}
         </div>
       </div>
       <div className="space-y-0.5">
-        <Renderer
-          value={enVal}
-          onValue={handleEn}
-          placeholder={placeholderEn}
-          className={cn(
-            inputClassName,
-            sourceLang === "en" && !doNotTranslate && srcAccent,
-            doNotTranslate && "opacity-70",
-          )}
-        />
+        {multiline ? (
+          <Textarea
+            rows={rows}
+            value={enVal}
+            onChange={(e) => handleEn(e.target.value)}
+            placeholder={placeholderEn}
+            className={cn(
+              inputClassName,
+              sourceLang === "en" && !doNotTranslate && srcAccent,
+              doNotTranslate && "opacity-70",
+            )}
+          />
+        ) : (
+          <Input
+            value={enVal}
+            onChange={(e) => handleEn(e.target.value)}
+            placeholder={placeholderEn}
+            className={cn(
+              inputClassName,
+              sourceLang === "en" && !doNotTranslate && srcAccent,
+              doNotTranslate && "opacity-70",
+            )}
+          />
+        )}
         <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
           <span>EN</span>
           {doNotTranslate && (
