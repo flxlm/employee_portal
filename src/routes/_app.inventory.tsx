@@ -85,6 +85,7 @@ function InventoryPage() {
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
+  const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const toggleExpanded = (id: string) =>
     setExpandedRows((prev) => {
