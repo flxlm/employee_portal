@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 type DailyMessage = {
   id: string;
   message: string;
+  visible_from: string;
   expires_at: string;
   created_at: string;
   created_by: string | null;
@@ -40,10 +41,22 @@ function endOfDayIso(d: Date): string {
   return x.toISOString();
 }
 
+function startOfDayIso(d: Date): string {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString();
+}
+
 function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
 }
 
 function formatPretty(d: Date): string {
@@ -60,6 +73,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [visibleFrom, setVisibleFrom] = useState<Date>(() => startOfToday());
   const [expiresOn, setExpiresOn] = useState<Date>(() => startOfToday());
   const [saving, setSaving] = useState(false);
 
@@ -67,8 +81,9 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
     setLoading(true);
     const { data, error } = await supabase
       .from("daily_messages")
-      .select("id, message, expires_at, created_at, created_by")
+      .select("id, message, visible_from, expires_at, created_at, created_by")
       .gt("expires_at", new Date().toISOString())
+      .order("visible_from", { ascending: true })
       .order("created_at", { ascending: false });
     setLoading(false);
     if (error) {
@@ -82,14 +97,24 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
     load();
   }, [load]);
 
+  const applyQuickRange = (from: Date, to: Date) => {
+    setVisibleFrom(from);
+    setExpiresOn(to);
+  };
+
   const submit = async () => {
     if (!text.trim()) {
       toast.error("Message required");
       return;
     }
+    if (expiresOn < visibleFrom) {
+      toast.error("End date must be on or after the start date");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("daily_messages").insert({
       message: text.trim(),
+      visible_from: startOfDayIso(visibleFrom),
       expires_at: endOfDayIso(expiresOn),
       created_by: userId,
     });
@@ -99,6 +124,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setText("");
+    setVisibleFrom(startOfToday());
     setExpiresOn(startOfToday());
     toast.success("Message posted");
     load();
@@ -163,7 +189,60 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
               placeholder="Share a note with the team…"
               rows={2}
             />
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Today", from: startOfToday(), to: startOfToday() },
+                { label: "Tomorrow", from: addDays(startOfToday(), 1), to: addDays(startOfToday(), 1) },
+                { label: "Next 7 days", from: startOfToday(), to: addDays(startOfToday(), 6) },
+                { label: "Next 30 days", from: startOfToday(), to: addDays(startOfToday(), 29) },
+              ].map((q) => {
+                const active =
+                  startOfDayIso(visibleFrom) === startOfDayIso(q.from) &&
+                  startOfDayIso(expiresOn) === startOfDayIso(q.to);
+                return (
+                  <Button
+                    key={q.label}
+                    type="button"
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    onClick={() => applyQuickRange(q.from, q.to)}
+                  >
+                    {q.label}
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="flex flex-wrap items-end gap-3">
+              <div className="grid gap-1">
+                <Label className="text-xs">Visible from</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("w-52 justify-start font-normal")}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      {formatPretty(visibleFrom)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={visibleFrom}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        setVisibleFrom(d);
+                        if (expiresOn < d) setExpiresOn(d);
+                      }}
+                      disabled={(d) => d < startOfToday()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="grid gap-1">
                 <Label className="text-xs">Visible until end of</Label>
                 <Popover>
@@ -171,7 +250,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
                     <Button
                       variant="outline"
                       size="sm"
-                      className={cn("w-56 justify-start font-normal")}
+                      className={cn("w-52 justify-start font-normal")}
                     >
                       <CalendarIcon className="h-4 w-4 mr-2" />
                       {formatPretty(expiresOn)}
@@ -182,8 +261,9 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
                       mode="single"
                       selected={expiresOn}
                       onSelect={(d) => d && setExpiresOn(d)}
-                      disabled={(d) => d < startOfToday()}
+                      disabled={(d) => d < visibleFrom}
                       initialFocus
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
@@ -234,9 +314,13 @@ function MessageCarousel({
             {!atEnd ? (
               <>
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    Until {new Date(messages[index].expires_at).toLocaleDateString()}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {new Date(messages[index].visible_from) > new Date()
+                        ? `Scheduled · ${new Date(messages[index].visible_from).toLocaleDateString()} → ${new Date(messages[index].expires_at).toLocaleDateString()}`
+                        : `Until ${new Date(messages[index].expires_at).toLocaleDateString()}`}
+                    </span>
+                  </div>
                   {isAdmin && (
                     <Button
                       size="icon"
