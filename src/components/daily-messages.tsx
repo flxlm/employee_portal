@@ -197,3 +197,88 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
     </Dialog>
   );
 }
+
+function MessageCarousel({
+  messages,
+  isAdmin,
+  onRemove,
+}: {
+  messages: DailyMessage[];
+  isAdmin: boolean;
+  onRemove: (id: string) => void;
+}) {
+  const [api, setApi] = useState<CarouselApi | null>(null);
+  const [index, setIndex] = useState(0);
+  const total = messages.length;
+
+  useEffect(() => {
+    if (!api) return;
+    const onSelect = () => setIndex(api.selectedScrollSnap());
+    onSelect();
+    api.on("select", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  if (total === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-10">
+        No messages yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="relative px-10">
+      <Carousel setApi={setApi} opts={{ align: "start", loop: false }}>
+        <CarouselContent>
+          {messages.map((m) => (
+            <CarouselItem key={m.id}>
+              <Card className="min-h-[180px]">
+                <CardContent className="pt-5 pb-4 flex flex-col gap-3 h-full">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Until {new Date(m.expires_at).toLocaleDateString()}
+                    </span>
+                    {isAdmin && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 -mt-1 text-muted-foreground hover:text-destructive"
+                        onClick={() => onRemove(m.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap flex-1">{m.message}</p>
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+          <CarouselItem key="__done__">
+            <Card className="min-h-[180px] border-dashed">
+              <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center gap-3 h-full">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+                <p className="text-sm font-medium">You're all caught up</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => api?.scrollTo(0)}
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" /> Go back to the beginning
+                </Button>
+              </CardContent>
+            </Card>
+          </CarouselItem>
+        </CarouselContent>
+        <CarouselPrevious className="-left-2" />
+        <CarouselNext className="-right-2" />
+      </Carousel>
+      <p className="mt-3 text-center text-[11px] text-muted-foreground">
+        {index < total ? `${index + 1} of ${total}` : "End"}
+      </p>
+    </div>
+  );
+}
