@@ -1063,7 +1063,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Suppliers & costs</DialogTitle>
-          <DialogDescription>{item?.name} — compare prices across suppliers.</DialogDescription>
+          <DialogDescription>{item?.name} — cost is for the listed pack size ({item?.unit || "unit"}).</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
