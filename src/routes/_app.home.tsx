@@ -29,6 +29,7 @@ function HomePage() {
   const [order, setOrder] = useState<string[] | null>(null);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [overKey, setOverKey] = useState<string | null>(null);
+  const [draftOrder, setDraftOrder] = useState<string[] | null>(null);
 
   const storageKey = user ? `home:tile-order:${user.id}` : null;
 
@@ -66,10 +67,11 @@ function HomePage() {
   ];
 
   const orderedTiles = useMemo(() => {
-    if (!order) return tiles;
+    const activeOrder = draftOrder ?? order;
+    if (!activeOrder) return tiles;
     const byKey = new Map(tiles.map((t) => [t.key, t]));
     const result: Tile[] = [];
-    for (const k of order) {
+    for (const k of activeOrder) {
       const t = byKey.get(k);
       if (t) {
         result.push(t);
@@ -79,15 +81,7 @@ function HomePage() {
     // Append any tiles not in saved order (new ones, or admin tiles that appeared later)
     for (const t of tiles) if (byKey.has(t.key)) result.push(t);
     return result;
-  }, [order, tiles]);
-
-  const persist = (next: Tile[]) => {
-    const keys = next.map((t) => t.key);
-    setOrder(keys);
-    if (storageKey) {
-      try { localStorage.setItem(storageKey, JSON.stringify(keys)); } catch { /* ignore */ }
-    }
-  };
+  }, [draftOrder, order, tiles]);
 
   const moveTile = (from: string, to: string) => {
     if (from === to) return;
@@ -97,14 +91,11 @@ function HomePage() {
     if (fromIdx < 0 || toIdx < 0) return;
     const [moved] = list.splice(fromIdx, 1);
     list.splice(toIdx, 0, moved);
-    persist(list);
+    setDraftOrder(list.map((t) => t.key));
   };
 
   const resetOrder = () => {
-    setOrder([]);
-    if (storageKey) {
-      try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
-    }
+    setDraftOrder(order ?? []);
   };
 
   const greeting = (() => {
@@ -128,7 +119,21 @@ function HomePage() {
           <Button
             variant={editing ? "default" : "outline"}
             size="sm"
-            onClick={() => setEditing((v) => !v)}
+            onClick={() => {
+              if (editing) {
+                if (draftOrder !== null) {
+                  setOrder(draftOrder);
+                  if (storageKey) {
+                    try { localStorage.setItem(storageKey, JSON.stringify(draftOrder)); } catch { /* ignore */ }
+                  }
+                }
+                setDraftOrder(null);
+                setEditing(false);
+              } else {
+                setDraftOrder(order ?? []);
+                setEditing(true);
+              }
+            }}
           >
             {editing ? <><Check className="h-4 w-4 mr-1" /> Done</> : <><Pencil className="h-4 w-4 mr-1" /> Reorder</>}
           </Button>
