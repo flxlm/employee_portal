@@ -224,6 +224,100 @@ function LiveMenuTimetablePage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6 border-primary/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Add a Special Time Slot
+          </CardTitle>
+          <CardDescription>
+            One-off slot for a specific date. Overrides the regular schedule and disappears automatically after the day passes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_150px_120px_120px_auto] md:grid-rows-[auto_auto] gap-x-3 gap-y-1.5 items-center"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!spMenuKey) {
+                toast.error("Pick a menu");
+                return;
+              }
+              if (spDate < todayStr) {
+                toast.error("Date must be today or later");
+                return;
+              }
+              addSpecialMut.mutate();
+            }}
+          >
+            <Label className="md:row-start-1 md:col-start-1">Menu</Label>
+            <Label className="md:row-start-1 md:col-start-2">Date</Label>
+            <Label className="md:row-start-1 md:col-start-3">Start</Label>
+            <Label className="md:row-start-1 md:col-start-4">End</Label>
+            <span className="hidden md:block md:row-start-1 md:col-start-5" aria-hidden />
+
+            <Select value={spMenuKey} onValueChange={setSpMenuKey}>
+              <SelectTrigger className="md:row-start-2 md:col-start-1"><SelectValue placeholder="Select menu" /></SelectTrigger>
+              <SelectContent>
+                {menus.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="md:row-start-2 md:col-start-2"
+              type="date"
+              value={spDate}
+              min={todayStr}
+              onChange={(e) => setSpDate(e.target.value)}
+            />
+            <Input
+              className="md:row-start-2 md:col-start-3"
+              type="time"
+              value={spStart}
+              onChange={(e) => setSpStart(e.target.value)}
+            />
+            <Input
+              className="md:row-start-2 md:col-start-4"
+              type="time"
+              value={spEnd}
+              onChange={(e) => setSpEnd(e.target.value)}
+            />
+            <Button
+              type="submit"
+              disabled={addSpecialMut.isPending}
+              className="w-full md:w-auto md:row-start-2 md:col-start-5"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
+          </form>
+
+          {specials.length > 0 && (
+            <ul className="mt-4 divide-y divide-border">
+              {specials.map((s) => {
+                const menuLabel = menus.find((m) => m.key === s.menu_key)?.label ?? s.menu_key;
+                const d = new Date(s.slot_date + "T00:00:00");
+                return (
+                  <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="font-medium">{menuLabel}</span>
+                      <span className="text-muted-foreground">
+                        {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                        {" · "}
+                        {fmtTime(s.start_time)}–{fmtTime(s.end_time)}
+                      </span>
+                    </div>
+                    <Button size="icon" variant="ghost" onClick={() => removeSpecialMut.mutate(s.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Schedule</CardTitle>
