@@ -1006,6 +1006,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
   const [loading, setLoading] = useState(false);
   const [supplier, setSupplier] = useState("");
   const [cost, setCost] = useState("");
+  const [packSize, setPackSize] = useState("1");
   const [notes, setNotes] = useState("");
 
   const load = useCallback(async () => {
