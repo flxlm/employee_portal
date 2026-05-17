@@ -94,6 +94,19 @@ function InventoryPage() {
       return next;
     });
 
+  const handleSort = (key: SortKey) => {
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  };
+
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sort.key !== column) return <ArrowUp className="h-3 w-3 ml-1 text-muted-foreground opacity-30" />;
+    return sort.dir === "asc" ? (
+      <ArrowUp className="h-3 w-3 ml-1 text-foreground" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1 text-foreground" />
+    );
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, JSON.stringify(sort));
   }, [sort]);
