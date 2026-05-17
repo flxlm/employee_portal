@@ -560,17 +560,25 @@ function InlineNumber({ value, onSave }: { value: number; onSave: (v: number) =>
 function PendingPanel({
   requests,
   items,
+  categories,
   userName,
 }: {
   requests: OrderRequest[];
   items: InventoryItem[];
+  categories: InventoryCategory[];
   userName: (id: string | null) => string;
 }) {
+  const [groupBy, setGroupBy] = useState<"category" | "supplier">("category");
   const itemMap = useMemo(() => {
     const m: Record<string, InventoryItem> = {};
     for (const i of items) m[i.id] = i;
     return m;
   }, [items]);
+  const catMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const c of categories) m[c.id] = c.name;
+    return m;
+  }, [categories]);
 
   const markReceived = async (r: OrderRequest) => {
     const { error } = await supabase
@@ -581,41 +589,83 @@ function PendingPanel({
     else toast.success("Marked received");
   };
 
+  const groups = useMemo(() => {
+    const map = new Map<string, OrderRequest[]>();
+    for (const r of requests) {
+      let key: string;
+      if (groupBy === "category") {
+        const it = r.inventory_item_id ? itemMap[r.inventory_item_id] : null;
+        key = it ? catMap[it.category_id] ?? "Uncategorized" : "Ad-hoc";
+      } else {
+        key = (r.supplier ?? "").trim() || "No supplier";
+      }
+      const arr = map.get(key) ?? [];
+      arr.push(r);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [requests, groupBy, itemMap, catMap]);
+
   return (
     <Card className="p-4 h-fit">
-      <h2 className="font-semibold text-sm mb-1">Pending order requests</h2>
+      <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+        <h2 className="font-semibold text-sm">Pending order requests</h2>
+        <div className="inline-flex rounded-md border border-border p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setGroupBy("category")}
+            className={`px-2 py-1 rounded ${groupBy === "category" ? "bg-muted font-medium" : "text-muted-foreground"}`}
+          >
+            By category
+          </button>
+          <button
+            type="button"
+            onClick={() => setGroupBy("supplier")}
+            className={`px-2 py-1 rounded ${groupBy === "supplier" ? "bg-muted font-medium" : "text-muted-foreground"}`}
+          >
+            By supplier
+          </button>
+        </div>
+      </div>
       <p className="text-xs text-muted-foreground mb-3">
         What's already been flagged for reorder. Avoid duplicates.
       </p>
-      <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-        {requests.length === 0 && (
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+        {groups.length === 0 && (
           <p className="text-xs text-muted-foreground">Nothing flagged.</p>
         )}
-        {requests.map((r) => {
-          const name = r.inventory_item_id
-            ? itemMap[r.inventory_item_id]?.name ?? "(item removed)"
-            : r.ad_hoc_name ?? "Ad-hoc request";
-          return (
-            <div key={r.id} className="text-sm border border-border rounded-md p-2 flex items-start gap-2">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{name}</div>
-                {r.quantity_needed != null && (
-                  <div className="text-xs text-muted-foreground">
-                    Need {r.quantity_needed} {r.unit ?? ""}
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground mt-1">
-                  {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
-                  {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
-                </div>
-                {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
-              </div>
-              <Button size="sm" variant="outline" onClick={() => markReceived(r)}>
-                Received
-              </Button>
+        {groups.map(([groupName, rows]) => (
+          <div key={groupName} className="space-y-2">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+              {groupName} <span className="text-muted-foreground/70">({rows.length})</span>
             </div>
-          );
-        })}
+            {rows.map((r) => {
+              const name = r.inventory_item_id
+                ? itemMap[r.inventory_item_id]?.name ?? "(item removed)"
+                : r.ad_hoc_name ?? "Ad-hoc request";
+              return (
+                <div key={r.id} className="text-sm border border-border rounded-md p-2 flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{name}</div>
+                    {r.quantity_needed != null && (
+                      <div className="text-xs text-muted-foreground">
+                        Need {r.quantity_needed} {r.unit ?? ""}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
+                      {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
+                    </div>
+                    {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => markReceived(r)}>
+                    Received
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </Card>
   );
