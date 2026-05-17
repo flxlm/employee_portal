@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, MoreVertical, Search, Minus, Settings2, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, MoreVertical, Search, Minus, Settings2, X, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   computeStatus,
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_app/inventory")({
 });
 
 type SortKey = "name" | "status" | "updated";
+type SortConfig = { key: SortKey; dir: "asc" | "desc" };
 const SORT_STORAGE = "inventory:sort";
 
 const STATUS_ORDER = { OUT: 0, LOW: 1, "AT PAR": 2, OK: 3 } as const;
@@ -46,9 +47,16 @@ function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>(() => {
-    if (typeof window === "undefined") return "name";
-    return (window.localStorage.getItem(SORT_STORAGE) as SortKey) || "name";
+  const [sort, setSort] = useState<SortConfig>(() => {
+    if (typeof window === "undefined") return { key: "name", dir: "asc" };
+    const stored = window.localStorage.getItem(SORT_STORAGE);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as SortConfig;
+        if (parsed.key && parsed.dir) return parsed;
+      } catch { /* fallthrough */ }
+    }
+    return { key: "name", dir: "asc" };
   });
 
   const [addItemOpen, setAddItemOpen] = useState(false);
@@ -86,8 +94,21 @@ function InventoryPage() {
       return next;
     });
 
+  const handleSort = (key: SortKey) => {
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  };
+
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sort.key !== column) return <ArrowUp className="h-3 w-3 ml-1 text-muted-foreground opacity-30" />;
+    return sort.dir === "asc" ? (
+      <ArrowUp className="h-3 w-3 ml-1 text-foreground" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1 text-foreground" />
+    );
+  };
+
   useEffect(() => {
-    if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
+    if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, JSON.stringify(sort));
   }, [sort]);
 
   useEffect(() => {
@@ -178,9 +199,11 @@ function InventoryPage() {
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((i) => i.name.toLowerCase().includes(q));
     rows = [...rows].sort((a, b) => {
-      if (sort === "name") return a.name.localeCompare(b.name);
-      if (sort === "updated") return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      return STATUS_ORDER[computeStatus(a)] - STATUS_ORDER[computeStatus(b)];
+      let cmp = 0;
+      if (sort.key === "name") cmp = a.name.localeCompare(b.name);
+      else if (sort.key === "updated") cmp = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      else cmp = STATUS_ORDER[computeStatus(a)] - STATUS_ORDER[computeStatus(b)];
+      return sort.dir === "asc" ? cmp : -cmp;
     });
     return rows;
   }, [items, activeCategory, search, sort]);
@@ -230,27 +253,6 @@ function InventoryPage() {
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Select value={activeCategory} onValueChange={setActiveCategory}>
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="name">Sort: Name</option>
-                  <option value="status">Sort: Status</option>
-                  <option value="updated">Sort: Last updated</option>
-                </select>
                 <Button size="sm" variant="outline" onClick={() => setAdHocOpen(true)}>
                   <Plus className="h-4 w-4" /> Ad-hoc request
                 </Button>
@@ -269,8 +271,20 @@ function InventoryPage() {
               )}
 
               <Card className="overflow-hidden">
-                <div className="border-b bg-muted/40 px-4 py-2">
-                  <div className="relative max-w-sm">
+                <div className="border-b bg-muted/40 px-4 py-2 flex items-center gap-3 flex-wrap">
+                  <Select value={activeCategory} onValueChange={setActiveCategory}>
+                    <SelectTrigger className="w-[180px] bg-background">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative max-w-sm flex-1 min-w-[200px]">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search items…"
@@ -285,11 +299,15 @@ function InventoryPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-10" />
-                        <TableHead className="min-w-[180px]">Item</TableHead>
+                        <TableHead className="min-w-[180px] cursor-pointer select-none" onClick={() => handleSort("name")}>
+                          <span className="inline-flex items-center">Item <SortIcon column="name" /></span>
+                        </TableHead>
                         <TableHead className="w-32">Category</TableHead>
                         <TableHead className="w-20 text-right">Qty</TableHead>
                         <TableHead className="w-16">Unit</TableHead>
-                        <TableHead className="w-28">Status</TableHead>
+                        <TableHead className="w-28 cursor-pointer select-none" onClick={() => handleSort("status")}>
+                          <span className="inline-flex items-center">Status <SortIcon column="status" /></span>
+                        </TableHead>
                         <TableHead className="w-[170px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
