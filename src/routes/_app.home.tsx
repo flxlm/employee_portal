@@ -83,14 +83,6 @@ function HomePage() {
     return result;
   }, [draftOrder, order, tiles]);
 
-  const persist = (next: Tile[]) => {
-    const keys = next.map((t) => t.key);
-    setOrder(keys);
-    if (storageKey) {
-      try { localStorage.setItem(storageKey, JSON.stringify(keys)); } catch { /* ignore */ }
-    }
-  };
-
   const moveTile = (from: string, to: string) => {
     if (from === to) return;
     const list = [...orderedTiles];
@@ -99,7 +91,7 @@ function HomePage() {
     if (fromIdx < 0 || toIdx < 0) return;
     const [moved] = list.splice(fromIdx, 1);
     list.splice(toIdx, 0, moved);
-    persist(list);
+    setDraftOrder(list.map((t) => t.key));
   };
 
   const resetOrder = () => {
