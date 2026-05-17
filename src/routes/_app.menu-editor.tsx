@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,7 @@ import {
   type MenuModification,
   type Lang,
 } from "@/lib/menu.functions";
-import { refreshDisplayMenu } from "@/lib/menu-display.functions";
+import { refreshDisplayMenu, refreshWebsiteMenu } from "@/lib/menu-display.functions";
 import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
 
 import { cn } from "@/lib/utils";
@@ -427,6 +427,23 @@ function MenuEditorPage() {
     refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
   };
 
+  const refreshWebsite = useServerFn(refreshWebsiteMenu);
+  const [refreshingWebsite, setRefreshingWebsite] = useState(false);
+  const [lastWebsiteRefresh, setLastWebsiteRefresh] = useState<string | null>(null);
+  const handleRefreshWebsite = async () => {
+    if (refreshingWebsite) return;
+    setRefreshingWebsite(true);
+    try {
+      const r = await refreshWebsite({});
+      setLastWebsiteRefresh(r.refreshed_at);
+      toast.success("Website menu refreshed");
+    } catch (err) {
+      console.error("[menu] refresh website failed", err);
+      toast.error(err instanceof Error ? err.message : "Refresh failed");
+    } finally {
+      setRefreshingWebsite(false);
+    }
+  };
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [menus, setMenus] = useState<MenuOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1034,6 +1051,18 @@ function MenuEditorPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefreshWebsite}
+              disabled={refreshingWebsite}
+              title={lastWebsiteRefresh ? `Last refreshed: ${new Date(lastWebsiteRefresh).toLocaleTimeString()}` : undefined}
+            >
+              <RefreshCw className={`h-4 w-4${refreshingWebsite ? " animate-spin" : ""}`} />
+              <span className="hidden xs:inline sm:inline">
+                {refreshingWebsite ? "Refreshing…" : "Refresh website"}
+              </span>
+            </Button>
             <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
               {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
             </Button>
