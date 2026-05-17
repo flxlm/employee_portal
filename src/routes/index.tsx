@@ -34,8 +34,7 @@ export const Route = createFileRoute("/")({
 
     if (isMenuHost(host)) {
       throw redirect({
-        to: "/display/$token",
-        params: { token: DEFAULT_DISPLAY_TOKEN },
+        to: "/menu",
         search: { menu: (search.menu as string | undefined) ?? "auto", lang: "fr" },
         replace: true,
       });
