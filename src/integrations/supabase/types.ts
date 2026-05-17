@@ -379,13 +379,22 @@ export type Database = {
           base_price_cents: number
           created_at: string
           description: string
+          description_en: string | null
+          description_is_manual_override: boolean
+          description_source_lang: string
+          description_translated_from: string | null
           display_order: number
+          do_not_translate: boolean
           id: string
           is_deleted: boolean
           is_hidden: boolean
           sold_out_date: string | null
           subsection_id: string
           title: string
+          title_en: string | null
+          title_is_manual_override: boolean
+          title_source_lang: string
+          title_translated_from: string | null
           updated_at: string
           version: number
         }
@@ -393,13 +402,22 @@ export type Database = {
           base_price_cents?: number
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           sold_out_date?: string | null
           subsection_id: string
           title?: string
+          title_en?: string | null
+          title_is_manual_override?: boolean
+          title_source_lang?: string
+          title_translated_from?: string | null
           updated_at?: string
           version?: number
         }
@@ -407,13 +425,22 @@ export type Database = {
           base_price_cents?: number
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           sold_out_date?: string | null
           subsection_id?: string
           title?: string
+          title_en?: string | null
+          title_is_manual_override?: boolean
+          title_source_lang?: string
+          title_translated_from?: string | null
           updated_at?: string
           version?: number
         }
@@ -468,11 +495,20 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          description_en: string | null
+          description_is_manual_override: boolean
+          description_source_lang: string
+          description_translated_from: string | null
           display_order: number
+          do_not_translate: boolean
           id: string
           is_deleted: boolean
           is_hidden: boolean
           name: string
+          name_en: string | null
+          name_is_manual_override: boolean
+          name_source_lang: string
+          name_translated_from: string | null
           sold_out_date: string | null
           updated_at: string
           version: number
@@ -481,11 +517,20 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          name_en?: string | null
+          name_is_manual_override?: boolean
+          name_source_lang?: string
+          name_translated_from?: string | null
           sold_out_date?: string | null
           updated_at?: string
           version?: number
@@ -494,11 +539,20 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          name_en?: string | null
+          name_is_manual_override?: boolean
+          name_source_lang?: string
+          name_translated_from?: string | null
           sold_out_date?: string | null
           updated_at?: string
           version?: number
@@ -510,11 +564,20 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          description_en: string | null
+          description_is_manual_override: boolean
+          description_source_lang: string
+          description_translated_from: string | null
           display_order: number
+          do_not_translate: boolean
           id: string
           is_deleted: boolean
           is_hidden: boolean
           name: string
+          name_en: string | null
+          name_is_manual_override: boolean
+          name_source_lang: string
+          name_translated_from: string | null
           section_id: string
           sold_out_date: string | null
           updated_at: string
@@ -524,11 +587,20 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          name_en?: string | null
+          name_is_manual_override?: boolean
+          name_source_lang?: string
+          name_translated_from?: string | null
           section_id: string
           sold_out_date?: string | null
           updated_at?: string
@@ -538,11 +610,20 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          description_en?: string | null
+          description_is_manual_override?: boolean
+          description_source_lang?: string
+          description_translated_from?: string | null
           display_order?: number
+          do_not_translate?: boolean
           id?: string
           is_deleted?: boolean
           is_hidden?: boolean
           name?: string
+          name_en?: string | null
+          name_is_manual_override?: boolean
+          name_source_lang?: string
+          name_translated_from?: string | null
           section_id?: string
           sold_out_date?: string | null
           updated_at?: string
