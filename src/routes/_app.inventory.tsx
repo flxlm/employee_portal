@@ -252,7 +252,6 @@ function InventoryPage() {
                         <TableHead className="w-24">Qty</TableHead>
                         <TableHead className="w-20">Unit</TableHead>
                         <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="hidden md:table-cell">Supplier / cost</TableHead>
                         <TableHead className="w-[180px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
