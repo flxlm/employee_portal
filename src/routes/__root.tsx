@@ -12,10 +12,6 @@ import { createServerFn } from "@tanstack/react-start";
 
 import appCss from "../styles.css?url";
 
-const DEFAULT_DISPLAY_TOKEN =
-  (import.meta.env.VITE_DEFAULT_DISPLAY_TOKEN as string | undefined) ||
-  "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
-
 function isMenuHost(host: string | null | undefined): boolean {
   if (!host) return false;
   const h = host.toLowerCase().split(":")[0];
