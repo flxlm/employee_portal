@@ -44,6 +44,7 @@ import {
 } from "@/lib/menu.functions";
 import { refreshDisplayMenu } from "@/lib/menu-display.functions";
 import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
+import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
 
 export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
@@ -239,6 +240,13 @@ function MenuEditorPage() {
   const [addingMenu, setAddingMenu] = useState(false);
   const fetchMenus = useServerFn(listMenus);
   const createMenu = useServerFn(addMenu);
+  const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
+  const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  useEffect(() => {
+    fetchWebhookUrl().then((r) => setWebhookUrl(r.url)).catch(() => {});
+  }, []);
   const revealDesc = (id: string) => setShowDesc((p) => { const n = new Set(p); n.add(id); return n; });
   const hasDesc = (id: string, val: string | null | undefined) => (val && val.length > 0) || showDesc.has(id);
 
@@ -855,6 +863,43 @@ function MenuEditorPage() {
           </div>
         </div>
       </header>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">Menu change webhook (optional)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground mb-2">
+            URL that receives a POST <code>{`{ event: "menu_updated", timestamp }`}</code> whenever the menu is republished. Leave blank to disable.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              type="url"
+              placeholder="https://example.com/webhooks/menu"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={webhookSaving}
+              onClick={async () => {
+                setWebhookSaving(true);
+                try {
+                  await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
+                  toast.success("Webhook URL saved");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Failed to save");
+                } finally {
+                  setWebhookSaving(false);
+                }
+              }}
+            >
+              <Save className="h-4 w-4" /> {webhookSaving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="space-y-6">
         {sections.map((sec, sIdx) => (

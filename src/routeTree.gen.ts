@@ -26,6 +26,7 @@ import { Route as AppEventsRouteImport } from './routes/_app.events'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as ApiPublicWebhookRouteImport } from './routes/api/public/webhook'
 import { Route as ApiPublicMenuRefreshRouteImport } from './routes/api/public/menu-refresh'
+import { Route as ApiPublicMenuRouteImport } from './routes/api/public/menu'
 import { Route as ApiPublicJotformEventInquiryRouteImport } from './routes/api/public/jotform-event-inquiry'
 
 const SignupRoute = SignupRouteImport.update({
@@ -112,6 +113,11 @@ const ApiPublicMenuRefreshRoute = ApiPublicMenuRefreshRouteImport.update({
   path: '/api/public/menu-refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMenuRoute = ApiPublicMenuRouteImport.update({
+  id: '/api/public/menu',
+  path: '/api/public/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJotformEventInquiryRoute =
   ApiPublicJotformEventInquiryRouteImport.update({
     id: '/api/public/jotform-event-inquiry',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_app/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
+  '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
   '/api/public/webhook': typeof ApiPublicWebhookRoute
 }
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/wines'
     | '/display/$token'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/wines'
     | '/display/$token'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
   id:
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/_app/wines'
     | '/display/$token'
     | '/api/public/jotform-event-inquiry'
+    | '/api/public/menu'
     | '/api/public/menu-refresh'
     | '/api/public/webhook'
   fileRoutesById: FileRoutesById
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   DisplayTokenRoute: typeof DisplayTokenRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
+  ApiPublicMenuRoute: typeof ApiPublicMenuRoute
   ApiPublicMenuRefreshRoute: typeof ApiPublicMenuRefreshRoute
   ApiPublicWebhookRoute: typeof ApiPublicWebhookRoute
 }
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMenuRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/menu': {
+      id: '/api/public/menu'
+      path: '/api/public/menu'
+      fullPath: '/api/public/menu'
+      preLoaderRoute: typeof ApiPublicMenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jotform-event-inquiry': {
       id: '/api/public/jotform-event-inquiry'
       path: '/api/public/jotform-event-inquiry'
@@ -416,6 +436,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   DisplayTokenRoute: DisplayTokenRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
+  ApiPublicMenuRoute: ApiPublicMenuRoute,
   ApiPublicMenuRefreshRoute: ApiPublicMenuRefreshRoute,
   ApiPublicWebhookRoute: ApiPublicWebhookRoute,
 }
