@@ -482,6 +482,7 @@ function InventoryPage() {
       )}
 
       <SuppliersDialog item={suppliersItem} onClose={() => setSuppliersItem(null)} />
+      <DetailDialog item={detailItem} onClose={() => setDetailItem(null)} categoryMap={categoryMap} userName={userName} />
     </div>
   );
 }
