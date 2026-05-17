@@ -40,7 +40,7 @@ export const Route = createFileRoute("/")({
       throw redirect({
         to: "/display/$token",
         params: { token: DEFAULT_DISPLAY_TOKEN },
-        search: { menu: (search.menu as string | undefined) ?? "auto" },
+        search: { menu: (search.menu as string | undefined) ?? "auto", lang: "fr" },
         replace: true,
       });
     }
