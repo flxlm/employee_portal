@@ -289,6 +289,149 @@ export const updateRow = createServerFn({ method: "POST" })
     delete safe.version;
     delete safe.created_at;
     delete safe.updated_at;
+
+    // Bilingual translation logic for translatable menu tables
+    const fields = TRANSLATABLE_BY_TABLE[table];
+    if (fields) {
+      const { data: cur } = await supabase
+        .from(table)
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      const current = cur as Record<string, unknown> | null;
+      if (current) {
+        const togglingDoNotTranslate = Object.prototype.hasOwnProperty.call(
+          safe,
+          "do_not_translate",
+        );
+        const doNotTranslate = (
+          togglingDoNotTranslate ? safe.do_not_translate : current.do_not_translate
+        ) as boolean;
+
+        const ops: Array<Promise<void>> = [];
+        for (const f of fields) {
+          const enKey = `${f}_en`;
+          const srcKey = `${f}_source_lang`;
+          const transFromKey = `${f}_translated_from`;
+          const overrideKey = `${f}_is_manual_override`;
+          const hintKey = `${f}_source_lang_hint`;
+
+          const hasFr = Object.prototype.hasOwnProperty.call(safe, f);
+          const hasEn = Object.prototype.hasOwnProperty.call(safe, enKey);
+          const hint = safe[hintKey] as Lang | undefined;
+          delete safe[hintKey];
+
+          // If just toggling do_not_translate (no text edits), still process to mirror
+          if (!hasFr && !hasEn && !togglingDoNotTranslate) continue;
+
+          const newFr = hasFr ? String(safe[f] ?? "") : String(current[f] ?? "");
+          const newEn = hasEn ? String(safe[enKey] ?? "") : String(current[enKey] ?? "");
+          const curFr = String(current[f] ?? "");
+          const curEn = String(current[enKey] ?? "");
+          const curSrc = ((current[srcKey] as Lang) ?? "fr") as Lang;
+          const curOverride = !!current[overrideKey];
+
+          if (doNotTranslate) {
+            const sourceLang: Lang = hint ?? curSrc;
+            const sourceText = sourceLang === "fr" ? newFr : newEn;
+            safe[f] = sourceText;
+            safe[enKey] = sourceText;
+            safe[srcKey] = sourceLang;
+            safe[transFromKey] = sourceText;
+            safe[overrideKey] = false;
+            continue;
+          }
+
+          const frChanged = newFr !== curFr;
+          const enChanged = newEn !== curEn;
+          if (!frChanged && !enChanged) {
+            delete safe[f];
+            delete safe[enKey];
+            continue;
+          }
+
+          let sourceLang: Lang;
+          if (frChanged && !enChanged) sourceLang = "fr";
+          else if (enChanged && !frChanged) sourceLang = "en";
+          else sourceLang = hint ?? curSrc;
+
+          const sourceChanged = sourceLang === "fr" ? frChanged : enChanged;
+          const nonSourceChanged = sourceLang === "fr" ? enChanged : frChanged;
+
+          if (nonSourceChanged && !sourceChanged) {
+            safe[f] = newFr;
+            safe[enKey] = newEn;
+            safe[srcKey] = curSrc;
+            safe[overrideKey] = true;
+            continue;
+          }
+          if (nonSourceChanged && sourceChanged) {
+            safe[f] = newFr;
+            safe[enKey] = newEn;
+            safe[srcKey] = sourceLang;
+            safe[transFromKey] = sourceLang === "fr" ? newFr : newEn;
+            safe[overrideKey] = true;
+            continue;
+          }
+          // Only source changed
+          if (curOverride) {
+            safe[f] = newFr;
+            safe[enKey] = newEn;
+            safe[srcKey] = sourceLang;
+            continue;
+          }
+          // Translate
+          const sourceText = sourceLang === "fr" ? newFr : newEn;
+          const targetLang: Lang = sourceLang === "fr" ? "en" : "fr";
+          if (!sourceText.trim()) {
+            safe[f] = newFr;
+            safe[enKey] = newEn;
+            safe[srcKey] = sourceLang;
+            safe[transFromKey] = sourceText;
+            safe[overrideKey] = false;
+            continue;
+          }
+          ops.push(
+            callLovableTranslate({
+              text: sourceText,
+              source_lang: sourceLang,
+              target_lang: targetLang,
+              type: fieldType(table, f),
+            })
+              .then((translated) => {
+                if (sourceLang === "fr") {
+                  safe[f] = newFr;
+                  safe[enKey] = translated;
+                } else {
+                  safe[enKey] = newEn;
+                  safe[f] = translated;
+                }
+                safe[srcKey] = sourceLang;
+                safe[transFromKey] = sourceText;
+                safe[overrideKey] = false;
+              })
+              .catch((err) => {
+                console.error(
+                  `[menu] translate failed for ${table}/${id}/${f}:`,
+                  err,
+                );
+                // Save source side as-is; leave non-source untouched
+                if (sourceLang === "fr") {
+                  safe[f] = newFr;
+                  delete safe[enKey];
+                } else {
+                  safe[enKey] = newEn;
+                  delete safe[f];
+                }
+                safe[srcKey] = sourceLang;
+                safe[transFromKey] = sourceText;
+              }),
+          );
+        }
+        await Promise.all(ops);
+      }
+    }
+
     safe.version = expectedVersion + 1;
 
     const { data: updated, error } = await supabase
