@@ -141,6 +141,8 @@ function HomePage() {
         </div>
       </header>
 
+      <DailyMessages isAdmin={isAdmin} userId={user?.id ?? null} />
+
       <div className="grid gap-4 sm:grid-cols-2">
         {orderedTiles.map(({ key, to, onClick, title, description, icon: Icon }) => {
           const isDragging = dragKey === key;
