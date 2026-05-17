@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Megaphone, Trash2, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Megaphone, Trash2, Plus, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type DailyMessage = {
   id: string;
@@ -16,31 +18,32 @@ type DailyMessage = {
   created_by: string | null;
 };
 
-function endOfTodayIso(): string {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d.toISOString();
+function endOfDayIso(d: Date): string {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x.toISOString();
 }
 
-function endOfDateIso(yyyyMmDd: string): string {
-  const [y, m, day] = yyyyMmDd.split("-").map(Number);
-  const d = new Date(y, (m ?? 1) - 1, day ?? 1, 23, 59, 59, 999);
-  return d.toISOString();
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-function todayInputValue(): string {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+function formatPretty(d: Date): string {
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: string | null }) {
   const [messages, setMessages] = useState<DailyMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
-  const [expiresOn, setExpiresOn] = useState(todayInputValue());
+  const [expiresOn, setExpiresOn] = useState<Date>(() => startOfToday());
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -68,7 +71,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setSaving(true);
-    const expires_at = expiresOn === todayInputValue() ? endOfTodayIso() : endOfDateIso(expiresOn);
+    const expires_at = endOfDayIso(expiresOn);
     const { error } = await supabase.from("daily_messages").insert({
       message: text.trim(),
       expires_at,
@@ -80,7 +83,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setText("");
-    setExpiresOn(todayInputValue());
+    setExpiresOn(startOfToday());
     toast.success("Message posted");
     load();
   };
@@ -120,20 +123,31 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
               <div className="flex flex-wrap items-end gap-3">
                 <div className="grid gap-1">
                   <Label className="text-xs">Visible until end of</Label>
-                  <Input
-                    type="date"
-                    value={expiresOn}
-                    min={todayInputValue()}
-                    onChange={(e) => setExpiresOn(e.target.value || todayInputValue())}
-                    className="w-44"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("w-56 justify-start font-normal")}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {formatPretty(expiresOn)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={expiresOn}
+                        onSelect={(d) => d && setExpiresOn(d)}
+                        disabled={(d) => d < startOfToday()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <Button onClick={submit} disabled={saving} size="sm">
                   <Plus className="h-4 w-4 mr-1" /> {saving ? "Posting…" : "Post"}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Default: disappears at end of today.
-                </p>
               </div>
             </CardContent>
           </Card>
