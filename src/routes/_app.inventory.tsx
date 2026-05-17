@@ -616,9 +616,6 @@ function PendingPanel({
           );
         })}
       </div>
-      <Button size="sm" variant="outline" className="w-full mt-3" onClick={onAdHoc}>
-        <Plus className="h-4 w-4" /> Add ad-hoc request
-      </Button>
     </Card>
   );
 }
