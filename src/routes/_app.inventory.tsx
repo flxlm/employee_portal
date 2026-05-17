@@ -361,7 +361,7 @@ function InventoryPage() {
                             {expandedRows.has(it.id) && (
                               <TableRow className="bg-muted/30 hover:bg-muted/30">
                                 <TableCell />
-                                <TableCell colSpan={5}>
+                                <TableCell colSpan={6}>
                                   <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1 items-center">
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Par:</span>
