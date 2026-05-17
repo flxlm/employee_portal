@@ -9,6 +9,16 @@ import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
+const DEFAULT_DISPLAY_TOKEN =
+  (import.meta.env.VITE_DEFAULT_DISPLAY_TOKEN as string | undefined) ||
+  "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
+
+function isMenuHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return h === "menu.savsav.net" || h.startsWith("menu.");
+}
+
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
@@ -28,6 +38,17 @@ function AppLayout() {
       window.localStorage.setItem("sidebar:collapsed", collapsed ? "1" : "0");
     }
   }, [collapsed]);
+
+  if (typeof window !== "undefined" && isMenuHost(window.location.host)) {
+    return (
+      <Navigate
+        to="/display/$token"
+        params={{ token: DEFAULT_DISPLAY_TOKEN }}
+        search={{ menu: "auto", lang: "fr" }}
+        replace
+      />
+    );
+  }
 
   useEffect(() => {
     if (!user) return;
