@@ -1084,6 +1084,71 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function DetailDialog({
+  item,
+  onClose,
+  categoryMap,
+  userName,
+}: {
+  item: InventoryItem | null;
+  onClose: () => void;
+  categoryMap: Record<string, string>;
+  userName: (id: string | null) => string;
+}) {
+  if (!item) return null;
+  const status = computeStatus(item);
+  return (
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{item.name}</DialogTitle>
+          <DialogDescription>
+            {categoryMap[item.category_id] ?? "—"} · {item.unit}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 text-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Current quantity</p>
+              <p className="font-medium">{item.current_quantity} {item.unit}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Status</p>
+              <Badge variant="outline" className={statusBadgeClass(status)}>{status}</Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Par level</p>
+              <p className="font-medium">{item.par_level} {item.unit}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Reorder threshold</p>
+              <p className="font-medium">{item.reorder_threshold} {item.unit}</p>
+            </div>
+          </div>
+          {item.last_supplier && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Last supplier</p>
+              <p className="font-medium">{item.last_supplier}</p>
+            </div>
+          )}
+          {item.notes && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Notes</p>
+              <p className="text-muted-foreground">{item.notes}</p>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Updated {timeAgo(item.updated_at)} · {userName(item.updated_by)}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClose: () => void }) {
   const [rows, setRows] = useState<InventoryItemSupplier[]>([]);
   const [loading, setLoading] = useState(false);
