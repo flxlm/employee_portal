@@ -43,8 +43,7 @@ export type DisplayMenu = {
   generated_at: string;
 };
 
-// Display token (rotate by changing here or wiring an env var)
-const DISPLAY_TOKEN = process.env.MENU_DISPLAY_TOKEN || "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
+// Display token retained only for the external public API (api/public/menu).
 
 // In-memory cache (5-min TTL). Fine on a single warm worker; cold starts will re-fetch.
 type CacheEntry = { data: DisplayMenu; expires: number };
