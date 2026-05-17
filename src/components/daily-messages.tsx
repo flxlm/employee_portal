@@ -71,7 +71,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setSaving(true);
-    const expires_at = expiresOn === todayInputValue() ? endOfTodayIso() : endOfDateIso(expiresOn);
+    const expires_at = endOfDayIso(expiresOn);
     const { error } = await supabase.from("daily_messages").insert({
       message: text.trim(),
       expires_at,
