@@ -813,7 +813,7 @@ function MenuEditorPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <a
-                    href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=auto`}
+                    href={`https://menu.savsav.net?menu=auto`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -823,7 +823,7 @@ function MenuEditorPage() {
                 {menus.map((opt) => (
                   <DropdownMenuItem key={opt.key} asChild>
                     <a
-                      href={`/display/YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU?menu=${encodeURIComponent(opt.key)}`}
+                      href={`https://menu.savsav.net?menu=${encodeURIComponent(opt.key)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
