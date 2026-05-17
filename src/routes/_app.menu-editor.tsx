@@ -372,6 +372,30 @@ function MenuEditorPage() {
       toast.error("Translation failed");
     }
   };
+  const translateAll = useServerFn(translateAllMissing);
+  const [translatingAll, setTranslatingAll] = useState(false);
+  const handleTranslateAll = async () => {
+    if (translatingAll) return;
+    setTranslatingAll(true);
+    try {
+      toast.info("Translating missing fields…");
+      const r = await translateAll({});
+      if (r.fieldsTranslated > 0) {
+        toast.success(
+          `Translated ${r.fieldsTranslated} field${r.fieldsTranslated > 1 ? "s" : ""} across ${r.rowsTouched} row${r.rowsTouched > 1 ? "s" : ""}${r.failures ? ` (${r.failures} failed)` : ""}`,
+        );
+        await reload();
+        triggerRefresh();
+      } else {
+        toast.info("Nothing to translate");
+      }
+    } catch (e) {
+      console.error("[menu] translateAll failed", e);
+      toast.error("Bulk translation failed");
+    } finally {
+      setTranslatingAll(false);
+    }
+  };
   const refreshDisplay = useServerFn(refreshDisplayMenu);
   const triggerRefresh = () => {
     refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
