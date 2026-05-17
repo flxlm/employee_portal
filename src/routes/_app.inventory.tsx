@@ -445,12 +445,6 @@ function InventoryPage() {
         userId={user?.id ?? null}
       />
 
-      <FlagDialog
-        item={flagItem}
-        onClose={() => setFlagItem(null)}
-        userId={user?.id ?? null}
-      />
-
       <AdHocDialog open={adHocOpen} onClose={() => setAdHocOpen(false)} userId={user?.id ?? null} />
 
       {isAdmin && (
