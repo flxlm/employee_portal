@@ -560,12 +560,10 @@ function PendingPanel({
   requests,
   items,
   userName,
-  onAdHoc,
 }: {
   requests: OrderRequest[];
   items: InventoryItem[];
   userName: (id: string | null) => string;
-  onAdHoc: () => void;
 }) {
   const itemMap = useMemo(() => {
     const m: Record<string, InventoryItem> = {};
