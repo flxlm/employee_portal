@@ -476,6 +476,109 @@ function MenuEditorPage() {
 
   const dirtyRef = useRef<Map<string, Dirty>>(new Map());
 
+  // ---- Optimistic-insert plumbing ----
+  // Temp rows are rendered immediately with a client-generated id while the
+  // real insert runs in the background. dirtyRef edits keyed under the temp id
+  // are re-keyed to the real id on success and auto-flushed.
+  type TableName = "menu_sections" | "menu_subsections" | "menu_items" | "item_modifications";
+  const pendingInsertsRef = useRef<Map<string, { table: TableName; timer: ReturnType<typeof setTimeout> }>>(new Map());
+  const retryFnsRef = useRef<Map<string, () => void>>(new Map());
+  const [savingTempIds, setSavingTempIds] = useState<Set<string>>(new Set());
+  const [failedTempIds, setFailedTempIds] = useState<Set<string>>(new Set());
+  const isPendingTemp = (id: string) => pendingInsertsRef.current.has(id);
+
+  const dismissTemp = (tempId: string) => {
+    setSections((s) =>
+      s
+        .filter((sec) => sec.id !== tempId)
+        .map((sec) => ({
+          ...sec,
+          subsections: sec.subsections
+            .filter((ss) => ss.id !== tempId)
+            .map((ss) => ({
+              ...ss,
+              items: ss.items
+                .filter((it) => it.id !== tempId)
+                .map((it) => ({
+                  ...it,
+                  modifications: it.modifications.filter((m) => m.id !== tempId),
+                })),
+            })),
+        }))
+    );
+    setFailedTempIds((p) => { if (!p.has(tempId)) return p; const n = new Set(p); n.delete(tempId); return n; });
+    retryFnsRef.current.delete(tempId);
+    for (const t of ["menu_sections","menu_subsections","menu_items","item_modifications"] as const) {
+      dirtyRef.current.delete(`${t}:${tempId}`);
+    }
+    setDirtyCount(dirtyRef.current.size);
+  };
+
+  const renderTempStatus = (tempId: string) => {
+    if (failedTempIds.has(tempId)) {
+      const retry = retryFnsRef.current.get(tempId);
+      return (
+        <div className="text-xs text-destructive flex items-center gap-3 px-1">
+          <span>Couldn't save</span>
+          {retry && <button type="button" className="underline" onClick={retry}>Retry</button>}
+          <button type="button" className="underline" onClick={() => dismissTemp(tempId)}>Dismiss</button>
+        </div>
+      );
+    }
+    if (savingTempIds.has(tempId)) {
+      return <div className="text-xs text-muted-foreground px-1">Saving…</div>;
+    }
+    return null;
+  };
+
+  const runOptimisticInsert = (params: {
+    table: TableName;
+    tempId: string;
+    values: Record<string, unknown>;
+    onReconcile: (real: { id: string; version: number; display_order: number }) => void;
+  }) => {
+    const { table, tempId, values, onReconcile } = params;
+    const attempt = () => {
+      setFailedTempIds((p) => { if (!p.has(tempId)) return p; const n = new Set(p); n.delete(tempId); return n; });
+      const timer = setTimeout(() => {
+        setSavingTempIds((p) => { const n = new Set(p); n.add(tempId); return n; });
+      }, 1500);
+      pendingInsertsRef.current.set(tempId, { table, timer });
+      insert({ data: { table: table as never, values: values as never } })
+        .then(({ row }) => {
+          const real = row as { id: string; version: number; display_order: number };
+          clearTimeout(timer);
+          pendingInsertsRef.current.delete(tempId);
+          retryFnsRef.current.delete(tempId);
+          setSavingTempIds((p) => { if (!p.has(tempId)) return p; const n = new Set(p); n.delete(tempId); return n; });
+          onReconcile(real);
+          const oldKey = `${table}:${tempId}`;
+          const queued = dirtyRef.current.get(oldKey);
+          if (queued) {
+            dirtyRef.current.delete(oldKey);
+            dirtyRef.current.set(`${table}:${real.id}`, {
+              ...queued,
+              id: real.id,
+              expectedVersion: real.version,
+            });
+            // Persist edits the user typed while the insert was in flight
+            void flush();
+          }
+          triggerRefresh();
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          pendingInsertsRef.current.delete(tempId);
+          setSavingTempIds((p) => { if (!p.has(tempId)) return p; const n = new Set(p); n.delete(tempId); return n; });
+          setFailedTempIds((p) => { const n = new Set(p); n.add(tempId); return n; });
+          console.error(`[menu] optimistic insert failed for ${table}/${tempId}`, err);
+          toast.error("Couldn't save — retry from the row");
+        });
+    };
+    retryFnsRef.current.set(tempId, attempt);
+    attempt();
+  };
+
   const reload = async () => {
     const [res, m] = await Promise.all([list(), fetchMenus()]);
     setSections(res.sections);
