@@ -601,10 +601,18 @@ function MenuEditorPage() {
   }, [dirtyCount]);
 
   const flush = async () => {
-    const items = Array.from(dirtyRef.current.values());
+    // Skip edits queued against optimistic rows that haven't reconciled yet.
+    // Those entries are re-keyed to their real id once the insert completes,
+    // and flush() is invoked again automatically.
+    const allEntries = Array.from(dirtyRef.current.entries());
+    const items: Dirty[] = [];
+    for (const [, d] of allEntries) {
+      if (isPendingTemp(d.id)) continue;
+      items.push(d);
+    }
     if (items.length === 0) return;
-    dirtyRef.current.clear();
-    setDirtyCount(0);
+    for (const d of items) dirtyRef.current.delete(`${d.table}:${d.id}`);
+    setDirtyCount(dirtyRef.current.size);
     setSavingCount((c) => c + items.length);
     try {
       const results = await Promise.all(
