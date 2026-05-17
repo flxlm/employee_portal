@@ -26,10 +26,11 @@ const ASTERISK_ANIMATION_SRC = "/asterisk-animation.webm";
 
 
 export const Route = createFileRoute("/display/$token")({
-  validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter } => {
+  validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter; lang?: "fr" | "en" } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
     const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
-    return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}) };
+    const lang = s.lang === "fr" || s.lang === "en" ? s.lang : undefined;
+    return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}), ...(lang ? { lang } : {}) };
   },
   loaderDeps: ({ search }) => ({ menu: search.menu }),
   loader: async ({ params, deps }) => {
@@ -132,25 +133,30 @@ function isSoldOutToday(d?: string | null): boolean {
   return !!d && d === todayISO();
 }
 
-function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: MenuFilter): Menu[] {
+function pickText(base: string, en: string | null | undefined, lang?: "fr" | "en"): string {
+  if (lang === "en") return (en && en.trim().length > 0) ? en : base;
+  return base;
+}
+
+function mapDisplayMenuToMenus(displayMenu: DisplayMenu | null, selectedMenu?: MenuFilter, lang?: "fr" | "en"): Menu[] {
   if (!displayMenu) return [];
 
   return displayMenu.sections
     .filter((section) => isVisibleOnMenu(section.visible_menus, selectedMenu))
     .map((section) => ({
-      section: section.name,
+      section: pickText(section.name, section.name_en, lang),
       hidden: section.is_hidden,
       soldOut: isSoldOutToday(section.sold_out_date),
       subsections: section.subsections
         .filter((subsection) => isVisibleOnMenu(subsection.visible_menus, selectedMenu))
         .map((subsection) => ({
-          subsection: subsection.name,
+          subsection: pickText(subsection.name, subsection.name_en, lang),
           hidden: subsection.is_hidden,
           soldOut: isSoldOutToday(subsection.sold_out_date),
           items: subsection.items.map((item) => ({
-            name: item.title,
+            name: pickText(item.title, item.title_en, lang),
             price: item.base_price_cents > 0 ? item.base_price_cents / 100 : undefined,
-            description: item.description,
+            description: pickText(item.description, item.description_en, lang),
             hidden: item.is_hidden,
             soldOut: isSoldOutToday(item.sold_out_date),
             modifications: item.modifications.map((modification) => ({
