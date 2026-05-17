@@ -1,0 +1,1 @@
+ALTER TYPE order_request_status ADD VALUE IF NOT EXISTS 'received';
