@@ -73,6 +73,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [visibleFrom, setVisibleFrom] = useState<Date>(() => startOfToday());
   const [expiresOn, setExpiresOn] = useState<Date>(() => startOfToday());
   const [saving, setSaving] = useState(false);
 
@@ -80,8 +81,9 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
     setLoading(true);
     const { data, error } = await supabase
       .from("daily_messages")
-      .select("id, message, expires_at, created_at, created_by")
+      .select("id, message, visible_from, expires_at, created_at, created_by")
       .gt("expires_at", new Date().toISOString())
+      .order("visible_from", { ascending: true })
       .order("created_at", { ascending: false });
     setLoading(false);
     if (error) {
@@ -95,14 +97,24 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
     load();
   }, [load]);
 
+  const applyQuickRange = (from: Date, to: Date) => {
+    setVisibleFrom(from);
+    setExpiresOn(to);
+  };
+
   const submit = async () => {
     if (!text.trim()) {
       toast.error("Message required");
       return;
     }
+    if (expiresOn < visibleFrom) {
+      toast.error("End date must be on or after the start date");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("daily_messages").insert({
       message: text.trim(),
+      visible_from: startOfDayIso(visibleFrom),
       expires_at: endOfDayIso(expiresOn),
       created_by: userId,
     });
@@ -112,6 +124,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
       return;
     }
     setText("");
+    setVisibleFrom(startOfToday());
     setExpiresOn(startOfToday());
     toast.success("Message posted");
     load();
