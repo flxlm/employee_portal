@@ -9,6 +9,9 @@ import {
   listMenuSchedule,
   updateScheduleEntry,
   type ScheduleEntry,
+  addMenuSpecial,
+  deleteMenuSpecial,
+  listMenuSpecials,
 } from "@/lib/menu-schedule.functions";
 import { listMenus } from "@/lib/menus.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
