@@ -36,6 +36,14 @@ function AdminPage() {
   const [email, setEmail] = useState("");
   const [asAdmin, setAsAdmin] = useState(false);
 
+  const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
+  const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  useEffect(() => {
+    fetchWebhookUrl().then((r) => setWebhookUrl(r.url)).catch(() => {});
+  }, []);
+
   const { data, isLoading } = useQuery({ queryKey: ["allowed-emails"], queryFn: () => list() });
 
   const addMut = useMutation({
