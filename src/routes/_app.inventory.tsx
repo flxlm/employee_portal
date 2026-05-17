@@ -253,18 +253,19 @@ function InventoryPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-8" />
-                        <TableHead>Item</TableHead>
-                        <TableHead className="w-24">Qty</TableHead>
-                        <TableHead className="w-20">Unit</TableHead>
-                        <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="w-[180px] text-right">Actions</TableHead>
+                        <TableHead className="w-10" />
+                        <TableHead className="min-w-[180px]">Item</TableHead>
+                        <TableHead className="w-32">Category</TableHead>
+                        <TableHead className="w-20 text-right">Qty</TableHead>
+                        <TableHead className="w-16">Unit</TableHead>
+                        <TableHead className="w-28">Status</TableHead>
+                        <TableHead className="w-[170px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {visibleItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                             No items. Click "Add item" to start.
                           </TableCell>
                         </TableRow>
