@@ -722,52 +722,58 @@ function DisplayPage() {
       <style>{COLUMN_CSS}</style>
 
       <div className="menu-flow" ref={flowRef}>
-        {menus.map((menu, mi) => (
-          <Fragment key={menu.section}>
-            <div className={`menu-section-block${mi > 0 ? " new-column" : ""}`} aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
-              <video
-                className="section-title-video"
-                src={MENU_ANIMATION_SRC}
-                autoPlay
-                muted
-                playsInline
-                loop
-                controls={false}
-                preload="metadata"
-                aria-hidden="true"
-                onError={(e) => {
-                  (e.currentTarget as HTMLVideoElement).style.display = "none";
-                }}
-              />
-              <h2 className="section-title-text" style={styleFor("section")}>
-                {menu.section}
-              </h2>
-            </div>
-            {menu.subsections.map((sub, si) => {
-              const dim = menu.hidden || sub.hidden;
-              const soldOut = !!menu.soldOut || !!sub.soldOut;
-              const isLast = si === menu.subsections.length - 1;
-              const isFinalSection = mi === menus.length - 1;
-              // Tag last subsection of every section EXCEPT the final one (whose logo carries the tag instead)
-              const tagAsLast = isLast && !isFinalSection;
-              return (
-                <section
-                  key={`${menu.section}-${si}`}
-                  className={tagAsLast ? "subsection-last-of-section" : undefined}
-                  data-section-index={mi}
-                  style={dim ? { opacity: 0.35 } : undefined}
-                >
-                  <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
-                    {sub.subsection}
+        {menus.map((menu, mi) => {
+          const renderSubsection = (sub: Subsection, si: number) => {
+            const dim = menu.hidden || sub.hidden;
+            const soldOut = !!menu.soldOut || !!sub.soldOut;
+            const isLast = si === menu.subsections.length - 1;
+            const isFinalSection = mi === menus.length - 1;
+            const tagAsLast = isLast && !isFinalSection;
+            return (
+              <section
+                key={`${menu.section}-${si}`}
+                className={tagAsLast ? "subsection-last-of-section" : undefined}
+                data-section-index={mi}
+                style={dim ? { opacity: 0.35 } : undefined}
+              >
+                <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
+                  {sub.subsection}
+                </h2>
+                {sub.items.map((item, ii) => (
+                  <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
+                ))}
+              </section>
+            );
+          };
+          const [firstSub, ...restSubs] = menu.subsections;
+          return (
+            <Fragment key={menu.section}>
+              <div className={`menu-section-group${mi > 0 ? " new-column" : ""}`}>
+                <div className="menu-section-block" aria-label={menu.section} style={menu.hidden ? { opacity: 0.35 } : undefined}>
+                  <video
+                    className="section-title-video"
+                    src={MENU_ANIMATION_SRC}
+                    autoPlay
+                    muted
+                    playsInline
+                    loop
+                    controls={false}
+                    preload="metadata"
+                    aria-hidden="true"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLVideoElement).style.display = "none";
+                    }}
+                  />
+                  <h2 className="section-title-text" style={styleFor("section")}>
+                    {menu.section}
                   </h2>
-                  {sub.items.map((item, ii) => (
-                    <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
-                  ))}
-                </section>
-              );
-            })}
-          </Fragment>
-        ))}
+                </div>
+                {firstSub && renderSubsection(firstSub, 0)}
+              </div>
+              {restSubs.map((sub, idx) => renderSubsection(sub, idx + 1))}
+            </Fragment>
+          );
+        })}
         <div className="menu-end-logo subsection-last-of-section" data-section-index={Math.max(0, menus.length - 1)}>
           <img
             src={savsavLogoSvg}
