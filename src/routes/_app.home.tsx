@@ -95,10 +95,7 @@ function HomePage() {
   };
 
   const resetOrder = () => {
-    setOrder([]);
-    if (storageKey) {
-      try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
-    }
+    setDraftOrder(order ?? []);
   };
 
   const greeting = (() => {
