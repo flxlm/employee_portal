@@ -311,7 +311,6 @@ function InventoryPage() {
                                   {status}
                                 </Badge>
                               </TableCell>
-                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center gap-1 justify-end">
                                   <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
