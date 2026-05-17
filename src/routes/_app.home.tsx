@@ -29,6 +29,7 @@ function HomePage() {
   const [order, setOrder] = useState<string[] | null>(null);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [overKey, setOverKey] = useState<string | null>(null);
+  const [draftOrder, setDraftOrder] = useState<string[] | null>(null);
 
   const storageKey = user ? `home:tile-order:${user.id}` : null;
 
