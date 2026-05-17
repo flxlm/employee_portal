@@ -12,14 +12,16 @@ function isMenuHost(host: string | null | undefined): boolean {
   return h === "menu.savsav.net" || h.startsWith("menu.");
 }
 
-async function getServerHost(): Promise<string | null> {
+import { createServerFn } from "@tanstack/react-start";
+
+const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
+  const { getRequestHost } = await import("@tanstack/react-start/server");
   try {
-    const { getRequestHost } = await import("@tanstack/react-start/server");
-    return getRequestHost();
+    return getRequestHost() ?? null;
   } catch {
     return null;
   }
-}
+});
 
 export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>): { menu?: string; debug?: boolean } => {
