@@ -11,8 +11,10 @@ function isMenuHost(host: string | null | undefined): boolean {
 import { createServerFn } from "@tanstack/react-start";
 
 const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
-  const { getRequestHost } = await import("@tanstack/react-start/server");
+  const { getRequestHeader, getRequestHost } = await import("@tanstack/react-start/server");
   try {
+    const fwd = getRequestHeader("x-forwarded-host");
+    if (fwd) return fwd.split(",")[0].trim();
     return getRequestHost() ?? null;
   } catch {
     return null;
