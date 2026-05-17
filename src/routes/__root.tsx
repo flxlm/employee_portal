@@ -6,9 +6,30 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  redirect,
 } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 
 import appCss from "../styles.css?url";
+
+const DEFAULT_DISPLAY_TOKEN =
+  (import.meta.env.VITE_DEFAULT_DISPLAY_TOKEN as string | undefined) ||
+  "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
+
+function isMenuHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return h === "menu.savsav.net" || h.startsWith("menu.");
+}
+
+const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
+  const { getRequestHost } = await import("@tanstack/react-start/server");
+  try {
+    return getRequestHost() ?? null;
+  } catch {
+    return null;
+  }
+});
 
 function NotFoundComponent() {
   return (
@@ -68,6 +89,21 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: async ({ location }) => {
+    const host =
+      typeof window === "undefined"
+        ? await getServerHost()
+        : window.location.host;
+
+    if (isMenuHost(host) && !location.pathname.startsWith("/display/")) {
+      throw redirect({
+        to: "/display/$token",
+        params: { token: DEFAULT_DISPLAY_TOKEN },
+        search: { menu: "auto", lang: "fr" },
+        replace: true,
+      });
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
