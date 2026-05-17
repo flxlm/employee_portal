@@ -258,7 +258,7 @@ function InventoryPage() {
                     <TableBody>
                       {visibleItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                             No items. Click "Add item" to start.
                           </TableCell>
                         </TableRow>
