@@ -147,37 +147,11 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-3">
-          <div className="space-y-3">
-            {messages.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                No messages yet.
-              </p>
-            )}
-            {messages.map((m) => (
-              <Card key={m.id}>
-                <CardContent className="pt-4 pb-3 flex items-start gap-3">
-                  <p className="text-sm whitespace-pre-wrap flex-1">{m.message}</p>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Until {new Date(m.expires_at).toLocaleDateString()}
-                    </span>
-                    {isAdmin && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => remove(m.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+        <MessageCarousel
+          messages={messages}
+          isAdmin={isAdmin}
+          onRemove={remove}
+        />
 
         {isAdmin && (
           <div className="border-t pt-4 space-y-3">
