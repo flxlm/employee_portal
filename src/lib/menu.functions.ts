@@ -182,16 +182,26 @@ export const listMenu = createServerFn({ method: "GET" })
     const itemsBySub = new Map<string, MenuItem[]>();
     for (const i of itemsRes.data || []) {
       const arr = itemsBySub.get(i.subsection_id) || [];
+      const r = i as Record<string, unknown>;
       arr.push({
         id: i.id,
         subsection_id: i.subsection_id,
         title: i.title,
+        title_en: (r.title_en as string | null) ?? null,
+        title_source_lang: ((r.title_source_lang as Lang) ?? "fr"),
+        title_translated_from: (r.title_translated_from as string | null) ?? null,
+        title_is_manual_override: (r.title_is_manual_override as boolean) ?? false,
         description: i.description,
+        description_en: (r.description_en as string | null) ?? null,
+        description_source_lang: ((r.description_source_lang as Lang) ?? "fr"),
+        description_translated_from: (r.description_translated_from as string | null) ?? null,
+        description_is_manual_override: (r.description_is_manual_override as boolean) ?? false,
+        do_not_translate: (r.do_not_translate as boolean) ?? false,
         base_price_cents: i.base_price_cents,
         display_order: i.display_order,
         version: i.version,
-        is_hidden: (i as { is_hidden?: boolean }).is_hidden ?? false,
-        sold_out_date: (i as { sold_out_date?: string | null }).sold_out_date ?? null,
+        is_hidden: (r.is_hidden as boolean) ?? false,
+        sold_out_date: (r.sold_out_date as string | null) ?? null,
         modifications: modsByItem.get(i.id) || [],
       });
       itemsBySub.set(i.subsection_id, arr);
@@ -200,32 +210,54 @@ export const listMenu = createServerFn({ method: "GET" })
     const subsBySec = new Map<string, MenuSubsection[]>();
     for (const ss of subsectionsRes.data || []) {
       const arr = subsBySec.get(ss.section_id) || [];
+      const r = ss as Record<string, unknown>;
       arr.push({
         id: ss.id,
         section_id: ss.section_id,
         name: ss.name,
+        name_en: (r.name_en as string | null) ?? null,
+        name_source_lang: ((r.name_source_lang as Lang) ?? "fr"),
+        name_translated_from: (r.name_translated_from as string | null) ?? null,
+        name_is_manual_override: (r.name_is_manual_override as boolean) ?? false,
         description: ss.description,
+        description_en: (r.description_en as string | null) ?? null,
+        description_source_lang: ((r.description_source_lang as Lang) ?? "fr"),
+        description_translated_from: (r.description_translated_from as string | null) ?? null,
+        description_is_manual_override: (r.description_is_manual_override as boolean) ?? false,
+        do_not_translate: (r.do_not_translate as boolean) ?? false,
         display_order: ss.display_order,
         version: ss.version,
-        visible_menus: (ss as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
-        is_hidden: (ss as { is_hidden?: boolean }).is_hidden ?? false,
-        sold_out_date: (ss as { sold_out_date?: string | null }).sold_out_date ?? null,
+        visible_menus: (r.visible_menus as string[] | undefined) ?? ["breakfast", "lunch", "dinner"],
+        is_hidden: (r.is_hidden as boolean) ?? false,
+        sold_out_date: (r.sold_out_date as string | null) ?? null,
         items: itemsBySub.get(ss.id) || [],
       });
       subsBySec.set(ss.section_id, arr);
     }
 
-    const sections: MenuSection[] = (sectionsRes.data || []).map((s) => ({
-      id: s.id,
-      name: s.name,
-      description: s.description,
-      display_order: s.display_order,
-      version: s.version,
-      visible_menus: (s as { visible_menus?: string[] }).visible_menus ?? ["breakfast", "lunch", "dinner"],
-      is_hidden: (s as { is_hidden?: boolean }).is_hidden ?? false,
-      sold_out_date: (s as { sold_out_date?: string | null }).sold_out_date ?? null,
-      subsections: subsBySec.get(s.id) || [],
-    }));
+    const sections: MenuSection[] = (sectionsRes.data || []).map((s) => {
+      const r = s as Record<string, unknown>;
+      return {
+        id: s.id,
+        name: s.name,
+        name_en: (r.name_en as string | null) ?? null,
+        name_source_lang: ((r.name_source_lang as Lang) ?? "fr"),
+        name_translated_from: (r.name_translated_from as string | null) ?? null,
+        name_is_manual_override: (r.name_is_manual_override as boolean) ?? false,
+        description: s.description,
+        description_en: (r.description_en as string | null) ?? null,
+        description_source_lang: ((r.description_source_lang as Lang) ?? "fr"),
+        description_translated_from: (r.description_translated_from as string | null) ?? null,
+        description_is_manual_override: (r.description_is_manual_override as boolean) ?? false,
+        do_not_translate: (r.do_not_translate as boolean) ?? false,
+        display_order: s.display_order,
+        version: s.version,
+        visible_menus: (r.visible_menus as string[] | undefined) ?? ["breakfast", "lunch", "dinner"],
+        is_hidden: (r.is_hidden as boolean) ?? false,
+        sold_out_date: (r.sold_out_date as string | null) ?? null,
+        subsections: subsBySec.get(s.id) || [],
+      };
+    });
 
     return { sections };
   });
