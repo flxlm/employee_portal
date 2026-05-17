@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ import {
   updateRow,
   softDeleteRow,
   reorderRows,
+  translateMissingRow,
   type MenuSection,
   type MenuSubsection,
   type MenuItem,
@@ -274,6 +275,8 @@ function RowSettingsMenu({
   canAddDescription,
   doNotTranslate,
   onToggleDoNotTranslate,
+  onTranslateMissing,
+  canTranslateMissing,
   size = "md",
 }: {
   hidden: boolean;
@@ -286,6 +289,8 @@ function RowSettingsMenu({
   canAddDescription?: boolean;
   doNotTranslate?: boolean;
   onToggleDoNotTranslate?: () => void;
+  onTranslateMissing?: () => void;
+  canTranslateMissing?: boolean;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -301,6 +306,11 @@ function RowSettingsMenu({
         {onAddDescription && canAddDescription && (
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
             <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
+        {onTranslateMissing && canTranslateMissing && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onTranslateMissing(); }}>
+            <Sparkles className="h-4 w-4" /> Translate missing language
           </DropdownMenuItem>
         )}
         {onToggleDoNotTranslate && (
@@ -344,6 +354,25 @@ function MenuEditorPage() {
   const update = useServerFn(updateRow);
   const del = useServerFn(softDeleteRow);
   const reorder = useServerFn(reorderRows);
+  const translateMissing = useServerFn(translateMissingRow);
+  const handleTranslateMissing = async (
+    table: "menu_sections" | "menu_subsections" | "menu_items",
+    id: string,
+  ) => {
+    try {
+      const r = await translateMissing({ data: { table, id } });
+      if (r.translated > 0) {
+        toast.success(`Translated ${r.translated} field${r.translated > 1 ? "s" : ""}`);
+        await reload();
+        triggerRefresh();
+      } else {
+        toast.info("Nothing to translate");
+      }
+    } catch (e) {
+      console.error("[menu] translateMissing failed", e);
+      toast.error("Translation failed");
+    }
+  };
   const refreshDisplay = useServerFn(refreshDisplayMenu);
   const triggerRefresh = () => {
     refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
@@ -1113,6 +1142,11 @@ function MenuEditorPage() {
                   onDelete={() => removeRow("menu_sections", sec.id)}
                   onAddDescription={() => revealDesc(sec.id)}
                   canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
+                  onTranslateMissing={() => handleTranslateMissing("menu_sections", sec.id)}
+                  canTranslateMissing={!sec.do_not_translate && (
+                    (!!sec.name?.trim() !== !!sec.name_en?.trim()) ||
+                    (!!sec.description?.trim() !== !!sec.description_en?.trim())
+                  )}
                 />
                 <Button
                   size="icon"
@@ -1218,6 +1252,11 @@ function MenuEditorPage() {
                       onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
                       onAddDescription={() => revealDesc(sub.id)}
                       canAddDescription={!hasDesc(sub.id, sub.description)}
+                      onTranslateMissing={() => handleTranslateMissing("menu_subsections", sub.id)}
+                      canTranslateMissing={!sub.do_not_translate && (
+                        (!!sub.name?.trim() !== !!sub.name_en?.trim()) ||
+                        (!!sub.description?.trim() !== !!sub.description_en?.trim())
+                      )}
                     />
                     <Button
                       size="icon"
@@ -1318,6 +1357,11 @@ function MenuEditorPage() {
                               patchItem(sec.id, sub.id, item.id, { do_not_translate: next });
                               queueEdit("menu_items", item.id, item.version, { do_not_translate: next });
                             }}
+                            onTranslateMissing={() => handleTranslateMissing("menu_items", item.id)}
+                            canTranslateMissing={!item.do_not_translate && (
+                              (!!item.title?.trim() !== !!item.title_en?.trim()) ||
+                              (!!item.description?.trim() !== !!item.description_en?.trim())
+                            )}
                           />
                         </div>
 
