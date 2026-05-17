@@ -399,7 +399,7 @@ const COLUMN_CSS = `
 
 function DisplayPage() {
   const { debug, menu, lang } = Route.useSearch();
-  const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
+  const { formatting, displayMenu, scheduleEntries, specialEntries } = Route.useLoaderData();
   const router = useRouter();
   const invalidateCache = useServerFn(invalidateDisplayMenuCache);
   const flowRef = useRef<HTMLDivElement | null>(null);
