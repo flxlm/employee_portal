@@ -240,6 +240,13 @@ function MenuEditorPage() {
   const [addingMenu, setAddingMenu] = useState(false);
   const fetchMenus = useServerFn(listMenus);
   const createMenu = useServerFn(addMenu);
+  const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
+  const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  useEffect(() => {
+    fetchWebhookUrl().then((r) => setWebhookUrl(r.url)).catch(() => {});
+  }, []);
   const revealDesc = (id: string) => setShowDesc((p) => { const n = new Set(p); n.add(id); return n; });
   const hasDesc = (id: string, val: string | null | undefined) => (val && val.length > 0) || showDesc.has(id);
 
