@@ -385,7 +385,7 @@ function InventoryPage() {
                                             {best ? (
                                               <span className="text-sm">
                                                 {best.supplier}
-                                                <span className="text-muted-foreground tabular-nums ml-2">€{Number(best.cost).toFixed(2)}</span>
+                                                <span className="text-muted-foreground tabular-nums ml-2">${Number(best.cost).toFixed(2)}{best.pack_size && Number(best.pack_size) !== 1 ? ` / ${Number(best.pack_size)}${it.unit || ""}` : ""}</span>
                                                 {count > 1 && <span className="text-muted-foreground ml-1 opacity-70">· +{count - 1}</span>}
                                               </span>
                                             ) : (
