@@ -123,20 +123,31 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
               <div className="flex flex-wrap items-end gap-3">
                 <div className="grid gap-1">
                   <Label className="text-xs">Visible until end of</Label>
-                  <Input
-                    type="date"
-                    value={expiresOn}
-                    min={todayInputValue()}
-                    onChange={(e) => setExpiresOn(e.target.value || todayInputValue())}
-                    className="w-44"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("w-56 justify-start font-normal")}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {formatPretty(expiresOn)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={expiresOn}
+                        onSelect={(d) => d && setExpiresOn(d)}
+                        disabled={(d) => d < startOfToday()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <Button onClick={submit} disabled={saving} size="sm">
                   <Plus className="h-4 w-4 mr-1" /> {saving ? "Posting…" : "Post"}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Default: disappears at end of today.
-                </p>
               </div>
             </CardContent>
           </Card>
