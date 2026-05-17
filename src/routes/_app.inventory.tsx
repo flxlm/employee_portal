@@ -351,8 +351,8 @@ function InventoryPage() {
                             {expandedRows.has(it.id) && (
                               <TableRow className="bg-muted/30 hover:bg-muted/30">
                                 <TableCell />
-                                <TableCell colSpan={6}>
-                                  <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1">
+                                <TableCell colSpan={5}>
+                                  <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1 items-center">
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Par:</span>
                                       <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
@@ -360,6 +360,30 @@ function InventoryPage() {
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Reorder ≤:</span>
                                       <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Supplier / cost:</span>
+                                      {(() => {
+                                        const best = bestSupplierByItem[it.id];
+                                        const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
+                                        return (
+                                          <button
+                                            type="button"
+                                            onClick={() => setSuppliersItem(it)}
+                                            className="text-left hover:bg-accent/40 rounded px-2 py-0.5"
+                                          >
+                                            {best ? (
+                                              <span className="text-sm">
+                                                {best.supplier}
+                                                <span className="text-muted-foreground tabular-nums ml-2">€{Number(best.cost).toFixed(2)}</span>
+                                                {count > 1 && <span className="text-muted-foreground ml-1 opacity-70">· +{count - 1}</span>}
+                                              </span>
+                                            ) : (
+                                              <span className="text-muted-foreground text-sm">+ Add supplier</span>
+                                            )}
+                                          </button>
+                                        );
+                                      })()}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
                                       Updated {timeAgo(it.updated_at)} · {userName(it.updated_by)}
