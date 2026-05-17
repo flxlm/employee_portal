@@ -707,7 +707,7 @@ function AddItemDialog({
             <Label className="text-xs">Suppliers & costs (optional)</Label>
             <div className="space-y-2 mt-1">
               {suppliers.map((s, i) => (
-                <div key={i} className="grid grid-cols-[1fr_90px_1fr_auto] gap-2 items-center">
+                <div key={i} className="grid grid-cols-[1fr_80px_90px_1fr_auto] gap-2 items-center">
                   <Input
                     placeholder="Supplier"
                     value={s.supplier}
@@ -715,9 +715,15 @@ function AddItemDialog({
                   />
                   <Input
                     type="number"
-                    placeholder="Cost"
+                    placeholder="Cost $"
                     value={s.cost}
                     onChange={(e) => updateSupplier(i, { cost: e.target.value })}
+                  />
+                  <Input
+                    type="number"
+                    placeholder={`Pack (${unit.trim() || "unit"})`}
+                    value={s.pack_size}
+                    onChange={(e) => updateSupplier(i, { pack_size: e.target.value })}
                   />
                   <Input
                     placeholder="Notes"
@@ -740,7 +746,7 @@ function AddItemDialog({
               size="sm"
               variant="outline"
               className="mt-2"
-              onClick={() => setSuppliers((r) => [...r, { supplier: "", cost: "", notes: "" }])}
+              onClick={() => setSuppliers((r) => [...r, { supplier: "", cost: "", pack_size: "1", notes: "" }])}
             >
               <Plus className="h-4 w-4" /> Add another supplier
             </Button>
