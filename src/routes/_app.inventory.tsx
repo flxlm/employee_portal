@@ -165,9 +165,23 @@ function InventoryPage() {
           <p className="text-sm text-muted-foreground">Track stock levels and flag items to reorder.</p>
         </div>
         {isAdmin && (
-          <Button variant="outline" size="sm" onClick={() => setManageCatsOpen(true)}>
-            <Settings2 className="h-4 w-4" /> Manage categories
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={async () => {
+              const name = window.prompt("New category name");
+              if (!name?.trim()) return;
+              const order = (categories[categories.length - 1]?.display_order ?? 0) + 1;
+              const { error } = await supabase
+                .from("inventory_categories")
+                .insert({ name: name.trim(), display_order: order });
+              if (error) toast.error(error.message);
+              else toast.success("Category added");
+            }}>
+              <Plus className="h-4 w-4" /> Add category
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setManageCatsOpen(true)}>
+              <Settings2 className="h-4 w-4" /> Manage
+            </Button>
+          </div>
         )}
       </header>
 
