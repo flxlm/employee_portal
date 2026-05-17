@@ -194,13 +194,6 @@ function InventoryPage() {
       </header>
 
       <div className="space-y-6">
-        <PendingPanel
-          requests={orderRequests}
-          items={items}
-          userName={userName}
-          onAdHoc={() => setAdHocOpen(true)}
-        />
-
         <div className="min-w-0">
           {categories.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground">No categories yet.</Card>
@@ -241,6 +234,13 @@ function InventoryPage() {
                   <Plus className="h-4 w-4" /> Add item
                 </Button>
               </div>
+
+              <PendingPanel
+                requests={orderRequests}
+                items={items}
+                userName={userName}
+                onAdHoc={() => setAdHocOpen(true)}
+              />
 
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
