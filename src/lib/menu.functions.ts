@@ -579,3 +579,75 @@ export const translateMissingRow = createServerFn({ method: "POST" })
     console.info(`[menu] translateMissing ${table}/${id} (${translated}) by ${context.userId}`);
     return { ok: true as const, translated };
   });
+
+export const translateAllMissing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const tables = ["menu_sections", "menu_subsections", "menu_items"] as const;
+    let rowsTouched = 0;
+    let fieldsTranslated = 0;
+    let failures = 0;
+
+    for (const table of tables) {
+      const fields = TRANSLATABLE_BY_TABLE[table];
+      const { data: rows, error } = await supabase
+        .from(table)
+        .select("*")
+        .eq("is_deleted", false);
+      if (error) throw error;
+      for (const r of rows || []) {
+        const current = r as Record<string, unknown>;
+        if (current.do_not_translate) continue;
+        const patch: Record<string, unknown> = {};
+        let translated = 0;
+        for (const f of fields) {
+          const enKey = `${f}_en`;
+          const srcKey = `${f}_source_lang`;
+          const transFromKey = `${f}_translated_from`;
+          const overrideKey = `${f}_is_manual_override`;
+          const fr = String(current[f] ?? "").trim();
+          const en = String(current[enKey] ?? "").trim();
+          if (fr && en) continue;
+          if (!fr && !en) continue;
+          const sourceLang: Lang = fr ? "fr" : "en";
+          const targetLang: Lang = sourceLang === "fr" ? "en" : "fr";
+          const sourceText = sourceLang === "fr" ? fr : en;
+          try {
+            const out = await callLovableTranslate({
+              text: sourceText,
+              source_lang: sourceLang,
+              target_lang: targetLang,
+              type: fieldType(table, f),
+            });
+            if (sourceLang === "fr") patch[enKey] = out;
+            else patch[f] = out;
+            patch[srcKey] = sourceLang;
+            patch[transFromKey] = sourceText;
+            patch[overrideKey] = false;
+            translated++;
+          } catch (err) {
+            console.error(`[menu] translateAll failed for ${table}/${current.id}/${f}:`, err);
+            failures++;
+          }
+        }
+        if (translated === 0) continue;
+        const currentVersion = Number(current.version ?? 0);
+        patch.version = currentVersion + 1;
+        const { error: updErr } = await supabase
+          .from(table)
+          .update(patch as never)
+          .eq("id", current.id as string)
+          .eq("version", currentVersion);
+        if (updErr) {
+          console.error(`[menu] translateAll update failed for ${table}/${current.id}:`, updErr);
+          failures++;
+          continue;
+        }
+        rowsTouched++;
+        fieldsTranslated += translated;
+      }
+    }
+    console.info(`[menu] translateAllMissing rows=${rowsTouched} fields=${fieldsTranslated} failures=${failures} by ${context.userId}`);
+    return { ok: true as const, rowsTouched, fieldsTranslated, failures };
+  });
