@@ -1,14 +1,15 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
+import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -34,6 +35,14 @@ function AdminPage() {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [asAdmin, setAsAdmin] = useState(false);
+
+  const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
+  const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  useEffect(() => {
+    fetchWebhookUrl().then((r) => setWebhookUrl(r.url)).catch(() => {});
+  }, []);
 
   const { data, isLoading } = useQuery({ queryKey: ["allowed-emails"], queryFn: () => list() });
 
@@ -83,6 +92,42 @@ function AdminPage() {
               <Clock className="h-4 w-4 mr-2" /> Open timetable
             </Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle><Webhook className="h-4 w-4 inline mr-2" />Menu change webhook</CardTitle>
+          <CardDescription>
+            URL that receives a POST <code>{`{ event: "menu_updated", timestamp }`}</code> whenever the menu is republished. Leave blank to disable.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              type="url"
+              placeholder="https://example.com/webhooks/menu"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={webhookSaving}
+              onClick={async () => {
+                setWebhookSaving(true);
+                try {
+                  await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
+                  toast.success("Webhook URL saved");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Failed to save");
+                } finally {
+                  setWebhookSaving(false);
+                }
+              }}
+            >
+              <Save className="h-4 w-4 mr-2" /> {webhookSaving ? "Saving…" : "Save"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
