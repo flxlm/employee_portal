@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,10 +41,12 @@ import {
   type MenuSubsection,
   type MenuItem,
   type MenuModification,
+  type Lang,
 } from "@/lib/menu.functions";
 import { refreshDisplayMenu } from "@/lib/menu-display.functions";
 import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/menu-editor")({
   component: MenuEditorPage,
@@ -151,6 +153,116 @@ function MenuToggles({
   );
 }
 
+function BilingualField({
+  multiline = false,
+  rows = 1,
+  fr,
+  en,
+  sourceLang,
+  isManualOverrideFr,
+  isManualOverrideEn,
+  doNotTranslate,
+  placeholderFr,
+  placeholderEn,
+  inputClassName,
+  onChange,
+}: {
+  multiline?: boolean;
+  rows?: number;
+  fr: string;
+  en: string | null;
+  sourceLang: Lang;
+  isManualOverrideFr: boolean;
+  isManualOverrideEn: boolean;
+  doNotTranslate: boolean;
+  placeholderFr?: string;
+  placeholderEn?: string;
+  inputClassName?: string;
+  onChange: (next: { fr: string; en: string; hint: Lang }) => void;
+}) {
+  const enVal = en ?? "";
+  const handleFr = (v: string) => {
+    if (doNotTranslate) onChange({ fr: v, en: v, hint: "fr" });
+    else onChange({ fr: v, en: enVal, hint: "fr" });
+  };
+  const handleEn = (v: string) => {
+    if (doNotTranslate) onChange({ fr: v, en: v, hint: "en" });
+    else onChange({ fr, en: v, hint: "en" });
+  };
+  const Renderer = ({
+    value,
+    onValue,
+    placeholder,
+    className,
+    disabled,
+  }: {
+    value: string;
+    onValue: (v: string) => void;
+    placeholder?: string;
+    className?: string;
+    disabled?: boolean;
+  }) =>
+    multiline ? (
+      <Textarea
+        rows={rows}
+        value={value}
+        onChange={(e) => onValue(e.target.value)}
+        placeholder={placeholder}
+        className={className}
+        disabled={disabled}
+      />
+    ) : (
+      <Input
+        value={value}
+        onChange={(e) => onValue(e.target.value)}
+        placeholder={placeholder}
+        className={className}
+        disabled={disabled}
+      />
+    );
+  const srcAccent = "border-l-[3px] border-l-primary";
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      <div className="space-y-0.5">
+        <Renderer
+          value={fr}
+          onValue={handleFr}
+          placeholder={placeholderFr}
+          className={cn(inputClassName, sourceLang === "fr" && !doNotTranslate && srcAccent)}
+        />
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
+          <span>FR</span>
+          {!doNotTranslate && sourceLang === "fr" && <span className="text-primary">· source</span>}
+          {!doNotTranslate && sourceLang === "en" && isManualOverrideFr && <span>· manual</span>}
+        </div>
+      </div>
+      <div className="space-y-0.5">
+        <Renderer
+          value={enVal}
+          onValue={handleEn}
+          placeholder={placeholderEn}
+          className={cn(
+            inputClassName,
+            sourceLang === "en" && !doNotTranslate && srcAccent,
+            doNotTranslate && "opacity-70",
+          )}
+        />
+        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground px-1">
+          <span>EN</span>
+          {doNotTranslate && (
+            <>
+              <Lock className="h-2.5 w-2.5" />
+              <span>same as FR</span>
+            </>
+          )}
+          {!doNotTranslate && sourceLang === "en" && <span className="text-primary">· source</span>}
+          {!doNotTranslate && sourceLang === "fr" && isManualOverrideEn && <span>· manual</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RowSettingsMenu({
   hidden,
   soldOut,
@@ -160,6 +272,8 @@ function RowSettingsMenu({
   onDelete,
   onAddDescription,
   canAddDescription,
+  doNotTranslate,
+  onToggleDoNotTranslate,
   size = "md",
 }: {
   hidden: boolean;
@@ -170,6 +284,8 @@ function RowSettingsMenu({
   onDelete: () => void;
   onAddDescription?: () => void;
   canAddDescription?: boolean;
+  doNotTranslate?: boolean;
+  onToggleDoNotTranslate?: () => void;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -185,6 +301,12 @@ function RowSettingsMenu({
         {onAddDescription && canAddDescription && (
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
             <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
+        {onToggleDoNotTranslate && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleDoNotTranslate(); }}>
+            <Languages className="h-4 w-4" />
+            {doNotTranslate ? "Allow translation" : "Same in both languages"}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onToggleSoldOut(); }}>
@@ -915,25 +1037,45 @@ function MenuEditorPage() {
                   </Button>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <Input
-                    className="text-lg font-semibold"
-                    value={sec.name}
-                    onChange={(e) => {
-                      patchSection(sec.id, { name: e.target.value });
-                      queueEdit("menu_sections", sec.id, sec.version, { name: e.target.value });
+                  <BilingualField
+                    fr={sec.name}
+                    en={sec.name_en}
+                    sourceLang={sec.name_source_lang}
+                    isManualOverrideFr={sec.name_source_lang === "en" && sec.name_is_manual_override}
+                    isManualOverrideEn={sec.name_source_lang === "fr" && sec.name_is_manual_override}
+                    doNotTranslate={sec.do_not_translate}
+                    placeholderFr="Nom de section"
+                    placeholderEn="Section name"
+                    inputClassName="text-lg font-semibold"
+                    onChange={({ fr, en, hint }) => {
+                      patchSection(sec.id, { name: fr, name_en: en });
+                      queueEdit("menu_sections", sec.id, sec.version, {
+                        name: fr,
+                        name_en: en,
+                        name_source_lang_hint: hint,
+                      });
                     }}
-                    placeholder="Section name"
                   />
                   {!collapsed.has(sec.id) && (
                     hasDesc(sec.id, sec.description) ? (
-                      <Textarea
-                        rows={1}
-                        value={sec.description}
-                        onChange={(e) => {
-                          patchSection(sec.id, { description: e.target.value });
-                          queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                      <BilingualField
+                        multiline
+                        fr={sec.description}
+                        en={sec.description_en}
+                        sourceLang={sec.description_source_lang}
+                        isManualOverrideFr={sec.description_source_lang === "en" && sec.description_is_manual_override}
+                        isManualOverrideEn={sec.description_source_lang === "fr" && sec.description_is_manual_override}
+                        doNotTranslate={sec.do_not_translate}
+                        placeholderFr="Description (FR)"
+                        placeholderEn="Description (EN)"
+                        onChange={({ fr, en, hint }) => {
+                          patchSection(sec.id, { description: fr, description_en: en });
+                          queueEdit("menu_sections", sec.id, sec.version, {
+                            description: fr,
+                            description_en: en,
+                            description_source_lang_hint: hint,
+                          });
                         }}
-                        placeholder="Section description"
                       />
                     ) : (
                       <button
@@ -997,23 +1139,43 @@ function MenuEditorPage() {
                       </Button>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Input
-                        className="font-medium"
-                        value={sub.name}
-                        onChange={(e) => {
-                          patchSubsection(sec.id, sub.id, { name: e.target.value });
-                          queueEdit("menu_subsections", sub.id, sub.version, { name: e.target.value });
+                      <BilingualField
+                        fr={sub.name}
+                        en={sub.name_en}
+                        sourceLang={sub.name_source_lang}
+                        isManualOverrideFr={sub.name_source_lang === "en" && sub.name_is_manual_override}
+                        isManualOverrideEn={sub.name_source_lang === "fr" && sub.name_is_manual_override}
+                        doNotTranslate={sub.do_not_translate}
+                        placeholderFr="Nom de sous-section"
+                        placeholderEn="Subsection name"
+                        inputClassName="font-medium"
+                        onChange={({ fr, en, hint }) => {
+                          patchSubsection(sec.id, sub.id, { name: fr, name_en: en });
+                          queueEdit("menu_subsections", sub.id, sub.version, {
+                            name: fr,
+                            name_en: en,
+                            name_source_lang_hint: hint,
+                          });
                         }}
-                        placeholder="Subsection name"
                       />
                       {hasDesc(sub.id, sub.description) ? (
-                        <Input
-                          value={sub.description}
-                          onChange={(e) => {
-                            patchSubsection(sec.id, sub.id, { description: e.target.value });
-                            queueEdit("menu_subsections", sub.id, sub.version, { description: e.target.value });
+                        <BilingualField
+                          fr={sub.description}
+                          en={sub.description_en}
+                          sourceLang={sub.description_source_lang}
+                          isManualOverrideFr={sub.description_source_lang === "en" && sub.description_is_manual_override}
+                          isManualOverrideEn={sub.description_source_lang === "fr" && sub.description_is_manual_override}
+                          doNotTranslate={sub.do_not_translate}
+                          placeholderFr="Description (FR)"
+                          placeholderEn="Description (EN)"
+                          onChange={({ fr, en, hint }) => {
+                            patchSubsection(sec.id, sub.id, { description: fr, description_en: en });
+                            queueEdit("menu_subsections", sub.id, sub.version, {
+                              description: fr,
+                              description_en: en,
+                              description_source_lang_hint: hint,
+                            });
                           }}
-                          placeholder="Subsection description"
                         />
                       ) : (
                         <button
@@ -1036,6 +1198,12 @@ function MenuEditorPage() {
                     <RowSettingsMenu
                       hidden={sub.is_hidden}
                       soldOut={isSoldOutToday(sub.sold_out_date)}
+                      doNotTranslate={sub.do_not_translate}
+                      onToggleDoNotTranslate={() => {
+                        const next = !sub.do_not_translate;
+                        patchSubsection(sec.id, sub.id, { do_not_translate: next });
+                        queueEdit("menu_subsections", sub.id, sub.version, { do_not_translate: next });
+                      }}
                       onToggleHidden={() => {
                         const next = !sub.is_hidden;
                         patchSubsection(sec.id, sub.id, { is_hidden: next });
