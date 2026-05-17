@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Wine, ClipboardCheck, Users, Zap, BookOpen, UtensilsCrossed, Package, ClipboardList } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, BookOpen, UtensilsCrossed, Package, ClipboardList, KeyRound } from "lucide-react";
+import { PasscodesDialog } from "@/components/passcodes-dialog";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_app/home")({
 function HomePage() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [passcodesOpen, setPasscodesOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -24,16 +26,16 @@ function HomePage() {
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
-  const tiles = [
-    { to: "/events", title: "Event Inquiries", description: "Review new, ongoing, confirmed, declined and past events.", icon: CalendarDays },
-    { to: "/wines", title: "Wine List", description: "Browse the current wine offering and inventory.", icon: Wine },
-    { to: "/open-close", title: "Open / Close Log", description: "Log opening and closing shifts with till and photo.", icon: ClipboardCheck },
-    { to: "/recipes", title: "Recipes", description: "Browse drink recipes for FOH staff.", icon: BookOpen },
-    { to: "/menu-editor", title: "Menu Editor", description: "Edit menu sections, items and modifications. Auto-saves as you type.", icon: UtensilsCrossed },
-    { to: "/inventory", title: "Inventory", description: "Track stock levels and flag items to reorder.", icon: Package },
-    { to: "/functions", title: "Functions", description: "Operational actions like refreshing menu screens.", icon: Zap },
-    ...(isAdmin ? [{ to: "/order-list", title: "Order List", description: "Review and process items flagged for reorder.", icon: ClipboardList }] : []),
-    ...(isAdmin ? [{ to: "/admin", title: "Admin", description: "Manage who can sign in to the portal.", icon: Users }] : []),
+  const tiles: Array<{ to?: string; onClick?: () => void; key: string; title: string; description: string; icon: typeof CalendarDays }> = [
+    { key: "events", to: "/events", title: "Event Inquiries", description: "Review new, ongoing, confirmed, declined and past events.", icon: CalendarDays },
+    { key: "wines", to: "/wines", title: "Wine List", description: "Browse the current wine offering and inventory.", icon: Wine },
+    { key: "open-close", to: "/open-close", title: "Open / Close Log", description: "Log opening and closing shifts with till and photo.", icon: ClipboardCheck },
+    { key: "recipes", to: "/recipes", title: "Recipes", description: "Browse drink recipes for FOH staff.", icon: BookOpen },
+    { key: "menu-editor", to: "/menu-editor", title: "Menu Editor", description: "Edit menu sections, items and modifications. Auto-saves as you type.", icon: UtensilsCrossed },
+    { key: "inventory", to: "/inventory", title: "Inventory", description: "Track stock levels and flag items to reorder.", icon: Package },
+    { key: "passcodes", onClick: () => setPasscodesOpen(true), title: "Passcodes", description: "View shared passcodes available to your account.", icon: KeyRound },
+    ...(isAdmin ? [{ key: "order-list", to: "/order-list", title: "Order List", description: "Review and process items flagged for reorder.", icon: ClipboardList }] : []),
+    ...(isAdmin ? [{ key: "admin", to: "/admin", title: "Admin", description: "Manage who can sign in to the portal.", icon: Users }] : []),
   ];
 
   const greeting = (() => {
@@ -51,8 +53,8 @@ function HomePage() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {tiles.map(({ to, title, description, icon: Icon }) => (
-          <Link key={to} to={to} className="group">
+        {tiles.map(({ key, to, onClick, title, description, icon: Icon }) => {
+          const inner = (
             <Card className="h-full transition-colors group-hover:border-primary">
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -66,9 +68,16 @@ function HomePage() {
                 <CardDescription>{description}</CardDescription>
               </CardContent>
             </Card>
-          </Link>
-        ))}
+          );
+          return to ? (
+            <Link key={key} to={to} className="group">{inner}</Link>
+          ) : (
+            <button key={key} type="button" onClick={onClick} className="group text-left">{inner}</button>
+          );
+        })}
       </div>
+
+      <PasscodesDialog open={passcodesOpen} onOpenChange={setPasscodesOpen} />
     </div>
   );
 }

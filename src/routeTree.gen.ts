@@ -23,7 +23,6 @@ import { Route as AppMenuEditorRouteImport } from './routes/_app.menu-editor'
 import { Route as AppLiveMenuTimetableRouteImport } from './routes/_app.live-menu-timetable'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
-import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as ApiPublicWebhookRouteImport } from './routes/api/public/webhook'
@@ -100,11 +99,6 @@ const AppHomeRoute = AppHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AppRoute,
 } as any)
-const AppFunctionsRoute = AppFunctionsRouteImport.update({
-  id: '/functions',
-  path: '/functions',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppEventsRoute = AppEventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -143,7 +137,6 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
-  '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/inventory': typeof AppInventoryRoute
   '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
@@ -165,7 +158,6 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
-  '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
   '/inventory': typeof AppInventoryRoute
   '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
@@ -189,7 +181,6 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/events': typeof AppEventsRoute
-  '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/live-menu-timetable': typeof AppLiveMenuTimetableRoute
@@ -213,7 +204,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/events'
-    | '/functions'
     | '/home'
     | '/inventory'
     | '/live-menu-timetable'
@@ -235,7 +225,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/events'
-    | '/functions'
     | '/home'
     | '/inventory'
     | '/live-menu-timetable'
@@ -258,7 +247,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_app/admin'
     | '/_app/events'
-    | '/_app/functions'
     | '/_app/home'
     | '/_app/inventory'
     | '/_app/live-menu-timetable'
@@ -387,13 +375,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/functions': {
-      id: '/_app/functions'
-      path: '/functions'
-      fullPath: '/functions'
-      preLoaderRoute: typeof AppFunctionsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/events': {
       id: '/_app/events'
       path: '/events'
@@ -442,7 +423,6 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppEventsRoute: typeof AppEventsRoute
-  AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppLiveMenuTimetableRoute: typeof AppLiveMenuTimetableRoute
@@ -457,7 +437,6 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppEventsRoute: AppEventsRoute,
-  AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppLiveMenuTimetableRoute: AppLiveMenuTimetableRoute,
