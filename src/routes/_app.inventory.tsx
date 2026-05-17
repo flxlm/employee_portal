@@ -235,6 +235,13 @@ function InventoryPage() {
                 </Button>
               </div>
 
+              <PendingPanel
+                requests={orderRequests}
+                items={items}
+                userName={userName}
+                onAdHoc={() => setAdHocOpen(true)}
+              />
+
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                   <Table>
