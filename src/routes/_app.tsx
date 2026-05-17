@@ -71,7 +71,9 @@ function AppLayout() {
     { to: "/open-close", label: "Open / Close", icon: ClipboardCheck },
     { to: "/recipes", label: "Recipes", icon: BookOpen },
     { to: "/menu-editor", label: "Menu Editor", icon: UtensilsCrossed },
+    { to: "/inventory", label: "Inventory", icon: Package },
     { to: "/functions", label: "Functions", icon: Zap },
+    ...(isAdmin ? [{ to: "/order-list", label: "Order List", icon: ClipboardList } as NavItem] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users } as NavItem] : []),
   ];
 
