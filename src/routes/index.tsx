@@ -2,10 +2,6 @@ import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
 
-const DEFAULT_DISPLAY_TOKEN =
-  (import.meta.env.VITE_DEFAULT_DISPLAY_TOKEN as string | undefined) ||
-  "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
-
 function isMenuHost(host: string | null | undefined): boolean {
   if (!host) return false;
   const h = host.toLowerCase().split(":")[0];
@@ -38,8 +34,7 @@ export const Route = createFileRoute("/")({
 
     if (isMenuHost(host)) {
       throw redirect({
-        to: "/display/$token",
-        params: { token: DEFAULT_DISPLAY_TOKEN },
+        to: "/menu",
         search: { menu: (search.menu as string | undefined) ?? "auto", lang: "fr" },
         replace: true,
       });

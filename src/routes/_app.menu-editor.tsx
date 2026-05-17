@@ -1034,11 +1034,10 @@ function MenuEditorPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 {(() => {
-                  const DISPLAY_TOKEN = "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
                   const open = (menuKey: string, lang?: "fr" | "en") => {
                     const params = new URLSearchParams({ menu: menuKey });
                     if (lang) params.set("lang", lang);
-                    window.open(`/display/${DISPLAY_TOKEN}?${params.toString()}`, "_blank", "noopener,noreferrer");
+                    window.open(`/menu?${params.toString()}`, "_blank", "noopener,noreferrer");
                   };
                   const renderLangSub = (label: string, menuKey: string) => (
                     <DropdownMenuSub key={menuKey}>

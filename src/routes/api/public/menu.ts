@@ -30,13 +30,14 @@ export const Route = createFileRoute("/api/public/menu")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const token = url.searchParams.get("token") ?? "";
-        if (!token) {
-          return jsonResponse({ error: "token required" }, { status: 401 });
+        const expected = process.env.MENU_DISPLAY_TOKEN ?? "";
+        if (!expected || !token || token !== expected) {
+          return jsonResponse({ error: "Invalid token" }, { status: 401 });
         }
 
         try {
           const [menu, formatting, schedule] = await Promise.all([
-            getDisplayMenu({ data: { token } }),
+            getDisplayMenu({ data: {} }),
             getMenuFormatting(),
             listMenuSchedulePublic(),
           ]);
@@ -78,7 +79,7 @@ export const Route = createFileRoute("/api/public/menu")({
 // Cache: 60s public + 5min stale-while-revalidate
 //
 // Query params:
-//   token  (required) — same display token used by /display/$token
+//   token  (required) — set via MENU_DISPLAY_TOKEN env var
 //   menu   (optional) — "auto" or a specific key. Currently informational; the
 //                       full payload (with schedule) is returned either way so
 //                       the consumer can decide which menu to show.

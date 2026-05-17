@@ -10,10 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DisplayTokenRouteImport } from './routes/display.$token'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOrderListRouteImport } from './routes/_app.order-list'
@@ -35,6 +35,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MenuRoute = MenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -47,11 +52,6 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DisplayTokenRoute = DisplayTokenRouteImport.update({
-  id: '/display/$token',
-  path: '/display/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWinesRoute = AppWinesRouteImport.update({
@@ -134,6 +134,7 @@ const ApiPublicJotformEventInquiryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
@@ -146,7 +147,6 @@ export interface FileRoutesByFullPath {
   '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
-  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -155,6 +155,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
   '/events': typeof AppEventsRoute
@@ -167,7 +168,6 @@ export interface FileRoutesByTo {
   '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
-  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -178,6 +178,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/events': typeof AppEventsRoute
@@ -190,7 +191,6 @@ export interface FileRoutesById {
   '/_app/order-list': typeof AppOrderListRoute
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
-  '/display/$token': typeof DisplayTokenRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -201,6 +201,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/menu'
     | '/signup'
     | '/admin'
     | '/events'
@@ -213,7 +214,6 @@ export interface FileRouteTypes {
     | '/order-list'
     | '/recipes'
     | '/wines'
-    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -222,6 +222,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/menu'
     | '/signup'
     | '/admin'
     | '/events'
@@ -234,7 +235,6 @@ export interface FileRouteTypes {
     | '/order-list'
     | '/recipes'
     | '/wines'
-    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -244,6 +244,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/login'
+    | '/menu'
     | '/signup'
     | '/_app/admin'
     | '/_app/events'
@@ -256,7 +257,6 @@ export interface FileRouteTypes {
     | '/_app/order-list'
     | '/_app/recipes'
     | '/_app/wines'
-    | '/display/$token'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -267,8 +267,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MenuRoute: typeof MenuRoute
   SignupRoute: typeof SignupRoute
-  DisplayTokenRoute: typeof DisplayTokenRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
   ApiPublicMenuRoute: typeof ApiPublicMenuRoute
   ApiPublicMenuRefreshRoute: typeof ApiPublicMenuRefreshRoute
@@ -282,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/menu': {
+      id: '/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof MenuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -303,13 +310,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/display/$token': {
-      id: '/display/$token'
-      path: '/display/$token'
-      fullPath: '/display/$token'
-      preLoaderRoute: typeof DisplayTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/wines': {
@@ -454,8 +454,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  MenuRoute: MenuRoute,
   SignupRoute: SignupRoute,
-  DisplayTokenRoute: DisplayTokenRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
   ApiPublicMenuRoute: ApiPublicMenuRoute,
   ApiPublicMenuRefreshRoute: ApiPublicMenuRefreshRoute,

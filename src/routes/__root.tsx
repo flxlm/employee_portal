@@ -12,10 +12,6 @@ import { createServerFn } from "@tanstack/react-start";
 
 import appCss from "../styles.css?url";
 
-const DEFAULT_DISPLAY_TOKEN =
-  (import.meta.env.VITE_DEFAULT_DISPLAY_TOKEN as string | undefined) ||
-  "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
-
 function isMenuHost(host: string | null | undefined): boolean {
   if (!host) return false;
   const h = host.toLowerCase().split(":")[0];
@@ -95,10 +91,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ? await getServerHost()
         : window.location.host;
 
-    if (isMenuHost(host) && !location.pathname.startsWith("/display/")) {
+    if (isMenuHost(host) && location.pathname !== "/menu") {
       throw redirect({
-        to: "/display/$token",
-        params: { token: DEFAULT_DISPLAY_TOKEN },
+        to: "/menu",
         search: { menu: "auto", lang: "fr" },
         replace: true,
       });

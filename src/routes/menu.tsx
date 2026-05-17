@@ -25,7 +25,7 @@ const MENU_ANIMATION_SRC = "/menu-animation-v2.webm";
 const ASTERISK_ANIMATION_SRC = "/asterisk-animation.webm";
 
 
-export const Route = createFileRoute("/display/$token")({
+export const Route = createFileRoute("/menu")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter; lang?: "fr" | "en" } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
     const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
@@ -33,11 +33,11 @@ export const Route = createFileRoute("/display/$token")({
     return { ...(debug ? { debug: true } : {}), ...(menu ? { menu } : {}), ...(lang ? { lang } : {}) };
   },
   loaderDeps: ({ search }) => ({ menu: search.menu }),
-  loader: async ({ params, deps }) => {
+  loader: async ({ deps }) => {
     const isAuto = deps.menu === "auto";
     const [formatting, displayMenu, schedule] = await Promise.all([
       getMenuFormatting().catch(() => ({} as MenuFormatting)),
-      getDisplayMenu({ data: { token: params.token } }),
+      getDisplayMenu({ data: {} }),
       isAuto
         ? listMenuSchedulePublic().catch(() => ({ entries: [] as ScheduleEntry[] }))
         : Promise.resolve({ entries: [] as ScheduleEntry[] }),
@@ -387,7 +387,6 @@ const COLUMN_CSS = `
 `;
 
 function DisplayPage() {
-  const { token } = Route.useParams();
   const { debug, menu, lang } = Route.useSearch();
   const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
   const router = useRouter();
@@ -420,7 +419,7 @@ function DisplayPage() {
         .channel("menu-display")
         .on("broadcast", { event: "refresh" }, async () => {
           try {
-            await invalidateCache({ data: { token } });
+            await invalidateCache();
           } catch (e) {
             console.error("[display] cache invalidation failed", e);
           }
@@ -435,7 +434,7 @@ function DisplayPage() {
       cancelled = true;
       if (cleanup) cleanup();
     };
-  }, [router, invalidateCache, token]);
+  }, [router, invalidateCache]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {

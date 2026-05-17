@@ -43,8 +43,7 @@ export type DisplayMenu = {
   generated_at: string;
 };
 
-// Display token (rotate by changing here or wiring an env var)
-const DISPLAY_TOKEN = process.env.MENU_DISPLAY_TOKEN || "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
+// Display token retained only for the external public API (api/public/menu).
 
 // In-memory cache (5-min TTL). Fine on a single warm worker; cold starts will re-fetch.
 type CacheEntry = { data: DisplayMenu; expires: number };
@@ -149,14 +148,8 @@ async function buildMenu(): Promise<DisplayMenu> {
 }
 
 export const getDisplayMenu = createServerFn({ method: "GET" })
-  .inputValidator((input: { token: string; refreshKey?: number }) => {
-    if (typeof input?.token !== "string") throw new Error("token required");
-    return input;
-  })
+  .inputValidator((input: { refreshKey?: number } | undefined) => input ?? {})
   .handler(async ({ data }) => {
-    if (data.token !== DISPLAY_TOKEN) {
-      throw new Error("Invalid display token");
-    }
     const now = Date.now();
     const hit = cache.get("menu");
     if (!data.refreshKey && hit && hit.expires > now) {
@@ -198,12 +191,7 @@ export const refreshDisplayMenu = createServerFn({ method: "POST" })
  * warm worker that didn't process the write still serves fresh data on the next loader run.
  */
 export const invalidateDisplayMenuCache = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string }) => {
-    if (typeof input?.token !== "string") throw new Error("token required");
-    return input;
-  })
-  .handler(async ({ data }) => {
-    if (data.token !== DISPLAY_TOKEN) throw new Error("Invalid display token");
+  .handler(async () => {
     clearDisplayCache();
     return { ok: true };
   });
