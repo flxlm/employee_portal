@@ -28,7 +28,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -1028,27 +1032,33 @@ function MenuEditorPage() {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`https://menu.savsav.net?menu=auto`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Live Menu
-                  </a>
-                </DropdownMenuItem>
-                {menus.map((opt) => (
-                  <DropdownMenuItem key={opt.key} asChild>
-                    <a
-                      href={`https://menu.savsav.net?menu=${encodeURIComponent(opt.key)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {opt.label}
-                    </a>
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="end" className="w-56">
+                {(() => {
+                  const open = (menuKey: string, lang?: "fr" | "en") => {
+                    const params = new URLSearchParams({ menu: menuKey });
+                    if (lang) params.set("lang", lang);
+                    window.open(`https://menu.savsav.net/?${params.toString()}`, "_blank", "noopener,noreferrer");
+                  };
+                  const renderLangSub = (label: string, menuKey: string) => (
+                    <DropdownMenuSub key={menuKey}>
+                      <DropdownMenuSubTrigger>{label}</DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem onSelect={() => open(menuKey)}>Auto language</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => open(menuKey, "fr")}>Français</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => open(menuKey, "en")}>English</DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  );
+                  return (
+                    <>
+                      <DropdownMenuLabel>Live (auto menu)</DropdownMenuLabel>
+                      {renderLangSub("Live Menu", "auto")}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Specific menu</DropdownMenuLabel>
+                      {menus.map((opt) => renderLangSub(opt.label, opt.key))}
+                    </>
+                  );
+                })()}
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
