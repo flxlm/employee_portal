@@ -371,13 +371,6 @@ function InventoryPage() {
             </div>
           )}
         </div>
-
-        <PendingPanel
-          requests={orderRequests}
-          items={items}
-          userName={userName}
-          onAdHoc={() => setAdHocOpen(true)}
-        />
       </div>
 
       <AddItemDialog
