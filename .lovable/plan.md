@@ -1,16 +1,28 @@
-# Make "Refresh website" also refresh live menus
+# Fix "Translate Missing" returning "Nothing to translate" on new items
 
-Today the **Refresh website** action in the menu editor only pings the marketing site. The in-store / live menu screens are refreshed separately whenever you save an edit. This change makes the button do both at once.
+## Root cause
 
-## Behavior after the change
+When you type into a new item/section/subsection, `queueEdit` debounces a save. The server's `updateRow` runs the FR→EN auto‑translation and persists `title_en` (or `name_en`) plus a bumped `version`. But `flush()` in `src/routes/_app.menu-editor.tsx` never reloads after a successful save, so the editor keeps showing:
 
-When you click **Refresh website**:
-1. The marketing website menu is refreshed (current behavior).
-2. The live menu displays are also refreshed (new — same action that already runs after every save).
-3. Toast shows "Website and live menus refreshed".
+- `title_en = null` (stale)
+- `version = N` (stale; server is now `N+1`)
 
-If the website refresh fails, the live menus are still refreshed and the error toast mentions only the website failure.
+That has two visible effects:
 
-## Technical detail
+1. The "Translate Missing" menu item stays enabled because the client still thinks EN is empty. Clicking it calls the server, which reads the fresh row, sees EN is already populated, and returns `translated: 0` → toast **"Nothing to translate"**.
+2. The next debounced edit on the same row sends the stale `expectedVersion`, which can trip the optimistic‑lock conflict path.
 
-In `src/routes/_app.menu-editor.tsx`, update `handleRefreshWebsite` to also invoke the existing `triggerRefresh()` (which calls `refreshDisplayMenu`) alongside the existing `refreshWebsite({})` call. No new server functions, no schema changes.
+## Fix
+
+In `src/routes/_app.menu-editor.tsx`, after a successful `flush()` (no conflicts, no errors), call `await reload()` before `triggerRefresh()`. On the conflict branch we already reload. On the all‑errors branch we leave state alone so the user can retry.
+
+This makes the editor reflect the server‑side translation immediately:
+- `title_en` / `name_en` show the translated text
+- `version` is current, so subsequent edits don't conflict
+- "Translate Missing" auto‑disables when there's truly nothing left to translate
+
+## Files
+
+- `src/routes/_app.menu-editor.tsx` — add `await reload()` in the success branch of `flush()` (around line 528–531).
+
+No server, schema, or other UI changes needed.
