@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw, MoreHorizontal } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1051,31 +1051,47 @@ function MenuEditorPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleRefreshWebsite}
-              disabled={refreshingWebsite}
-              title={lastWebsiteRefresh ? `Last refreshed: ${new Date(lastWebsiteRefresh).toLocaleTimeString()}` : undefined}
-            >
-              <RefreshCw className={`h-4 w-4${refreshingWebsite ? " animate-spin" : ""}`} />
-              <span className="hidden xs:inline sm:inline">
-                {refreshingWebsite ? "Refreshing…" : "Refresh website"}
-              </span>
-            </Button>
-            <Button onClick={collapsed.size === sections.length && sections.length > 0 ? expandAll : collapseAll} size="sm" variant="outline">
-              {collapsed.size === sections.length && sections.length > 0 ? "Expand all" : "Collapse all"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleTranslateAll} disabled={translatingAll}>
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden xs:inline sm:inline">
-                {translatingAll
-                  ? translateProgress
-                    ? `Translating ${translateProgress.done}/${translateProgress.total}…`
-                    : "Translating…"
-                  : "Translate missing"}
-              </span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="hidden xs:inline sm:inline">More</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={(e) => { e.preventDefault(); handleRefreshWebsite(); }}
+                  disabled={refreshingWebsite}
+                >
+                  <RefreshCw className={`h-4 w-4${refreshingWebsite ? " animate-spin" : ""}`} />
+                  {refreshingWebsite ? "Refreshing…" : "Refresh website"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => { e.preventDefault(); handleTranslateAll(); }}
+                  disabled={translatingAll}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {translatingAll
+                    ? translateProgress
+                      ? `Translating ${translateProgress.done}/${translateProgress.total}…`
+                      : "Translating…"
+                    : "Translate missing"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    if (collapsed.size === sections.length && sections.length > 0) expandAll();
+                    else collapseAll();
+                  }}
+                >
+                  {collapsed.size === sections.length && sections.length > 0 ? (
+                    <><ChevronDown className="h-4 w-4" /> Expand all</>
+                  ) : (
+                    <><ChevronUp className="h-4 w-4" /> Collapse all</>
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm">
