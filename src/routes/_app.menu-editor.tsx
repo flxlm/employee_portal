@@ -721,44 +721,174 @@ function MenuEditorPage() {
     );
   };
 
-  const addSection = async () => {
+  const addSection = () => {
+    const tempId = crypto.randomUUID();
     const order = sections.length + 1;
-    const { row } = await insert({ data: { table: "menu_sections" as never, values: { name: "New section", display_order: order } as never } });
-    setSections((s) => [...s, { ...(row as unknown as MenuSection), subsections: [] }]);
-    triggerRefresh();
+    const optimistic: MenuSection = {
+      id: tempId,
+      name: "New section",
+      name_en: null,
+      name_source_lang: "fr",
+      name_translated_from: null,
+      name_is_manual_override: false,
+      description: "",
+      description_en: null,
+      description_source_lang: "fr",
+      description_translated_from: null,
+      description_is_manual_override: false,
+      do_not_translate: false,
+      display_order: order,
+      version: 0,
+      visible_menus: ["breakfast", "lunch", "dinner"],
+      is_hidden: false,
+      sold_out_date: null,
+      subsections: [],
+    };
+    setSections((s) => [...s, optimistic]);
+    runOptimisticInsert({
+      table: "menu_sections",
+      tempId,
+      values: { name: "New section", display_order: order },
+      onReconcile: (real) => {
+        setSections((s) => s.map((sec) => (sec.id === tempId ? { ...sec, id: real.id, version: real.version, display_order: real.display_order } : sec)));
+      },
+    });
   };
-  const addSubsection = async (sectionId: string) => {
+  const addSubsection = (sectionId: string) => {
     const sec = sections.find((s) => s.id === sectionId);
     if (!sec) return;
+    const tempId = crypto.randomUUID();
     const order = sec.subsections.length + 1;
-    const { row } = await insert({
-      data: { table: "menu_subsections" as never, values: { section_id: sectionId, name: "New subsection", display_order: order } as never },
+    const optimistic: MenuSubsection = {
+      id: tempId,
+      section_id: sectionId,
+      name: "New subsection",
+      name_en: null,
+      name_source_lang: "fr",
+      name_translated_from: null,
+      name_is_manual_override: false,
+      description: "",
+      description_en: null,
+      description_source_lang: "fr",
+      description_translated_from: null,
+      description_is_manual_override: false,
+      do_not_translate: false,
+      display_order: order,
+      version: 0,
+      visible_menus: ["breakfast", "lunch", "dinner"],
+      is_hidden: false,
+      sold_out_date: null,
+      items: [],
+    };
+    patchSection(sectionId, { subsections: [...sec.subsections, optimistic] });
+    runOptimisticInsert({
+      table: "menu_subsections",
+      tempId,
+      values: { section_id: sectionId, name: "New subsection", display_order: order },
+      onReconcile: (real) => {
+        setSections((s) =>
+          s.map((x) =>
+            x.id !== sectionId
+              ? x
+              : { ...x, subsections: x.subsections.map((ss) => (ss.id === tempId ? { ...ss, id: real.id, version: real.version, display_order: real.display_order } : ss)) }
+          )
+        );
+      },
     });
-    patchSection(sectionId, { subsections: [...sec.subsections, { ...(row as unknown as MenuSubsection), items: [] }] });
-    triggerRefresh();
   };
-  const addItem = async (sectionId: string, subId: string) => {
+  const addItem = (sectionId: string, subId: string) => {
     const sub = sections.find((s) => s.id === sectionId)?.subsections.find((ss) => ss.id === subId);
     if (!sub) return;
+    const tempId = crypto.randomUUID();
     const order = sub.items.length + 1;
-    const { row } = await insert({
-      data: { table: "menu_items" as never, values: { subsection_id: subId, title: "New item", base_price_cents: 0, display_order: order } as never },
+    const optimistic: MenuItem = {
+      id: tempId,
+      subsection_id: subId,
+      title: "New item",
+      title_en: null,
+      title_source_lang: "fr",
+      title_translated_from: null,
+      title_is_manual_override: false,
+      description: "",
+      description_en: null,
+      description_source_lang: "fr",
+      description_translated_from: null,
+      description_is_manual_override: false,
+      do_not_translate: false,
+      base_price_cents: 0,
+      display_order: order,
+      version: 0,
+      is_hidden: false,
+      sold_out_date: null,
+      modifications: [],
+    };
+    patchSubsection(sectionId, subId, { items: [...sub.items, optimistic] });
+    runOptimisticInsert({
+      table: "menu_items",
+      tempId,
+      values: { subsection_id: subId, title: "New item", base_price_cents: 0, display_order: order },
+      onReconcile: (real) => {
+        setSections((s) =>
+          s.map((x) =>
+            x.id !== sectionId
+              ? x
+              : {
+                  ...x,
+                  subsections: x.subsections.map((ss) =>
+                    ss.id !== subId
+                      ? ss
+                      : { ...ss, items: ss.items.map((it) => (it.id === tempId ? { ...it, id: real.id, version: real.version, display_order: real.display_order } : it)) }
+                  ),
+                }
+          )
+        );
+      },
     });
-    patchSubsection(sectionId, subId, { items: [...sub.items, { ...(row as unknown as MenuItem), modifications: [] }] });
-    triggerRefresh();
   };
-  const addMod = async (sectionId: string, subId: string, itemId: string) => {
+  const addMod = (sectionId: string, subId: string, itemId: string) => {
     const item = sections
       .find((s) => s.id === sectionId)
       ?.subsections.find((ss) => ss.id === subId)
       ?.items.find((i) => i.id === itemId);
     if (!item) return;
+    const tempId = crypto.randomUUID();
     const order = item.modifications.length + 1;
-    const { row } = await insert({
-      data: { table: "item_modifications" as never, values: { item_id: itemId, modification_name: "Modification", price_modifier_cents: 0, display_order: order } as never },
+    const optimistic: MenuModification = {
+      id: tempId,
+      modification_name: "Modification",
+      price_modifier_cents: 0,
+      display_order: order,
+      version: 0,
+    };
+    patchItem(sectionId, subId, itemId, { modifications: [...item.modifications, optimistic] });
+    runOptimisticInsert({
+      table: "item_modifications",
+      tempId,
+      values: { item_id: itemId, modification_name: "Modification", price_modifier_cents: 0, display_order: order },
+      onReconcile: (real) => {
+        setSections((s) =>
+          s.map((x) =>
+            x.id !== sectionId
+              ? x
+              : {
+                  ...x,
+                  subsections: x.subsections.map((ss) =>
+                    ss.id !== subId
+                      ? ss
+                      : {
+                          ...ss,
+                          items: ss.items.map((it) =>
+                            it.id !== itemId
+                              ? it
+                              : { ...it, modifications: it.modifications.map((m) => (m.id === tempId ? { ...m, id: real.id, version: real.version, display_order: real.display_order } : m)) }
+                          ),
+                        }
+                  ),
+                }
+          )
+        );
+      },
     });
-    patchItem(sectionId, subId, itemId, { modifications: [...item.modifications, row as unknown as MenuModification] });
-    triggerRefresh();
   };
 
   const duplicateSection = async (sectionId: string) => {
