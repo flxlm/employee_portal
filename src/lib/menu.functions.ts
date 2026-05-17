@@ -105,10 +105,12 @@ async function callLovableTranslate(args: {
 }): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("LOVABLE_API_KEY not configured");
-  const LANG = { fr: "French", en: "English" } as const;
+  const LANG = { fr: "Québécois French", en: "English" } as const;
   const system = `You are a professional menu translator for a Montreal café. Translate menu text from ${LANG[args.source_lang]} to ${LANG[args.target_lang]}. Rules:
+- The French side is always Québécois French (not France French). Use colloquial Québécois terms commonly heard in Montreal cafés and bistros (e.g. "déjeuner" = breakfast, "dîner" = lunch, "souper" = dinner, "blé d'Inde", "patates", "cretons", "tourtière", "poutine", "smoked meat", "guédille", "pâté chinois", "fèves au lard", "binnes", "toasts", "oeuf tourné", "bacon", "saucisses"). Prefer everyday spoken Québécois wording over formal/European French.
+- Keep dish names natural and colloquial — how a Montreal server would actually say it, not a literal dictionary translation.
 - Keep the translation concise and natural for a ${LANG[args.target_lang]}-speaking customer.
-- Preserve loanwords commonly used in both languages (e.g. "gravlax" stays "gravlax", "baguette" stays "baguette").
+- Preserve loanwords commonly used in both languages (e.g. "gravlax" stays "gravlax", "baguette" stays "baguette", "bagel" stays "bagel", "grilled cheese" stays "grilled cheese" in QC French).
 - For item names, prefer short, evocative translations.
 - Match the SAME formatting as the input: ALL CAPS in → ALL CAPS out; sentence case in → sentence case out.
 - Never translate brand or proper names (e.g. "Savsav").
