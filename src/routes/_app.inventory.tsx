@@ -258,8 +258,20 @@ function InventoryPage() {
               )}
 
               <Card className="overflow-hidden">
-                <div className="border-b bg-muted/40 px-4 py-2">
-                  <div className="relative max-w-sm">
+                <div className="border-b bg-muted/40 px-4 py-2 flex items-center gap-3 flex-wrap">
+                  <Select value={activeCategory} onValueChange={setActiveCategory}>
+                    <SelectTrigger className="w-[180px] bg-background">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative max-w-sm flex-1 min-w-[200px]">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search items…"
