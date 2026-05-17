@@ -30,9 +30,8 @@ export const Route = createFileRoute("/api/public/menu")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const token = url.searchParams.get("token") ?? "";
-        const expected =
-          process.env.MENU_DISPLAY_TOKEN || "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
-        if (!token || token !== expected) {
+        const expected = process.env.MENU_DISPLAY_TOKEN ?? "";
+        if (!expected || !token || token !== expected) {
           return jsonResponse({ error: "Invalid token" }, { status: 401 });
         }
 
