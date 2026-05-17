@@ -1244,13 +1244,23 @@ function MenuEditorPage() {
                             </Button>
                           </div>
                           <div className="flex-1 grid gap-2 sm:grid-cols-[1fr_120px]">
-                            <Input
-                              value={item.title}
-                              onChange={(e) => {
-                                patchItem(sec.id, sub.id, item.id, { title: e.target.value });
-                                queueEdit("menu_items", item.id, item.version, { title: e.target.value });
+                            <BilingualField
+                              fr={item.title}
+                              en={item.title_en}
+                              sourceLang={item.title_source_lang}
+                              isManualOverrideFr={item.title_source_lang === "en" && item.title_is_manual_override}
+                              isManualOverrideEn={item.title_source_lang === "fr" && item.title_is_manual_override}
+                              doNotTranslate={item.do_not_translate}
+                              placeholderFr="Titre"
+                              placeholderEn="Title"
+                              onChange={({ fr, en, hint }) => {
+                                patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
+                                queueEdit("menu_items", item.id, item.version, {
+                                  title: fr,
+                                  title_en: en,
+                                  title_source_lang_hint: hint,
+                                });
                               }}
-                              placeholder="Item title"
                             />
                             <PriceInput
                               cents={item.base_price_cents}
@@ -1260,16 +1270,28 @@ function MenuEditorPage() {
                               }}
                             />
                             {hasDesc(item.id, item.description) && (
-                              <Textarea
-                                className="sm:col-span-2"
-                                rows={1}
-                                value={item.description}
-                                onChange={(e) => {
-                                  patchItem(sec.id, sub.id, item.id, { description: e.target.value });
-                                  queueEdit("menu_items", item.id, item.version, { description: e.target.value });
-                                }}
-                                placeholder="Item description"
-                              />
+                              <div className="sm:col-span-2">
+                                <BilingualField
+                                  multiline
+                                  rows={1}
+                                  fr={item.description}
+                                  en={item.description_en}
+                                  sourceLang={item.description_source_lang}
+                                  isManualOverrideFr={item.description_source_lang === "en" && item.description_is_manual_override}
+                                  isManualOverrideEn={item.description_source_lang === "fr" && item.description_is_manual_override}
+                                  doNotTranslate={item.do_not_translate}
+                                  placeholderFr="Description"
+                                  placeholderEn="Description"
+                                  onChange={({ fr, en, hint }) => {
+                                    patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
+                                    queueEdit("menu_items", item.id, item.version, {
+                                      description: fr,
+                                      description_en: en,
+                                      description_source_lang_hint: hint,
+                                    });
+                                  }}
+                                />
+                              </div>
                             )}
                           </div>
                           <RowSettingsMenu
@@ -1290,6 +1312,12 @@ function MenuEditorPage() {
                             onDelete={() => removeRow("menu_items", item.id)}
                             onAddDescription={() => revealDesc(item.id)}
                             canAddDescription={!hasDesc(item.id, item.description)}
+                            doNotTranslate={item.do_not_translate}
+                            onToggleDoNotTranslate={() => {
+                              const next = !item.do_not_translate;
+                              patchItem(sec.id, sub.id, item.id, { do_not_translate: next });
+                              queueEdit("menu_items", item.id, item.version, { do_not_translate: next });
+                            }}
                           />
                         </div>
 
