@@ -1036,11 +1036,12 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
       item_id: item.id,
       supplier: supplier.trim(),
       cost: Number(cost) || 0,
+      pack_size: Number(packSize) > 0 ? Number(packSize) : 1,
       notes: notes.trim() || null,
     });
     if (error) toast.error(error.message);
     else {
-      setSupplier(""); setCost(""); setNotes("");
+      setSupplier(""); setCost(""); setPackSize("1"); setNotes("");
       load();
     }
   };
