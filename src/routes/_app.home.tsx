@@ -67,10 +67,11 @@ function HomePage() {
   ];
 
   const orderedTiles = useMemo(() => {
-    if (!order) return tiles;
+    const activeOrder = draftOrder ?? order;
+    if (!activeOrder) return tiles;
     const byKey = new Map(tiles.map((t) => [t.key, t]));
     const result: Tile[] = [];
-    for (const k of order) {
+    for (const k of activeOrder) {
       const t = byKey.get(k);
       if (t) {
         result.push(t);
@@ -80,7 +81,7 @@ function HomePage() {
     // Append any tiles not in saved order (new ones, or admin tiles that appeared later)
     for (const t of tiles) if (byKey.has(t.key)) result.push(t);
     return result;
-  }, [order, tiles]);
+  }, [draftOrder, order, tiles]);
 
   const persist = (next: Tile[]) => {
     const keys = next.map((t) => t.key);
