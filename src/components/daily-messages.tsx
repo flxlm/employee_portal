@@ -189,7 +189,60 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
               placeholder="Share a note with the team…"
               rows={2}
             />
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Today", from: startOfToday(), to: startOfToday() },
+                { label: "Tomorrow", from: addDays(startOfToday(), 1), to: addDays(startOfToday(), 1) },
+                { label: "Next 7 days", from: startOfToday(), to: addDays(startOfToday(), 6) },
+                { label: "Next 30 days", from: startOfToday(), to: addDays(startOfToday(), 29) },
+              ].map((q) => {
+                const active =
+                  startOfDayIso(visibleFrom) === startOfDayIso(q.from) &&
+                  startOfDayIso(expiresOn) === startOfDayIso(q.to);
+                return (
+                  <Button
+                    key={q.label}
+                    type="button"
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    onClick={() => applyQuickRange(q.from, q.to)}
+                  >
+                    {q.label}
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="flex flex-wrap items-end gap-3">
+              <div className="grid gap-1">
+                <Label className="text-xs">Visible from</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("w-52 justify-start font-normal")}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      {formatPretty(visibleFrom)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={visibleFrom}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        setVisibleFrom(d);
+                        if (expiresOn < d) setExpiresOn(d);
+                      }}
+                      disabled={(d) => d < startOfToday()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="grid gap-1">
                 <Label className="text-xs">Visible until end of</Label>
                 <Popover>
@@ -197,7 +250,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
                     <Button
                       variant="outline"
                       size="sm"
-                      className={cn("w-56 justify-start font-normal")}
+                      className={cn("w-52 justify-start font-normal")}
                     >
                       <CalendarIcon className="h-4 w-4 mr-2" />
                       {formatPretty(expiresOn)}
@@ -208,8 +261,9 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
                       mode="single"
                       selected={expiresOn}
                       onSelect={(d) => d && setExpiresOn(d)}
-                      disabled={(d) => d < startOfToday()}
+                      disabled={(d) => d < visibleFrom}
                       initialFocus
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
