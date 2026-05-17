@@ -55,6 +55,7 @@ function InventoryPage() {
   const [flagItem, setFlagItem] = useState<InventoryItem | null>(null);
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
