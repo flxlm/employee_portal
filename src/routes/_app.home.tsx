@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays, Wine, ClipboardCheck, Users, BookOpen, UtensilsCrossed, Package, ClipboardList, KeyRound, GripVertical, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasscodesDialog } from "@/components/passcodes-dialog";
+import { DailyMessages } from "@/components/daily-messages";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/home")({
@@ -139,6 +140,8 @@ function HomePage() {
           </Button>
         </div>
       </header>
+
+      <DailyMessages isAdmin={isAdmin} userId={user?.id ?? null} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {orderedTiles.map(({ key, to, onClick, title, description, icon: Icon }) => {
