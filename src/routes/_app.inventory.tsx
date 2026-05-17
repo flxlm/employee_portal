@@ -302,7 +302,10 @@ function InventoryPage() {
                                 />
                                 {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-sm text-muted-foreground truncate">
+                                {categoryMap[it.category_id] ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right">
                                 <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
                               </TableCell>
                               <TableCell>
