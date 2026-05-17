@@ -95,7 +95,7 @@ function InventoryPage() {
     });
 
   useEffect(() => {
-    if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
+    if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, JSON.stringify(sort));
   }, [sort]);
 
   useEffect(() => {
