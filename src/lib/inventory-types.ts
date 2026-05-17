@@ -26,6 +26,7 @@ export type InventoryItemSupplier = {
   item_id: string;
   supplier: string;
   cost: number;
+  pack_size: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
