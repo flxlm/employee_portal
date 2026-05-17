@@ -389,7 +389,7 @@ function InventoryPage() {
                                             {best ? (
                                               <span className="text-sm">
                                                 {best.supplier}
-                                                <span className="text-muted-foreground tabular-nums ml-2">${Number(best.cost).toFixed(2)}{best.pack_size && Number(best.pack_size) !== 1 ? ` / ${Number(best.pack_size)}${it.unit || ""}` : ""}</span>
+                                                <span className="text-muted-foreground tabular-nums ml-2">CA${Number(best.cost).toFixed(2)}{best.pack_size && Number(best.pack_size) !== 1 ? ` / ${Number(best.pack_size)}${it.unit || ""}` : ""}</span>
                                                 {count > 1 && <span className="text-muted-foreground ml-1 opacity-70">· +{count - 1}</span>}
                                               </span>
                                             ) : (
@@ -715,7 +715,7 @@ function AddItemDialog({
                   />
                   <Input
                     type="number"
-                    placeholder="Cost $"
+                    placeholder="Cost (CAD)"
                     value={s.cost}
                     onChange={(e) => updateSupplier(i, { cost: e.target.value })}
                   />
@@ -1076,7 +1076,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
               <TableHeader>
                 <TableRow>
                   <TableHead>Supplier</TableHead>
-                  <TableHead className="w-24">Cost $</TableHead>
+                  <TableHead className="w-24">Cost (CAD)</TableHead>
                   <TableHead className="w-28">Pack ({item?.unit || "unit"})</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="w-12" />
@@ -1114,7 +1114,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
 
           <div className="border-t pt-3 grid grid-cols-[1fr_100px_110px_1fr_auto] gap-2 items-end">
             <Field label="Supplier"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
-            <Field label="Cost $"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label="Cost (CAD)"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
             <Field label={`Pack (${item?.unit || "unit"})`}><Input type="number" value={packSize} onChange={(e) => setPackSize(e.target.value)} /></Field>
             <Field label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. min order 5kg" /></Field>
             <Button onClick={add}><Plus className="h-4 w-4" /> Add</Button>
