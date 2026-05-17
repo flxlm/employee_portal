@@ -1037,25 +1037,45 @@ function MenuEditorPage() {
                   </Button>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <Input
-                    className="text-lg font-semibold"
-                    value={sec.name}
-                    onChange={(e) => {
-                      patchSection(sec.id, { name: e.target.value });
-                      queueEdit("menu_sections", sec.id, sec.version, { name: e.target.value });
+                  <BilingualField
+                    fr={sec.name}
+                    en={sec.name_en}
+                    sourceLang={sec.name_source_lang}
+                    isManualOverrideFr={sec.name_source_lang === "en" && sec.name_is_manual_override}
+                    isManualOverrideEn={sec.name_source_lang === "fr" && sec.name_is_manual_override}
+                    doNotTranslate={sec.do_not_translate}
+                    placeholderFr="Nom de section"
+                    placeholderEn="Section name"
+                    inputClassName="text-lg font-semibold"
+                    onChange={({ fr, en, hint }) => {
+                      patchSection(sec.id, { name: fr, name_en: en });
+                      queueEdit("menu_sections", sec.id, sec.version, {
+                        name: fr,
+                        name_en: en,
+                        name_source_lang_hint: hint,
+                      });
                     }}
-                    placeholder="Section name"
                   />
                   {!collapsed.has(sec.id) && (
                     hasDesc(sec.id, sec.description) ? (
-                      <Textarea
-                        rows={1}
-                        value={sec.description}
-                        onChange={(e) => {
-                          patchSection(sec.id, { description: e.target.value });
-                          queueEdit("menu_sections", sec.id, sec.version, { description: e.target.value });
+                      <BilingualField
+                        multiline
+                        fr={sec.description}
+                        en={sec.description_en}
+                        sourceLang={sec.description_source_lang}
+                        isManualOverrideFr={sec.description_source_lang === "en" && sec.description_is_manual_override}
+                        isManualOverrideEn={sec.description_source_lang === "fr" && sec.description_is_manual_override}
+                        doNotTranslate={sec.do_not_translate}
+                        placeholderFr="Description (FR)"
+                        placeholderEn="Description (EN)"
+                        onChange={({ fr, en, hint }) => {
+                          patchSection(sec.id, { description: fr, description_en: en });
+                          queueEdit("menu_sections", sec.id, sec.version, {
+                            description: fr,
+                            description_en: en,
+                            description_source_lang_hint: hint,
+                          });
                         }}
-                        placeholder="Section description"
                       />
                     ) : (
                       <button
