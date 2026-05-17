@@ -1711,7 +1711,7 @@ function MenuEditorPage() {
                         </div>
                       </div>
                     ))}
-                    <Button size="sm" variant="outline" onClick={() => addItem(sec.id, sub.id)}>
+                    <Button size="sm" variant="outline" disabled={isTempUnresolved(sub.id)} onClick={() => addItem(sec.id, sub.id)}>
                       <Plus className="h-3 w-3" /> Add item
                     </Button>
                   </div>
