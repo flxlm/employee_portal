@@ -222,7 +222,7 @@ function InventoryPage() {
                         <TableHead className="w-24">Qty</TableHead>
                         <TableHead className="w-20">Unit</TableHead>
                         <TableHead className="w-20">Par</TableHead>
-                        <TableHead className="w-24">Reorder ≤</TableHead>
+                        <TableHead className="w-24 whitespace-nowrap">Reorder ≤</TableHead>
                         <TableHead className="w-24">Status</TableHead>
                         <TableHead className="hidden md:table-cell">Supplier</TableHead>
                         <TableHead className="hidden md:table-cell">Updated</TableHead>
