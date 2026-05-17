@@ -2,6 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type Lang = "fr" | "en";
+
+export type BilingualField = {
+  en: string | null;
+  source_lang: Lang;
+  translated_from: string | null;
+  is_manual_override: boolean;
+};
+
 export type MenuModification = {
   id: string;
   modification_name: string;
@@ -14,7 +23,16 @@ export type MenuItem = {
   id: string;
   subsection_id: string;
   title: string;
+  title_en: string | null;
+  title_source_lang: Lang;
+  title_translated_from: string | null;
+  title_is_manual_override: boolean;
   description: string;
+  description_en: string | null;
+  description_source_lang: Lang;
+  description_translated_from: string | null;
+  description_is_manual_override: boolean;
+  do_not_translate: boolean;
   base_price_cents: number;
   display_order: number;
   version: number;
@@ -27,7 +45,16 @@ export type MenuSubsection = {
   id: string;
   section_id: string;
   name: string;
+  name_en: string | null;
+  name_source_lang: Lang;
+  name_translated_from: string | null;
+  name_is_manual_override: boolean;
   description: string;
+  description_en: string | null;
+  description_source_lang: Lang;
+  description_translated_from: string | null;
+  description_is_manual_override: boolean;
+  do_not_translate: boolean;
   display_order: number;
   version: number;
   visible_menus: string[];
@@ -39,7 +66,16 @@ export type MenuSubsection = {
 export type MenuSection = {
   id: string;
   name: string;
+  name_en: string | null;
+  name_source_lang: Lang;
+  name_translated_from: string | null;
+  name_is_manual_override: boolean;
   description: string;
+  description_en: string | null;
+  description_source_lang: Lang;
+  description_translated_from: string | null;
+  description_is_manual_override: boolean;
+  do_not_translate: boolean;
   display_order: number;
   version: number;
   visible_menus: string[];
@@ -47,6 +83,56 @@ export type MenuSection = {
   sold_out_date: string | null;
   subsections: MenuSubsection[];
 };
+
+const TRANSLATABLE_BY_TABLE: Record<string, readonly string[]> = {
+  menu_items: ["title", "description"],
+  menu_subsections: ["name", "description"],
+  menu_sections: ["name", "description"],
+};
+
+function fieldType(table: string, field: string): string {
+  if (table === "menu_items") return field === "title" ? "item_name" : "item_description";
+  if (table === "menu_subsections")
+    return field === "name" ? "subsection_name" : "subsection_description";
+  return field === "name" ? "section_name" : "section_description";
+}
+
+async function callLovableTranslate(args: {
+  text: string;
+  source_lang: Lang;
+  target_lang: Lang;
+  type: string;
+}): Promise<string> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("LOVABLE_API_KEY not configured");
+  const LANG = { fr: "French", en: "English" } as const;
+  const system = `You are a professional menu translator for a Montreal café. Translate menu text from ${LANG[args.source_lang]} to ${LANG[args.target_lang]}. Rules:
+- Keep the translation concise and natural for a ${LANG[args.target_lang]}-speaking customer.
+- Preserve loanwords commonly used in both languages (e.g. "gravlax" stays "gravlax", "baguette" stays "baguette").
+- For item names, prefer short, evocative translations.
+- Match the SAME formatting as the input: ALL CAPS in → ALL CAPS out; sentence case in → sentence case out.
+- Never translate brand or proper names (e.g. "Savsav").
+- Never include explanations, alternatives, or quotation marks. Return ONLY the translation, nothing else.`;
+  const user = `Translate this ${args.type.replace(/_/g, " ")} from ${LANG[args.source_lang]} to ${LANG[args.target_lang]}:\n\n${args.text}`;
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      max_tokens: 200,
+    }),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Lovable AI gateway ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return String(data.choices?.[0]?.message?.content ?? "").trim();
+}
 
 export const listMenu = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
