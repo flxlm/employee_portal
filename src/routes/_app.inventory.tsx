@@ -57,6 +57,14 @@ function InventoryPage() {
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
