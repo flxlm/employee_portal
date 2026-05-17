@@ -369,6 +369,8 @@ function InventoryPage() {
           categories={categories}
         />
       )}
+
+      <SuppliersDialog item={suppliersItem} onClose={() => setSuppliersItem(null)} />
     </div>
   );
 }
