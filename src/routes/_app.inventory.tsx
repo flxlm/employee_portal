@@ -541,6 +541,15 @@ function PendingPanel({
     return m;
   }, [items]);
 
+  const markReceived = async (r: OrderRequest) => {
+    const { error } = await supabase
+      .from("order_requests")
+      .update({ status: "received" })
+      .eq("id", r.id);
+    if (error) toast.error(error.message);
+    else toast.success("Marked received");
+  };
+
   return (
     <Card className="p-4 h-fit">
       <h2 className="font-semibold text-sm mb-1">Pending order requests</h2>
@@ -556,18 +565,23 @@ function PendingPanel({
             ? itemMap[r.inventory_item_id]?.name ?? "(item removed)"
             : r.ad_hoc_name ?? "Ad-hoc request";
           return (
-            <div key={r.id} className="text-sm border border-border rounded-md p-2">
-              <div className="font-medium">{name}</div>
-              {r.quantity_needed != null && (
-                <div className="text-xs text-muted-foreground">
-                  Need {r.quantity_needed} {r.unit ?? ""}
+            <div key={r.id} className="text-sm border border-border rounded-md p-2 flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">{name}</div>
+                {r.quantity_needed != null && (
+                  <div className="text-xs text-muted-foreground">
+                    Need {r.quantity_needed} {r.unit ?? ""}
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground mt-1">
+                  {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
+                  {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
                 </div>
-              )}
-              <div className="text-xs text-muted-foreground mt-1">
-                {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
-                {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
+                {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
               </div>
-              {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
+              <Button size="sm" variant="outline" onClick={() => markReceived(r)}>
+                Received
+              </Button>
             </div>
           );
         })}
