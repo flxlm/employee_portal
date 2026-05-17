@@ -149,6 +149,13 @@ export const refreshDisplayMenu = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[refreshDisplayMenu] broadcast failed", e);
     }
+    // Fire-and-forget external webhook (e.g. savsav.net marketing site).
+    try {
+      const { notifyMenuChanged } = await import("@/lib/app-settings.functions");
+      await notifyMenuChanged();
+    } catch (e) {
+      console.error("[refreshDisplayMenu] notify failed", e);
+    }
     return { ok: true };
   });
 
