@@ -252,14 +252,13 @@ function InventoryPage() {
                         <TableHead className="w-24">Qty</TableHead>
                         <TableHead className="w-20">Unit</TableHead>
                         <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="hidden md:table-cell">Supplier / cost</TableHead>
                         <TableHead className="w-[180px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {visibleItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                             No items. Click "Add item" to start.
                           </TableCell>
                         </TableRow>
@@ -312,31 +311,6 @@ function InventoryPage() {
                                   {status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {(() => {
-                                  const best = bestSupplierByItem[it.id];
-                                  const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
-                                  return (
-                                    <button
-                                      type="button"
-                                      onClick={() => setSuppliersItem(it)}
-                                      className="text-left hover:bg-accent/40 rounded px-1 -mx-1 py-0.5 w-full"
-                                    >
-                                      {best ? (
-                                        <>
-                                          <div className="text-sm">{best.supplier}</div>
-                                          <div className="text-xs text-muted-foreground tabular-nums">
-                                            €{Number(best.cost).toFixed(2)}
-                                            {count > 1 && <span className="ml-1 opacity-70">· +{count - 1}</span>}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <span className="text-muted-foreground text-sm">+ Add supplier</span>
-                                      )}
-                                    </button>
-                                  );
-                                })()}
-                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center gap-1 justify-end">
                                   <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
@@ -377,8 +351,8 @@ function InventoryPage() {
                             {expandedRows.has(it.id) && (
                               <TableRow className="bg-muted/30 hover:bg-muted/30">
                                 <TableCell />
-                                <TableCell colSpan={6}>
-                                  <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1">
+                                <TableCell colSpan={5}>
+                                  <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm py-1 items-center">
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Par:</span>
                                       <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
@@ -386,6 +360,30 @@ function InventoryPage() {
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Reorder ≤:</span>
                                       <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Supplier / cost:</span>
+                                      {(() => {
+                                        const best = bestSupplierByItem[it.id];
+                                        const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
+                                        return (
+                                          <button
+                                            type="button"
+                                            onClick={() => setSuppliersItem(it)}
+                                            className="text-left hover:bg-accent/40 rounded px-2 py-0.5"
+                                          >
+                                            {best ? (
+                                              <span className="text-sm">
+                                                {best.supplier}
+                                                <span className="text-muted-foreground tabular-nums ml-2">€{Number(best.cost).toFixed(2)}</span>
+                                                {count > 1 && <span className="text-muted-foreground ml-1 opacity-70">· +{count - 1}</span>}
+                                              </span>
+                                            ) : (
+                                              <span className="text-muted-foreground text-sm">+ Add supplier</span>
+                                            )}
+                                          </button>
+                                        );
+                                      })()}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
                                       Updated {timeAgo(it.updated_at)} · {userName(it.updated_by)}
