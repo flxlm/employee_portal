@@ -39,17 +39,6 @@ function AppLayout() {
     }
   }, [collapsed]);
 
-  if (typeof window !== "undefined" && isMenuHost(window.location.host)) {
-    return (
-      <Navigate
-        to="/display/$token"
-        params={{ token: DEFAULT_DISPLAY_TOKEN }}
-        search={{ menu: "auto", lang: "fr" }}
-        replace
-      />
-    );
-  }
-
   useEffect(() => {
     if (!user) return;
     supabase
@@ -60,6 +49,17 @@ function AppLayout() {
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  if (typeof window !== "undefined" && isMenuHost(window.location.host)) {
+    return (
+      <Navigate
+        to="/display/$token"
+        params={{ token: DEFAULT_DISPLAY_TOKEN }}
+        search={{ menu: "auto", lang: "fr" }}
+        replace
+      />
+    );
+  }
 
   if (loading) {
     return (
