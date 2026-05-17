@@ -20,6 +20,7 @@ import {
   timeAgo,
   type InventoryCategory,
   type InventoryItem,
+  type InventoryItemSupplier,
   type OrderRequest,
 } from "@/lib/inventory-types";
 
@@ -54,6 +55,7 @@ function InventoryPage() {
   const [flagItem, setFlagItem] = useState<InventoryItem | null>(null);
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem(SORT_STORAGE, sort);
@@ -302,6 +304,7 @@ function InventoryPage() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
                                         {isAdmin && (
                                           <DropdownMenuItem
@@ -366,6 +369,8 @@ function InventoryPage() {
           categories={categories}
         />
       )}
+
+      <SuppliersDialog item={suppliersItem} onClose={() => setSuppliersItem(null)} />
     </div>
   );
 }
@@ -824,5 +829,126 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <Label className="text-xs">{label}</Label>
       {children}
     </div>
+  );
+}
+
+function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClose: () => void }) {
+  const [rows, setRows] = useState<InventoryItemSupplier[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [supplier, setSupplier] = useState("");
+  const [cost, setCost] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const load = useCallback(async () => {
+    if (!item) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("inventory_item_suppliers")
+      .select("*")
+      .eq("item_id", item.id)
+      .order("cost", { ascending: true });
+    setLoading(false);
+    if (error) toast.error(error.message);
+    else setRows((data ?? []) as InventoryItemSupplier[]);
+  }, [item]);
+
+  useEffect(() => {
+    if (item) load();
+    else setRows([]);
+  }, [item, load]);
+
+  const add = async () => {
+    if (!item || !supplier.trim()) {
+      toast.error("Supplier required");
+      return;
+    }
+    const { error } = await supabase.from("inventory_item_suppliers").insert({
+      item_id: item.id,
+      supplier: supplier.trim(),
+      cost: Number(cost) || 0,
+      notes: notes.trim() || null,
+    });
+    if (error) toast.error(error.message);
+    else {
+      setSupplier(""); setCost(""); setNotes("");
+      load();
+    }
+  };
+
+  const updateRow = async (id: string, patch: Partial<InventoryItemSupplier>) => {
+    const { error } = await supabase.from("inventory_item_suppliers").update(patch).eq("id", id);
+    if (error) toast.error(error.message);
+    else load();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("inventory_item_suppliers").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else load();
+  };
+
+  return (
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Suppliers & costs</DialogTitle>
+          <DialogDescription>{item?.name} — compare prices across suppliers.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {!loading && rows.length === 0 && (
+            <p className="text-sm text-muted-foreground">No supplier prices recorded yet.</p>
+          )}
+          {rows.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead className="w-28">Cost</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead className="w-12" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>
+                      <InlineText value={r.supplier} onSave={(v) => v && updateRow(r.id, { supplier: v })} />
+                    </TableCell>
+                    <TableCell>
+                      <InlineNumber value={r.cost} onSave={(v) => updateRow(r.id, { cost: v })} />
+                    </TableCell>
+                    <TableCell>
+                      <InlineText
+                        value={r.notes ?? ""}
+                        placeholder="—"
+                        onSave={(v) => updateRow(r.id, { notes: v || null })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(r.id)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          <div className="border-t pt-3 grid grid-cols-[1fr_120px_1fr_auto] gap-2 items-end">
+            <Field label="Supplier"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
+            <Field label="Cost"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. min order 5kg" /></Field>
+            <Button onClick={add}><Plus className="h-4 w-4" /> Add</Button>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

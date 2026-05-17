@@ -21,6 +21,16 @@ export type InventoryItem = {
   archived_at: string | null;
 };
 
+export type InventoryItemSupplier = {
+  id: string;
+  item_id: string;
+  supplier: string;
+  cost: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type OrderRequest = {
   id: string;
   inventory_item_id: string | null;

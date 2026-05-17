@@ -211,6 +211,44 @@ export type Database = {
           },
         ]
       }
+      inventory_item_suppliers: {
+        Row: {
+          cost: number
+          created_at: string
+          id: string
+          item_id: string
+          notes: string | null
+          supplier: string
+          updated_at: string
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          supplier?: string
+          updated_at?: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          supplier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_item_suppliers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           archived_at: string | null
