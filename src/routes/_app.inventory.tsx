@@ -304,6 +304,7 @@ function InventoryPage() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
                                         {isAdmin && (
                                           <DropdownMenuItem
