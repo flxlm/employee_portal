@@ -192,12 +192,7 @@ export const refreshDisplayMenu = createServerFn({ method: "POST" })
  * warm worker that didn't process the write still serves fresh data on the next loader run.
  */
 export const invalidateDisplayMenuCache = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string }) => {
-    if (typeof input?.token !== "string") throw new Error("token required");
-    return input;
-  })
-  .handler(async ({ data }) => {
-    if (data.token !== DISPLAY_TOKEN) throw new Error("Invalid display token");
+  .handler(async () => {
     clearDisplayCache();
     return { ok: true };
   });
