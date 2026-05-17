@@ -78,7 +78,7 @@ async function buildMenu(): Promise<DisplayMenu> {
         id: subId,
         name: (row.subsection_name as string) || "",
         description: (row.subsection_description as string) || "",
-        visible_menus: (row.subsection_visible_menus as string[] | null) || [],
+        visible_menus: sec.visible_menus,
         is_hidden: !!row.subsection_is_hidden,
         sold_out_date: (row.subsection_sold_out_date as string | null) ?? null,
         items: [],
