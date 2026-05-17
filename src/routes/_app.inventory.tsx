@@ -1076,7 +1076,8 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
               <TableHeader>
                 <TableRow>
                   <TableHead>Supplier</TableHead>
-                  <TableHead className="w-28">Cost</TableHead>
+                  <TableHead className="w-24">Cost $</TableHead>
+                  <TableHead className="w-28">Pack ({item?.unit || "unit"})</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
@@ -1089,6 +1090,9 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
                     </TableCell>
                     <TableCell>
                       <InlineNumber value={r.cost} onSave={(v) => updateRow(r.id, { cost: v })} />
+                    </TableCell>
+                    <TableCell>
+                      <InlineNumber value={r.pack_size ?? 1} onSave={(v) => updateRow(r.id, { pack_size: v > 0 ? v : 1 })} />
                     </TableCell>
                     <TableCell>
                       <InlineText
@@ -1108,9 +1112,10 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
             </Table>
           )}
 
-          <div className="border-t pt-3 grid grid-cols-[1fr_120px_1fr_auto] gap-2 items-end">
+          <div className="border-t pt-3 grid grid-cols-[1fr_100px_110px_1fr_auto] gap-2 items-end">
             <Field label="Supplier"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
-            <Field label="Cost"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label="Cost $"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label={`Pack (${item?.unit || "unit"})`}><Input type="number" value={packSize} onChange={(e) => setPackSize(e.target.value)} /></Field>
             <Field label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. min order 5kg" /></Field>
             <Button onClick={add}><Plus className="h-4 w-4" /> Add</Button>
           </div>
