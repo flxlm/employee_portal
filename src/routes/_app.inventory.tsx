@@ -186,9 +186,11 @@ function InventoryPage() {
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((i) => i.name.toLowerCase().includes(q));
     rows = [...rows].sort((a, b) => {
-      if (sort === "name") return a.name.localeCompare(b.name);
-      if (sort === "updated") return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      return STATUS_ORDER[computeStatus(a)] - STATUS_ORDER[computeStatus(b)];
+      let cmp = 0;
+      if (sort.key === "name") cmp = a.name.localeCompare(b.name);
+      else if (sort.key === "updated") cmp = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      else cmp = STATUS_ORDER[computeStatus(a)] - STATUS_ORDER[computeStatus(b)];
+      return sort.dir === "asc" ? cmp : -cmp;
     });
     return rows;
   }, [items, activeCategory, search, sort]);
