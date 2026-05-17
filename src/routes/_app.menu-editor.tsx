@@ -275,6 +275,8 @@ function RowSettingsMenu({
   canAddDescription,
   doNotTranslate,
   onToggleDoNotTranslate,
+  onTranslateMissing,
+  canTranslateMissing,
   size = "md",
 }: {
   hidden: boolean;
@@ -287,6 +289,8 @@ function RowSettingsMenu({
   canAddDescription?: boolean;
   doNotTranslate?: boolean;
   onToggleDoNotTranslate?: () => void;
+  onTranslateMissing?: () => void;
+  canTranslateMissing?: boolean;
   size?: "sm" | "md";
 }) {
   const btnClass = size === "sm" ? "h-7 w-7" : "h-8 w-8";
@@ -302,6 +306,11 @@ function RowSettingsMenu({
         {onAddDescription && canAddDescription && (
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onAddDescription(); }}>
             <Plus className="h-4 w-4" /> Add description
+          </DropdownMenuItem>
+        )}
+        {onTranslateMissing && canTranslateMissing && (
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onTranslateMissing(); }}>
+            <Sparkles className="h-4 w-4" /> Translate missing language
           </DropdownMenuItem>
         )}
         {onToggleDoNotTranslate && (
