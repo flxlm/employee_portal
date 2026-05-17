@@ -18,24 +18,25 @@ type DailyMessage = {
   created_by: string | null;
 };
 
-function endOfTodayIso(): string {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d.toISOString();
+function endOfDayIso(d: Date): string {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x.toISOString();
 }
 
-function endOfDateIso(yyyyMmDd: string): string {
-  const [y, m, day] = yyyyMmDd.split("-").map(Number);
-  const d = new Date(y, (m ?? 1) - 1, day ?? 1, 23, 59, 59, 999);
-  return d.toISOString();
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-function todayInputValue(): string {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+function formatPretty(d: Date): string {
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: string | null }) {
