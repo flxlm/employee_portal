@@ -176,160 +176,160 @@ function InventoryPage() {
           {categories.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground">No categories yet.</Card>
           ) : (
-            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-              <TabsList className="flex flex-wrap h-auto">
-                {categories.map((c) => (
-                  <TabsTrigger key={c.id} value={c.id}>
-                    {c.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={activeCategory} onValueChange={setActiveCategory}>
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search items…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="name">Sort: Name</option>
+                  <option value="status">Sort: Status</option>
+                  <option value="updated">Sort: Last updated</option>
+                </select>
+                <Button size="sm" onClick={() => setAddItemOpen(true)}>
+                  <Plus className="h-4 w-4" /> Add item
+                </Button>
+              </div>
 
-              {categories.map((c) => (
-                <TabsContent key={c.id} value={c.id} className="mt-4 space-y-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="relative flex-1 min-w-[200px]">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search items…"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-8"
-                      />
-                    </div>
-                    <select
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value as SortKey)}
-                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                      <option value="name">Sort: Name</option>
-                      <option value="status">Sort: Status</option>
-                      <option value="updated">Sort: Last updated</option>
-                    </select>
-                    <Button size="sm" onClick={() => setAddItemOpen(true)}>
-                      <Plus className="h-4 w-4" /> Add item
-                    </Button>
-                  </div>
-
-                  <Card className="overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead className="w-24">Qty</TableHead>
-                            <TableHead className="w-20">Unit</TableHead>
-                            <TableHead className="w-20">Par</TableHead>
-                            <TableHead className="w-24">Reorder ≤</TableHead>
-                            <TableHead className="w-24">Status</TableHead>
-                            <TableHead className="hidden md:table-cell">Supplier</TableHead>
-                            <TableHead className="hidden md:table-cell">Updated</TableHead>
-                            <TableHead className="w-[180px] text-right">Actions</TableHead>
+              <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead className="w-24">Qty</TableHead>
+                        <TableHead className="w-20">Unit</TableHead>
+                        <TableHead className="w-20">Par</TableHead>
+                        <TableHead className="w-24">Reorder ≤</TableHead>
+                        <TableHead className="w-24">Status</TableHead>
+                        <TableHead className="hidden md:table-cell">Supplier</TableHead>
+                        <TableHead className="hidden md:table-cell">Updated</TableHead>
+                        <TableHead className="w-[180px] text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visibleItems.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
+                            No items. Click "Add item" to start.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {visibleItems.map((it) => {
+                        const status = computeStatus(it);
+                        const onList = flaggedItemIds.has(it.id);
+                        return (
+                          <TableRow key={it.id}>
+                            <TableCell>
+                              <InlineText
+                                value={it.name}
+                                onSave={(v) => {
+                                  if (v && v !== it.name && window.confirm("Rename this item? History references the name."))
+                                    updateField(it.id, { name: v });
+                                }}
+                                className="font-medium"
+                              />
+                              {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
+                            </TableCell>
+                            <TableCell>
+                              <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
+                            </TableCell>
+                            <TableCell>
+                              <InlineText
+                                value={it.unit}
+                                onSave={(v) => {
+                                  if (window.confirm("Change unit?")) updateField(it.id, { unit: v });
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
+                            </TableCell>
+                            <TableCell>
+                              <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={statusBadgeClass(status)}>
+                                {status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <InlineText
+                                value={it.last_supplier ?? ""}
+                                placeholder="—"
+                                onSave={(v) => updateField(it.id, { last_supplier: v || null })}
+                              />
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                              {timeAgo(it.updated_at)}
+                              <div className="opacity-70">{userName(it.updated_by)}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1 justify-end">
+                                <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
+                                  Adjust
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant={onList ? "ghost" : "default"}
+                                  disabled={onList}
+                                  onClick={() => setFlagItem(it)}
+                                >
+                                  {onList ? "On order list" : "Flag"}
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
+                                    {isAdmin && (
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() => {
+                                          if (window.confirm("Permanently delete this item?")) deleteItem(it.id);
+                                        }}
+                                      >
+                                        Delete
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {visibleItems.length === 0 && (
-                            <TableRow>
-                              <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
-                                No items. Click "Add item" to start.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                          {visibleItems.map((it) => {
-                            const status = computeStatus(it);
-                            const onList = flaggedItemIds.has(it.id);
-                            return (
-                              <TableRow key={it.id}>
-                                <TableCell>
-                                  <InlineText
-                                    value={it.name}
-                                    onSave={(v) => {
-                                      if (v && v !== it.name && window.confirm("Rename this item? History references the name."))
-                                        updateField(it.id, { name: v });
-                                    }}
-                                    className="font-medium"
-                                  />
-                                  {it.notes && <div className="text-xs text-muted-foreground mt-0.5">{it.notes}</div>}
-                                </TableCell>
-                                <TableCell>
-                                  <InlineNumber value={it.current_quantity} onSave={(v) => updateField(it.id, { current_quantity: v })} />
-                                </TableCell>
-                                <TableCell>
-                                  <InlineText
-                                    value={it.unit}
-                                    onSave={(v) => {
-                                      if (window.confirm("Change unit?")) updateField(it.id, { unit: v });
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <InlineNumber value={it.par_level} onSave={(v) => updateField(it.id, { par_level: v })} />
-                                </TableCell>
-                                <TableCell>
-                                  <InlineNumber value={it.reorder_threshold} onSave={(v) => updateField(it.id, { reorder_threshold: v })} />
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className={statusBadgeClass(status)}>
-                                    {status}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                  <InlineText
-                                    value={it.last_supplier ?? ""}
-                                    placeholder="—"
-                                    onSave={(v) => updateField(it.id, { last_supplier: v || null })}
-                                  />
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                                  {timeAgo(it.updated_at)}
-                                  <div className="opacity-70">{userName(it.updated_by)}</div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex items-center gap-1 justify-end">
-                                    <Button size="sm" variant="outline" onClick={() => setAdjustItem(it)}>
-                                      Adjust
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant={onList ? "ghost" : "default"}
-                                      disabled={onList}
-                                      onClick={() => setFlagItem(it)}
-                                    >
-                                      {onList ? "On order list" : "Flag"}
-                                    </Button>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8">
-                                          <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => setSuppliersItem(it)}>Suppliers & costs</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => archiveItem(it.id)}>Archive</DropdownMenuItem>
-                                        {isAdmin && (
-                                          <DropdownMenuItem
-                                            className="text-destructive"
-                                            onClick={() => {
-                                              if (window.confirm("Permanently delete this item?")) deleteItem(it.id);
-                                            }}
-                                          >
-                                            Delete
-                                          </DropdownMenuItem>
-                                        )}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </Card>
-                </TabsContent>
-              ))}
-            </Tabs>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            </div>
           )}
         </div>
 
