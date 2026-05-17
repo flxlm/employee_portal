@@ -38,7 +38,7 @@ import {
   softDeleteRow,
   reorderRows,
   translateMissingRow,
-  translateAllMissing,
+  listMissingTranslations,
   type MenuSection,
   type MenuSubsection,
   type MenuItem,
