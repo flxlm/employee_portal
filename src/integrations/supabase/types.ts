@@ -218,6 +218,7 @@ export type Database = {
           id: string
           item_id: string
           notes: string | null
+          pack_size: number
           supplier: string
           updated_at: string
         }
@@ -227,6 +228,7 @@ export type Database = {
           id?: string
           item_id: string
           notes?: string | null
+          pack_size?: number
           supplier?: string
           updated_at?: string
         }
@@ -236,6 +238,7 @@ export type Database = {
           id?: string
           item_id?: string
           notes?: string | null
+          pack_size?: number
           supplier?: string
           updated_at?: string
         }

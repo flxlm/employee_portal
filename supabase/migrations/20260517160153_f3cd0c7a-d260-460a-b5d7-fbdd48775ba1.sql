@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory_item_suppliers ADD COLUMN pack_size numeric NOT NULL DEFAULT 1;

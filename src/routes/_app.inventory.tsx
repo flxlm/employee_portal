@@ -136,9 +136,13 @@ function InventoryPage() {
   // Cheapest supplier per item (paired supplier+cost view)
   const bestSupplierByItem = useMemo(() => {
     const map: Record<string, InventoryItemSupplier> = {};
+    const perUnit = (s: InventoryItemSupplier) => {
+      const ps = Number(s.pack_size);
+      return Number(s.cost) / (ps > 0 ? ps : 1);
+    };
     for (const s of itemSuppliers) {
       const cur = map[s.item_id];
-      if (!cur || Number(s.cost) < Number(cur.cost)) map[s.item_id] = s;
+      if (!cur || perUnit(s) < perUnit(cur)) map[s.item_id] = s;
     }
     return map;
   }, [itemSuppliers]);
@@ -385,7 +389,7 @@ function InventoryPage() {
                                             {best ? (
                                               <span className="text-sm">
                                                 {best.supplier}
-                                                <span className="text-muted-foreground tabular-nums ml-2">€{Number(best.cost).toFixed(2)}</span>
+                                                <span className="text-muted-foreground tabular-nums ml-2">${Number(best.cost).toFixed(2)}{best.pack_size && Number(best.pack_size) !== 1 ? ` / ${Number(best.pack_size)}${it.unit || ""}` : ""}</span>
                                                 {count > 1 && <span className="text-muted-foreground ml-1 opacity-70">· +{count - 1}</span>}
                                               </span>
                                             ) : (
@@ -618,17 +622,17 @@ function AddItemDialog({
   const [par, setPar] = useState("0");
   const [threshold, setThreshold] = useState("0");
   const [notes, setNotes] = useState("");
-  const [suppliers, setSuppliers] = useState<Array<{ supplier: string; cost: string; notes: string }>>([
-    { supplier: "", cost: "", notes: "" },
+  const [suppliers, setSuppliers] = useState<Array<{ supplier: string; cost: string; pack_size: string; notes: string }>>([
+    { supplier: "", cost: "", pack_size: "1", notes: "" },
   ]);
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
     setName(""); setUnit(""); setQty("0"); setPar("0"); setThreshold("0"); setNotes("");
-    setSuppliers([{ supplier: "", cost: "", notes: "" }]);
+    setSuppliers([{ supplier: "", cost: "", pack_size: "1", notes: "" }]);
   };
 
-  const updateSupplier = (i: number, patch: Partial<{ supplier: string; cost: string; notes: string }>) => {
+  const updateSupplier = (i: number, patch: Partial<{ supplier: string; cost: string; pack_size: string; notes: string }>) => {
     setSuppliers((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   };
 
@@ -669,6 +673,7 @@ function AddItemDialog({
           item_id: inserted.id,
           supplier: s.supplier.trim(),
           cost: Number(s.cost) || 0,
+          pack_size: Number(s.pack_size) > 0 ? Number(s.pack_size) : 1,
           notes: s.notes.trim() || null,
         })),
       );
@@ -702,7 +707,7 @@ function AddItemDialog({
             <Label className="text-xs">Suppliers & costs (optional)</Label>
             <div className="space-y-2 mt-1">
               {suppliers.map((s, i) => (
-                <div key={i} className="grid grid-cols-[1fr_90px_1fr_auto] gap-2 items-center">
+                <div key={i} className="grid grid-cols-[1fr_80px_90px_1fr_auto] gap-2 items-center">
                   <Input
                     placeholder="Supplier"
                     value={s.supplier}
@@ -710,9 +715,15 @@ function AddItemDialog({
                   />
                   <Input
                     type="number"
-                    placeholder="Cost"
+                    placeholder="Cost $"
                     value={s.cost}
                     onChange={(e) => updateSupplier(i, { cost: e.target.value })}
+                  />
+                  <Input
+                    type="number"
+                    placeholder={`Pack (${unit.trim() || "unit"})`}
+                    value={s.pack_size}
+                    onChange={(e) => updateSupplier(i, { pack_size: e.target.value })}
                   />
                   <Input
                     placeholder="Notes"
@@ -735,7 +746,7 @@ function AddItemDialog({
               size="sm"
               variant="outline"
               className="mt-2"
-              onClick={() => setSuppliers((r) => [...r, { supplier: "", cost: "", notes: "" }])}
+              onClick={() => setSuppliers((r) => [...r, { supplier: "", cost: "", pack_size: "1", notes: "" }])}
             >
               <Plus className="h-4 w-4" /> Add another supplier
             </Button>
@@ -995,6 +1006,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
   const [loading, setLoading] = useState(false);
   const [supplier, setSupplier] = useState("");
   const [cost, setCost] = useState("");
+  const [packSize, setPackSize] = useState("1");
   const [notes, setNotes] = useState("");
 
   const load = useCallback(async () => {
@@ -1024,11 +1036,12 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
       item_id: item.id,
       supplier: supplier.trim(),
       cost: Number(cost) || 0,
+      pack_size: Number(packSize) > 0 ? Number(packSize) : 1,
       notes: notes.trim() || null,
     });
     if (error) toast.error(error.message);
     else {
-      setSupplier(""); setCost(""); setNotes("");
+      setSupplier(""); setCost(""); setPackSize("1"); setNotes("");
       load();
     }
   };
@@ -1050,7 +1063,7 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Suppliers & costs</DialogTitle>
-          <DialogDescription>{item?.name} — compare prices across suppliers.</DialogDescription>
+          <DialogDescription>{item?.name} — cost is for the listed pack size ({item?.unit || "unit"}).</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -1063,7 +1076,8 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
               <TableHeader>
                 <TableRow>
                   <TableHead>Supplier</TableHead>
-                  <TableHead className="w-28">Cost</TableHead>
+                  <TableHead className="w-24">Cost $</TableHead>
+                  <TableHead className="w-28">Pack ({item?.unit || "unit"})</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
@@ -1076,6 +1090,9 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
                     </TableCell>
                     <TableCell>
                       <InlineNumber value={r.cost} onSave={(v) => updateRow(r.id, { cost: v })} />
+                    </TableCell>
+                    <TableCell>
+                      <InlineNumber value={r.pack_size ?? 1} onSave={(v) => updateRow(r.id, { pack_size: v > 0 ? v : 1 })} />
                     </TableCell>
                     <TableCell>
                       <InlineText
@@ -1095,9 +1112,10 @@ function SuppliersDialog({ item, onClose }: { item: InventoryItem | null; onClos
             </Table>
           )}
 
-          <div className="border-t pt-3 grid grid-cols-[1fr_120px_1fr_auto] gap-2 items-end">
+          <div className="border-t pt-3 grid grid-cols-[1fr_100px_110px_1fr_auto] gap-2 items-end">
             <Field label="Supplier"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
-            <Field label="Cost"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label="Cost $"><Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></Field>
+            <Field label={`Pack (${item?.unit || "unit"})`}><Input type="number" value={packSize} onChange={(e) => setPackSize(e.target.value)} /></Field>
             <Field label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. min order 5kg" /></Field>
             <Button onClick={add}><Plus className="h-4 w-4" /> Add</Button>
           </div>
