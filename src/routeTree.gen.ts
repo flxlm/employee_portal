@@ -16,10 +16,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DisplayTokenRouteImport } from './routes/display.$token'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
+import { Route as AppOrderListRouteImport } from './routes/_app.order-list'
 import { Route as AppOpenCloseRouteImport } from './routes/_app.open-close'
 import { Route as AppMenuFormattingRouteImport } from './routes/_app.menu-formatting'
 import { Route as AppMenuEditorRouteImport } from './routes/_app.menu-editor'
 import { Route as AppLiveMenuTimetableRouteImport } from './routes/_app.live-menu-timetable'
+import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppFunctionsRouteImport } from './routes/_app.functions'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
@@ -63,6 +65,11 @@ const AppRecipesRoute = AppRecipesRouteImport.update({
   path: '/recipes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrderListRoute = AppOrderListRouteImport.update({
+  id: '/order-list',
+  path: '/order-list',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOpenCloseRoute = AppOpenCloseRouteImport.update({
   id: '/open-close',
   path: '/open-close',
@@ -81,6 +88,11 @@ const AppMenuEditorRoute = AppMenuEditorRouteImport.update({
 const AppLiveMenuTimetableRoute = AppLiveMenuTimetableRouteImport.update({
   id: '/live-menu-timetable',
   path: '/live-menu-timetable',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
@@ -133,10 +145,12 @@ export interface FileRoutesByFullPath {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/inventory': typeof AppInventoryRoute
   '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/menu-editor': typeof AppMenuEditorRoute
   '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
+  '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
@@ -153,10 +167,12 @@ export interface FileRoutesByTo {
   '/events': typeof AppEventsRoute
   '/functions': typeof AppFunctionsRoute
   '/home': typeof AppHomeRoute
+  '/inventory': typeof AppInventoryRoute
   '/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/menu-editor': typeof AppMenuEditorRoute
   '/menu-formatting': typeof AppMenuFormattingRoute
   '/open-close': typeof AppOpenCloseRoute
+  '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
@@ -175,10 +191,12 @@ export interface FileRoutesById {
   '/_app/events': typeof AppEventsRoute
   '/_app/functions': typeof AppFunctionsRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/inventory': typeof AppInventoryRoute
   '/_app/live-menu-timetable': typeof AppLiveMenuTimetableRoute
   '/_app/menu-editor': typeof AppMenuEditorRoute
   '/_app/menu-formatting': typeof AppMenuFormattingRoute
   '/_app/open-close': typeof AppOpenCloseRoute
+  '/_app/order-list': typeof AppOrderListRoute
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
   '/display/$token': typeof DisplayTokenRoute
@@ -197,10 +215,12 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/inventory'
     | '/live-menu-timetable'
     | '/menu-editor'
     | '/menu-formatting'
     | '/open-close'
+    | '/order-list'
     | '/recipes'
     | '/wines'
     | '/display/$token'
@@ -217,10 +237,12 @@ export interface FileRouteTypes {
     | '/events'
     | '/functions'
     | '/home'
+    | '/inventory'
     | '/live-menu-timetable'
     | '/menu-editor'
     | '/menu-formatting'
     | '/open-close'
+    | '/order-list'
     | '/recipes'
     | '/wines'
     | '/display/$token'
@@ -238,10 +260,12 @@ export interface FileRouteTypes {
     | '/_app/events'
     | '/_app/functions'
     | '/_app/home'
+    | '/_app/inventory'
     | '/_app/live-menu-timetable'
     | '/_app/menu-editor'
     | '/_app/menu-formatting'
     | '/_app/open-close'
+    | '/_app/order-list'
     | '/_app/recipes'
     | '/_app/wines'
     | '/display/$token'
@@ -314,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRecipesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/order-list': {
+      id: '/_app/order-list'
+      path: '/order-list'
+      fullPath: '/order-list'
+      preLoaderRoute: typeof AppOrderListRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/open-close': {
       id: '/_app/open-close'
       path: '/open-close'
@@ -340,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/live-menu-timetable'
       fullPath: '/live-menu-timetable'
       preLoaderRoute: typeof AppLiveMenuTimetableRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/home': {
@@ -406,10 +444,12 @@ interface AppRouteChildren {
   AppEventsRoute: typeof AppEventsRoute
   AppFunctionsRoute: typeof AppFunctionsRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppInventoryRoute: typeof AppInventoryRoute
   AppLiveMenuTimetableRoute: typeof AppLiveMenuTimetableRoute
   AppMenuEditorRoute: typeof AppMenuEditorRoute
   AppMenuFormattingRoute: typeof AppMenuFormattingRoute
   AppOpenCloseRoute: typeof AppOpenCloseRoute
+  AppOrderListRoute: typeof AppOrderListRoute
   AppRecipesRoute: typeof AppRecipesRoute
   AppWinesRoute: typeof AppWinesRoute
 }
@@ -419,10 +459,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventsRoute: AppEventsRoute,
   AppFunctionsRoute: AppFunctionsRoute,
   AppHomeRoute: AppHomeRoute,
+  AppInventoryRoute: AppInventoryRoute,
   AppLiveMenuTimetableRoute: AppLiveMenuTimetableRoute,
   AppMenuEditorRoute: AppMenuEditorRoute,
   AppMenuFormattingRoute: AppMenuFormattingRoute,
   AppOpenCloseRoute: AppOpenCloseRoute,
+  AppOrderListRoute: AppOrderListRoute,
   AppRecipesRoute: AppRecipesRoute,
   AppWinesRoute: AppWinesRoute,
 }

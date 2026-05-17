@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Wine, ClipboardCheck, Users, Zap, BookOpen, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, Zap, BookOpen, UtensilsCrossed, Package, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -30,7 +30,9 @@ function HomePage() {
     { to: "/open-close", title: "Open / Close Log", description: "Log opening and closing shifts with till and photo.", icon: ClipboardCheck },
     { to: "/recipes", title: "Recipes", description: "Browse drink recipes for FOH staff.", icon: BookOpen },
     { to: "/menu-editor", title: "Menu Editor", description: "Edit menu sections, items and modifications. Auto-saves as you type.", icon: UtensilsCrossed },
+    { to: "/inventory", title: "Inventory", description: "Track stock levels and flag items to reorder.", icon: Package },
     { to: "/functions", title: "Functions", description: "Operational actions like refreshing menu screens.", icon: Zap },
+    ...(isAdmin ? [{ to: "/order-list", title: "Order List", description: "Review and process items flagged for reorder.", icon: ClipboardList }] : []),
     ...(isAdmin ? [{ to: "/admin", title: "Admin", description: "Manage who can sign in to the portal.", icon: Users }] : []),
   ];
 

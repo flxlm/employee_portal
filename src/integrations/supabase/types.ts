@@ -152,6 +152,121 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_categories: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      inventory_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          item_id: string
+          new_quantity: number
+          old_quantity: number
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          item_id: string
+          new_quantity: number
+          old_quantity: number
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          item_id?: string
+          new_quantity?: number
+          old_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          archived_at: string | null
+          category_id: string
+          created_at: string
+          current_quantity: number
+          id: string
+          last_supplier: string | null
+          name: string
+          notes: string | null
+          par_level: number
+          reorder_threshold: number
+          unit: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          category_id: string
+          created_at?: string
+          current_quantity?: number
+          id?: string
+          last_supplier?: string | null
+          name?: string
+          notes?: string | null
+          par_level?: number
+          reorder_threshold?: number
+          unit?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          category_id?: string
+          created_at?: string
+          current_quantity?: number
+          id?: string
+          last_supplier?: string | null
+          name?: string
+          notes?: string | null
+          par_level?: number
+          reorder_threshold?: number
+          unit?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_modifications: {
         Row: {
           created_at: string
@@ -488,6 +603,59 @@ export type Database = {
         }
         Relationships: []
       }
+      order_requests: {
+        Row: {
+          ad_hoc_name: string | null
+          flagged_at: string
+          flagged_by: string | null
+          id: string
+          inventory_item_id: string | null
+          notes: string | null
+          ordered_at: string | null
+          ordered_by: string | null
+          quantity_needed: number | null
+          status: Database["public"]["Enums"]["order_request_status"]
+          supplier: string | null
+          unit: string | null
+        }
+        Insert: {
+          ad_hoc_name?: string | null
+          flagged_at?: string
+          flagged_by?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          notes?: string | null
+          ordered_at?: string | null
+          ordered_by?: string | null
+          quantity_needed?: number | null
+          status?: Database["public"]["Enums"]["order_request_status"]
+          supplier?: string | null
+          unit?: string | null
+        }
+        Update: {
+          ad_hoc_name?: string | null
+          flagged_at?: string
+          flagged_by?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          notes?: string | null
+          ordered_at?: string | null
+          ordered_by?: string | null
+          quantity_needed?: number | null
+          status?: Database["public"]["Enums"]["order_request_status"]
+          supplier?: string | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_requests_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passcodes: {
         Row: {
           admin_only: boolean
@@ -692,6 +860,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "employee"
+      order_request_status: "pending" | "ordered" | "cancelled"
       shift_type: "open" | "close"
     }
     CompositeTypes: {
@@ -821,6 +990,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "employee"],
+      order_request_status: ["pending", "ordered", "cancelled"],
       shift_type: ["open", "close"],
     },
   },
