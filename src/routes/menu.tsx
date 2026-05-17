@@ -736,11 +736,16 @@ function DisplayPage() {
                 data-section-index={mi}
                 style={dim ? { opacity: 0.35 } : undefined}
               >
-                <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
-                  {sub.subsection}
-                </h2>
-                {sub.items.map((item, ii) => (
-                  <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
+                <div className="subsection-title-with-first">
+                  <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
+                    {sub.subsection}
+                  </h2>
+                  {sub.items[0] && (
+                    <div>{renderItem(sub.items[0], soldOut || !!sub.items[0].soldOut)}</div>
+                  )}
+                </div>
+                {sub.items.slice(1).map((item, ii) => (
+                  <div key={ii + 1}>{renderItem(item, soldOut || !!item.soldOut)}</div>
                 ))}
               </section>
             );
