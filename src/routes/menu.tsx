@@ -240,20 +240,20 @@ const COLUMN_CSS = `
 @media (min-width: 600px) { .menu-flow { column-count: 2; } }
 @media (min-width: 900px) { .menu-flow { column-count: 3; } }
 @media (min-width: 1200px) { .menu-flow { column-count: 4; } }
-.menu-flow > .menu-section-block {
+.menu-flow > .menu-section-group {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
   margin-bottom: 1rem;
-  break-after: avoid;
-  -webkit-column-break-after: avoid;
-  page-break-after: avoid;
 }
-.menu-flow > .menu-section-block.new-column {
+.menu-flow > .menu-section-group.new-column {
   break-before: column;
   -webkit-column-break-before: always;
   page-break-before: always;
+}
+.menu-section-group > .menu-section-block {
+  margin-bottom: 0.5rem;
 }
 .menu-flow > section {
   display: block;
