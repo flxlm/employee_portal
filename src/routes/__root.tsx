@@ -91,10 +91,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ? await getServerHost()
         : window.location.host;
 
-    if (isMenuHost(host) && !location.pathname.startsWith("/display/")) {
+    if (isMenuHost(host) && location.pathname !== "/menu") {
       throw redirect({
-        to: "/display/$token",
-        params: { token: DEFAULT_DISPLAY_TOKEN },
+        to: "/menu",
         search: { menu: "auto", lang: "fr" },
         replace: true,
       });
