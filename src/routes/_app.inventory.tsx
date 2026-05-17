@@ -263,6 +263,7 @@ function InventoryPage() {
                 <PendingPanel
                   requests={orderRequests}
                   items={items}
+                  categories={categories}
                   userName={userName}
                 />
               )}
