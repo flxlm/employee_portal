@@ -1705,7 +1705,7 @@ function MenuEditorPage() {
                         )}
 
                         <div className="pl-7">
-                          <Button size="sm" variant="ghost" onClick={() => addMod(sec.id, sub.id, item.id)}>
+                          <Button size="sm" variant="ghost" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
                             <Plus className="h-3 w-3" /> Add modification
                           </Button>
                         </div>
