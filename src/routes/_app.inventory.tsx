@@ -185,7 +185,14 @@ function InventoryPage() {
         )}
       </header>
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+      <div className="space-y-6">
+        <PendingPanel
+          requests={orderRequests}
+          items={items}
+          userName={userName}
+          onAdHoc={() => setAdHocOpen(true)}
+        />
+
         <div className="min-w-0">
           {categories.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground">No categories yet.</Card>
@@ -364,13 +371,6 @@ function InventoryPage() {
             </div>
           )}
         </div>
-
-        <PendingPanel
-          requests={orderRequests}
-          items={items}
-          userName={userName}
-          onAdHoc={() => setAdHocOpen(true)}
-        />
       </div>
 
       <AddItemDialog
@@ -509,7 +509,7 @@ function PendingPanel({
   }, [items]);
 
   return (
-    <Card className="p-4 h-fit lg:sticky lg:top-4">
+    <Card className="p-4 h-fit">
       <h2 className="font-semibold text-sm mb-1">Pending order requests</h2>
       <p className="text-xs text-muted-foreground mb-3">
         What's already been flagged for reorder. Avoid duplicates.
