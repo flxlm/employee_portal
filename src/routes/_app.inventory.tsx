@@ -53,7 +53,19 @@ function InventoryPage() {
 
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [adjustItem, setAdjustItem] = useState<InventoryItem | null>(null);
-  const [flagItem, setFlagItem] = useState<InventoryItem | null>(null);
+  const flagItem = async (it: InventoryItem) => {
+    const need = Math.max(0, Number(it.par_level) - Number(it.current_quantity));
+    const { error } = await supabase.from("order_requests").insert({
+      inventory_item_id: it.id,
+      quantity_needed: need > 0 ? need : null,
+      unit: it.unit,
+      supplier: it.last_supplier,
+      flagged_by: user?.id ?? null,
+      status: "pending",
+    });
+    if (error) toast.error(error.message);
+    else toast.success(`Added ${it.name} to order list`);
+  };
   const [adHocOpen, setAdHocOpen] = useState(false);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const [suppliersItem, setSuppliersItem] = useState<InventoryItem | null>(null);
