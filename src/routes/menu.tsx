@@ -37,17 +37,21 @@ export const Route = createFileRoute("/menu")({
   loaderDeps: ({ search }) => ({ menu: search.menu }),
   loader: async ({ deps }) => {
     const isAuto = deps.menu === "auto";
-    const [formatting, displayMenu, schedule] = await Promise.all([
+    const [formatting, displayMenu, schedule, specials] = await Promise.all([
       getMenuFormatting().catch(() => ({} as MenuFormatting)),
       getDisplayMenu({ data: {} }),
       isAuto
         ? listMenuSchedulePublic().catch(() => ({ entries: [] as ScheduleEntry[] }))
         : Promise.resolve({ entries: [] as ScheduleEntry[] }),
+      isAuto
+        ? listMenuSpecialsPublic().catch(() => ({ specials: [] as SpecialEntry[] }))
+        : Promise.resolve({ specials: [] as SpecialEntry[] }),
     ]);
     return {
       formatting: (formatting ?? {}) as MenuFormatting,
       displayMenu,
       scheduleEntries: schedule.entries,
+      specialEntries: specials.specials,
     };
   },
   staleTime: 60_000,
