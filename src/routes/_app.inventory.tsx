@@ -509,7 +509,7 @@ function PendingPanel({
   }, [items]);
 
   return (
-    <Card className="p-4 h-fit lg:sticky lg:top-4">
+    <Card className="p-4 h-fit">
       <h2 className="font-semibold text-sm mb-1">Pending order requests</h2>
       <p className="text-xs text-muted-foreground mb-3">
         What's already been flagged for reorder. Avoid duplicates.
