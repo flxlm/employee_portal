@@ -43,7 +43,7 @@ export function DailyMessages({ isAdmin, userId }: { isAdmin: boolean; userId: s
   const [messages, setMessages] = useState<DailyMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
-  const [expiresOn, setExpiresOn] = useState(todayInputValue());
+  const [expiresOn, setExpiresOn] = useState<Date>(() => startOfToday());
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
