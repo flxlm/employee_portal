@@ -526,6 +526,7 @@ function MenuEditorPage() {
       } else if (errors > 0) {
         toast.error(`${errors} change${errors > 1 ? "s" : ""} failed to save`);
       } else {
+        await reload();
         toast.success("Changes saved");
         triggerRefresh();
       }
