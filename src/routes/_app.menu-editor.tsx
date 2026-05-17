@@ -1008,43 +1008,6 @@ function MenuEditorPage() {
         </div>
       </header>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Menu change webhook (optional)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground mb-2">
-            URL that receives a POST <code>{`{ event: "menu_updated", timestamp }`}</code> whenever the menu is republished. Leave blank to disable.
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              type="url"
-              placeholder="https://example.com/webhooks/menu"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-            />
-            <Button
-              size="sm"
-              disabled={webhookSaving}
-              onClick={async () => {
-                setWebhookSaving(true);
-                try {
-                  await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
-                  toast.success("Webhook URL saved");
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Failed to save");
-                } finally {
-                  setWebhookSaving(false);
-                }
-              }}
-            >
-              <Save className="h-4 w-4" /> {webhookSaving ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-
       <div className="space-y-6">
         {sections.map((sec, sIdx) => (
           <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sec.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""}`}>
