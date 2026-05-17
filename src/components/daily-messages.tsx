@@ -314,9 +314,13 @@ function MessageCarousel({
             {!atEnd ? (
               <>
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    Until {new Date(messages[index].expires_at).toLocaleDateString()}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {new Date(messages[index].visible_from) > new Date()
+                        ? `Scheduled · ${new Date(messages[index].visible_from).toLocaleDateString()} → ${new Date(messages[index].expires_at).toLocaleDateString()}`
+                        : `Until ${new Date(messages[index].expires_at).toLocaleDateString()}`}
+                    </span>
+                  </div>
                   {isAdmin && (
                     <Button
                       size="icon"
