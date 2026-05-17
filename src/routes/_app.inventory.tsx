@@ -194,13 +194,6 @@ function InventoryPage() {
       </header>
 
       <div className="space-y-6">
-        <PendingPanel
-          requests={orderRequests}
-          items={items}
-          userName={userName}
-          onAdHoc={() => setAdHocOpen(true)}
-        />
-
         <div className="min-w-0">
           {categories.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground">No categories yet.</Card>
