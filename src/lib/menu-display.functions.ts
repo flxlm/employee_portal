@@ -5,7 +5,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export type DisplayItem = {
   id: string;
   title: string;
+  title_en: string | null;
   description: string;
+  description_en: string | null;
   base_price_cents: number;
   is_hidden: boolean;
   sold_out_date: string | null;
@@ -15,7 +17,9 @@ export type DisplayItem = {
 export type DisplaySubsection = {
   id: string;
   name: string;
+  name_en: string | null;
   description: string;
+  description_en: string | null;
   visible_menus: string[];
   is_hidden: boolean;
   sold_out_date: string | null;
@@ -25,7 +29,9 @@ export type DisplaySubsection = {
 export type DisplaySection = {
   id: string;
   name: string;
+  name_en: string | null;
   description: string;
+  description_en: string | null;
   visible_menus: string[];
   is_hidden: boolean;
   sold_out_date: string | null;
@@ -50,19 +56,40 @@ export function clearDisplayCache() {
 }
 
 async function buildMenu(): Promise<DisplayMenu> {
-  const { data, error } = await supabaseAdmin.from("menu_display_view").select("*");
-  if (error) throw error;
+  const [viewRes, secEn, subEn, itemEn] = await Promise.all([
+    supabaseAdmin.from("menu_display_view").select("*"),
+    supabaseAdmin.from("menu_sections").select("id, name_en, description_en"),
+    supabaseAdmin.from("menu_subsections").select("id, name_en, description_en"),
+    supabaseAdmin.from("menu_items").select("id, title_en, description_en"),
+  ]);
+  if (viewRes.error) throw viewRes.error;
+
+  const secEnMap = new Map<string, { name_en: string | null; description_en: string | null }>();
+  for (const r of (secEn.data || []) as Array<{ id: string; name_en: string | null; description_en: string | null }>) {
+    secEnMap.set(r.id, { name_en: r.name_en, description_en: r.description_en });
+  }
+  const subEnMap = new Map<string, { name_en: string | null; description_en: string | null }>();
+  for (const r of (subEn.data || []) as Array<{ id: string; name_en: string | null; description_en: string | null }>) {
+    subEnMap.set(r.id, { name_en: r.name_en, description_en: r.description_en });
+  }
+  const itemEnMap = new Map<string, { title_en: string | null; description_en: string | null }>();
+  for (const r of (itemEn.data || []) as Array<{ id: string; title_en: string | null; description_en: string | null }>) {
+    itemEnMap.set(r.id, { title_en: r.title_en, description_en: r.description_en });
+  }
 
   const sections = new Map<string, DisplaySection>();
-  for (const row of (data || []) as Array<Record<string, unknown>>) {
+  for (const row of (viewRes.data || []) as Array<Record<string, unknown>>) {
     const sectionId = row.section_id as string | null;
     if (!sectionId) continue;
     let sec = sections.get(sectionId);
     if (!sec) {
+      const en = secEnMap.get(sectionId);
       sec = {
         id: sectionId,
         name: (row.section_name as string) || "",
+        name_en: en?.name_en ?? null,
         description: (row.section_description as string) || "",
+        description_en: en?.description_en ?? null,
         visible_menus: (row.section_visible_menus as string[] | null) || [],
         is_hidden: !!row.section_is_hidden,
         sold_out_date: (row.section_sold_out_date as string | null) ?? null,
@@ -74,10 +101,13 @@ async function buildMenu(): Promise<DisplayMenu> {
     if (!subId) continue;
     let sub = sec.subsections.find((s) => s.id === subId);
     if (!sub) {
+      const en = subEnMap.get(subId);
       sub = {
         id: subId,
         name: (row.subsection_name as string) || "",
+        name_en: en?.name_en ?? null,
         description: (row.subsection_description as string) || "",
+        description_en: en?.description_en ?? null,
         visible_menus: sec.visible_menus,
         is_hidden: !!row.subsection_is_hidden,
         sold_out_date: (row.subsection_sold_out_date as string | null) ?? null,
@@ -93,10 +123,13 @@ async function buildMenu(): Promise<DisplayMenu> {
         name: string;
         price_modifier_cents: number;
       }>;
+      const en = itemEnMap.get(itemId);
       sub.items.push({
         id: itemId,
         title: (row.item_title as string) || "",
+        title_en: en?.title_en ?? null,
         description: (row.item_description as string) || "",
+        description_en: en?.description_en ?? null,
         base_price_cents: (row.base_price_cents as number) || 0,
         is_hidden: !!row.item_is_hidden,
         sold_out_date: (row.item_sold_out_date as string | null) ?? null,
