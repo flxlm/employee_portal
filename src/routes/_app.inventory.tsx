@@ -41,6 +41,7 @@ function InventoryPage() {
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [orderRequests, setOrderRequests] = useState<OrderRequest[]>([]);
+  const [itemSuppliers, setItemSuppliers] = useState<InventoryItemSupplier[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("");
@@ -73,11 +74,12 @@ function InventoryPage() {
   }, [user]);
 
   const loadAll = useCallback(async () => {
-    const [cats, its, ors, profs] = await Promise.all([
+    const [cats, its, ors, profs, sups] = await Promise.all([
       supabase.from("inventory_categories").select("*").is("archived_at", null).order("display_order"),
       supabase.from("inventory_items").select("*").is("archived_at", null),
       supabase.from("order_requests").select("*").eq("status", "pending").order("flagged_at", { ascending: false }),
       supabase.from("profiles").select("id,full_name,email"),
+      supabase.from("inventory_item_suppliers").select("*"),
     ]);
     if (cats.data) {
       setCategories(cats.data as InventoryCategory[]);
@@ -85,6 +87,7 @@ function InventoryPage() {
     }
     if (its.data) setItems(its.data as InventoryItem[]);
     if (ors.data) setOrderRequests(ors.data as OrderRequest[]);
+    if (sups.data) setItemSuppliers(sups.data as InventoryItemSupplier[]);
     if (profs.data) {
       const map: Record<string, ProfileRow> = {};
       for (const p of profs.data as ProfileRow[]) map[p.id] = p;
@@ -104,6 +107,7 @@ function InventoryPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "inventory_items" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "order_requests" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "inventory_categories" }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "inventory_item_suppliers" }, () => loadAll())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -120,6 +124,16 @@ function InventoryPage() {
     () => new Set(orderRequests.filter((r) => r.inventory_item_id).map((r) => r.inventory_item_id as string)),
     [orderRequests],
   );
+
+  // Cheapest supplier per item (paired supplier+cost view)
+  const bestSupplierByItem = useMemo(() => {
+    const map: Record<string, InventoryItemSupplier> = {};
+    for (const s of itemSuppliers) {
+      const cur = map[s.item_id];
+      if (!cur || Number(s.cost) < Number(cur.cost)) map[s.item_id] = s;
+    }
+    return map;
+  }, [itemSuppliers]);
 
   const visibleItems = useMemo(() => {
     let rows = items.filter((i) => i.category_id === activeCategory);
@@ -224,7 +238,7 @@ function InventoryPage() {
                         <TableHead className="w-20">Par</TableHead>
                         <TableHead className="w-24 whitespace-nowrap">Reorder ≤</TableHead>
                         <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="hidden md:table-cell">Supplier</TableHead>
+                        <TableHead className="hidden md:table-cell">Supplier / cost</TableHead>
                         <TableHead className="hidden md:table-cell">Updated</TableHead>
                         <TableHead className="w-[180px] text-right">Actions</TableHead>
                       </TableRow>
@@ -276,11 +290,29 @@ function InventoryPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
-                              <InlineText
-                                value={it.last_supplier ?? ""}
-                                placeholder="—"
-                                onSave={(v) => updateField(it.id, { last_supplier: v || null })}
-                              />
+                              {(() => {
+                                const best = bestSupplierByItem[it.id];
+                                const count = itemSuppliers.filter((s) => s.item_id === it.id).length;
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSuppliersItem(it)}
+                                    className="text-left hover:bg-accent/40 rounded px-1 -mx-1 py-0.5 w-full"
+                                  >
+                                    {best ? (
+                                      <>
+                                        <div className="text-sm">{best.supplier}</div>
+                                        <div className="text-xs text-muted-foreground tabular-nums">
+                                          €{Number(best.cost).toFixed(2)}
+                                          {count > 1 && <span className="ml-1 opacity-70">· +{count - 1}</span>}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <span className="text-muted-foreground text-sm">+ Add supplier</span>
+                                    )}
+                                  </button>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
                               {timeAgo(it.updated_at)}
