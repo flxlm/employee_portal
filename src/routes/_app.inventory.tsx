@@ -41,6 +41,7 @@ function InventoryPage() {
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [orderRequests, setOrderRequests] = useState<OrderRequest[]>([]);
+  const [itemSuppliers, setItemSuppliers] = useState<InventoryItemSupplier[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("");
