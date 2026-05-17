@@ -1,28 +1,56 @@
-# Fix "Translate Missing" returning "Nothing to translate" on new items
+# Speed up "Add item" in the menu editor
 
-## Root cause
+## What's slow today
 
-When you type into a new item/section/subsection, `queueEdit` debounces a save. The server's `updateRow` runs the FR→EN auto‑translation and persists `title_en` (or `name_en`) plus a bumped `version`. But `flush()` in `src/routes/_app.menu-editor.tsx` never reloads after a successful save, so the editor keeps showing:
+Clicking **Add item** runs this sequence before anything appears on screen:
 
-- `title_en = null` (stale)
-- `version = N` (stale; server is now `N+1`)
+1. Call the `insertRow` server function (auth middleware + Supabase `insert ... select().single()` round trip — typically 300–800 ms).
+2. `await` the response.
+3. Append the returned row to local state, then render.
+4. Fire `triggerRefresh()` for the live display (already non-blocking — fine).
 
-That has two visible effects:
+So the entire perceived latency = one server round trip. The user clicks, then waits, then sees the new row. Same pattern is used by `addSubsection`, `addSection`, and `addMod`.
 
-1. The "Translate Missing" menu item stays enabled because the client still thinks EN is empty. Clicking it calls the server, which reads the fresh row, sees EN is already populated, and returns `translated: 0` → toast **"Nothing to translate"**.
-2. The next debounced edit on the same row sends the stale `expectedVersion`, which can trip the optimistic‑lock conflict path.
+## The fix: optimistic insert
 
-## Fix
+Render the new item **immediately** with a client-generated temp id, send the insert in the background, then reconcile when the server responds. The user perceives the add as instant.
 
-In `src/routes/_app.menu-editor.tsx`, after a successful `flush()` (no conflicts, no errors), call `await reload()` before `triggerRefresh()`. On the conflict branch we already reload. On the all‑errors branch we leave state alone so the user can retry.
+### Behavior
 
-This makes the editor reflect the server‑side translation immediately:
-- `title_en` / `name_en` show the translated text
-- `version` is current, so subsequent edits don't conflict
-- "Translate Missing" auto‑disables when there's truly nothing left to translate
+- Click "Add item" → a new row appears in the list within one frame, already focused on the title input so the user can start typing.
+- In the background, `insertRow` runs. On success, swap the temp row for the real one (preserving any edits the user already typed — those edits flow through the existing dirty-row autosave path, just keyed on the real id once we have it).
+- On failure, remove the temp row and toast an error.
 
-## Files
+### Edits that arrive before the server insert finishes
 
-- `src/routes/_app.menu-editor.tsx` — add `await reload()` in the success branch of `flush()` (around line 528–531).
+Two safe options — pick one:
 
-No server, schema, or other UI changes needed.
+- **Option A (simpler):** disable the title/price inputs on the temp row until the real id arrives (typically <500 ms). Visually it still feels instant; only typing is briefly blocked.
+- **Option B (smoother):** allow typing into the temp row, queue any field changes against the temp id, and once the real id arrives, replay the queued patch via `updateRow`. More code, no input lockout.
+
+Recommend Option A first — it captures ~95% of the perceived-speed win with minimal risk.
+
+### Apply the same pattern to siblings
+
+`addSection`, `addSubsection`, and `addMod` have identical structure. Same change, same payoff.
+
+## Other small wins (optional)
+
+- The `insertRow` server fn does `.insert(...).select().single()`. We only need the new `id` and `version` for client reconciliation, so we could `.select("id, version, display_order")` instead of `*` — marginal, but cheaper payload.
+- Nothing else on the hot path is worth touching. `triggerRefresh()` is already fire-and-forget. There's no extra `reload()` after add.
+
+## Technical details
+
+Files to change:
+
+- `src/routes/_app.menu-editor.tsx`
+  - `addItem` (line 629), `addSubsection` (619), `addSection` (613), `addMod` (639): switch to optimistic insert.
+  - Use `crypto.randomUUID()` for the temp id. Mark the row with a `__pending: true` flag (or track temp ids in a `Set<string>`) so the UI can disable inputs / show a subtle spinner.
+  - On server response: `setSections` mapping that replaces the temp id with the real row (keep `modifications: []` / `items: []`). On error: remove the temp row and `toast.error`.
+- `src/lib/menu.functions.ts` (optional): narrow the `.select()` in `insertRow` to just the columns the client needs.
+
+No schema changes, no server-function signature changes (still returns `{ row }`).
+
+## Expected impact
+
+Perceived "Add item" latency drops from one server round trip (~300–800 ms) to a single frame (~16 ms). Real DB write still happens at the same speed in the background.
