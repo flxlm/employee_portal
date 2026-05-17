@@ -222,15 +222,6 @@ function InventoryPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search items…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
@@ -253,6 +244,17 @@ function InventoryPage() {
               />
 
               <Card className="overflow-hidden">
+                <div className="border-b bg-muted/40 px-4 py-2">
+                  <div className="relative max-w-sm">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search items…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-8 bg-background"
+                    />
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
