@@ -136,9 +136,13 @@ function InventoryPage() {
   // Cheapest supplier per item (paired supplier+cost view)
   const bestSupplierByItem = useMemo(() => {
     const map: Record<string, InventoryItemSupplier> = {};
+    const perUnit = (s: InventoryItemSupplier) => {
+      const ps = Number(s.pack_size);
+      return Number(s.cost) / (ps > 0 ? ps : 1);
+    };
     for (const s of itemSuppliers) {
       const cur = map[s.item_id];
-      if (!cur || Number(s.cost) < Number(cur.cost)) map[s.item_id] = s;
+      if (!cur || perUnit(s) < perUnit(cur)) map[s.item_id] = s;
     }
     return map;
   }, [itemSuppliers]);
