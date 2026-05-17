@@ -387,7 +387,6 @@ const COLUMN_CSS = `
 `;
 
 function DisplayPage() {
-  const { token } = Route.useParams();
   const { debug, menu, lang } = Route.useSearch();
   const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
   const router = useRouter();
@@ -420,7 +419,7 @@ function DisplayPage() {
         .channel("menu-display")
         .on("broadcast", { event: "refresh" }, async () => {
           try {
-            await invalidateCache({ data: { token } });
+            await invalidateCache();
           } catch (e) {
             console.error("[display] cache invalidation failed", e);
           }
@@ -435,7 +434,7 @@ function DisplayPage() {
       cancelled = true;
       if (cleanup) cleanup();
     };
-  }, [router, invalidateCache, token]);
+  }, [router, invalidateCache]);
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
