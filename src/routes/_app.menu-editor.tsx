@@ -1718,7 +1718,7 @@ function MenuEditorPage() {
                   )}
                 </div>
               ))}
-              <Button size="sm" variant="outline" onClick={() => addSubsection(sec.id)}>
+              <Button size="sm" variant="outline" disabled={isTempUnresolved(sec.id)} onClick={() => addSubsection(sec.id)}>
                 <Plus className="h-3 w-3" /> Add subsection
               </Button>
             </CardContent>
