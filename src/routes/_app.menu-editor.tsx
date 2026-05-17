@@ -45,7 +45,7 @@ import {
   type MenuModification,
   type Lang,
 } from "@/lib/menu.functions";
-import { refreshDisplayMenu } from "@/lib/menu-display.functions";
+import { refreshDisplayMenu, refreshWebsiteMenu } from "@/lib/menu-display.functions";
 import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
 
 import { cn } from "@/lib/utils";
