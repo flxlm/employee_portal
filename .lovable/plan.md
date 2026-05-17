@@ -1,4 +1,4 @@
-# Inventory: USD + per-supplier pack size
+# Inventory: CAD dollar sign + per-supplier pack size
 
 ## 1. Change currency symbol
 
@@ -23,16 +23,19 @@ Existing rows keep `pack_size = 1` (current behaviour preserved).
 ### UI changes (all in `src/routes/_app.inventory.tsx`)
 
 **Add Item dialog (`AddItemDialog`)**
+
 - Add a `pack_size` input next to each supplier row, suffixed with the item's `unit` (live from the Unit field above — falls back to "unit" if blank).
 - Layout per row: `Supplier name | Cost ($) | Pack size (unit) | Notes | remove`.
 - Default `pack_size` to `1`. Insert it into `inventory_item_suppliers` along with the existing fields.
 
 **Suppliers & Costs dialog (`SuppliersDialog`)**
+
 - Show a `Pack size` column with inline editing (reuse `InlineNumber`), suffixed with `item.unit`.
 - "Add supplier" form gets a `Pack size` input (default 1) alongside Supplier / Cost.
 - Header copy: clarify "Cost is for the listed pack size."
 
 **Cheapest-supplier badge (line 137)**
+
 - Change comparison from raw `cost` to **cost per unit** = `cost / pack_size` (guard divide-by-zero by treating `pack_size <= 0` as 1).
 - Display stays `$<cost>` of the winning row (the actual price you pay), but selection now reflects true value.
 
