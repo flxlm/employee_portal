@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 type DailyMessage = {
   id: string;
   message: string;
+  visible_from: string;
   expires_at: string;
   created_at: string;
   created_by: string | null;
@@ -40,10 +41,22 @@ function endOfDayIso(d: Date): string {
   return x.toISOString();
 }
 
+function startOfDayIso(d: Date): string {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString();
+}
+
 function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
 }
 
 function formatPretty(d: Date): string {
