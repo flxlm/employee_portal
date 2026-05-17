@@ -74,11 +74,12 @@ function InventoryPage() {
   }, [user]);
 
   const loadAll = useCallback(async () => {
-    const [cats, its, ors, profs] = await Promise.all([
+    const [cats, its, ors, profs, sups] = await Promise.all([
       supabase.from("inventory_categories").select("*").is("archived_at", null).order("display_order"),
       supabase.from("inventory_items").select("*").is("archived_at", null),
       supabase.from("order_requests").select("*").eq("status", "pending").order("flagged_at", { ascending: false }),
       supabase.from("profiles").select("id,full_name,email"),
+      supabase.from("inventory_item_suppliers").select("*"),
     ]);
     if (cats.data) {
       setCategories(cats.data as InventoryCategory[]);
@@ -86,6 +87,7 @@ function InventoryPage() {
     }
     if (its.data) setItems(its.data as InventoryItem[]);
     if (ors.data) setOrderRequests(ors.data as OrderRequest[]);
+    if (sups.data) setItemSuppliers(sups.data as InventoryItemSupplier[]);
     if (profs.data) {
       const map: Record<string, ProfileRow> = {};
       for (const p of profs.data as ProfileRow[]) map[p.id] = p;
