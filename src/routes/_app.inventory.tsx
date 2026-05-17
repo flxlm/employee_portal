@@ -562,12 +562,19 @@ function AddItemDialog({
   const [qty, setQty] = useState("0");
   const [par, setPar] = useState("0");
   const [threshold, setThreshold] = useState("0");
-  const [supplier, setSupplier] = useState("");
   const [notes, setNotes] = useState("");
+  const [suppliers, setSuppliers] = useState<Array<{ supplier: string; cost: string; notes: string }>>([
+    { supplier: "", cost: "", notes: "" },
+  ]);
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
-    setName(""); setUnit(""); setQty("0"); setPar("0"); setThreshold("0"); setSupplier(""); setNotes("");
+    setName(""); setUnit(""); setQty("0"); setPar("0"); setThreshold("0"); setNotes("");
+    setSuppliers([{ supplier: "", cost: "", notes: "" }]);
+  };
+
+  const updateSupplier = (i: number, patch: Partial<{ supplier: string; cost: string; notes: string }>) => {
+    setSuppliers((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   };
 
   const submit = async () => {
@@ -576,22 +583,44 @@ function AddItemDialog({
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("inventory_items").insert({
-      category_id: categoryId,
-      name: name.trim(),
-      unit: unit.trim(),
-      current_quantity: Number(qty) || 0,
-      par_level: Number(par) || 0,
-      reorder_threshold: Number(threshold) || 0,
-      last_supplier: supplier.trim() || null,
-      notes: notes.trim() || null,
-      updated_by: userId,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    const validSuppliers = suppliers.filter((s) => s.supplier.trim());
+    const firstSupplier = validSuppliers[0]?.supplier.trim() || null;
+
+    const { data: inserted, error } = await supabase
+      .from("inventory_items")
+      .insert({
+        category_id: categoryId,
+        name: name.trim(),
+        unit: unit.trim(),
+        current_quantity: Number(qty) || 0,
+        par_level: Number(par) || 0,
+        reorder_threshold: Number(threshold) || 0,
+        last_supplier: firstSupplier,
+        notes: notes.trim() || null,
+        updated_by: userId,
+      })
+      .select("id")
+      .single();
+
+    if (error || !inserted) {
+      setSaving(false);
+      toast.error(error?.message ?? "Failed to add item");
       return;
     }
+
+    if (validSuppliers.length > 0) {
+      const { error: supErr } = await supabase.from("inventory_item_suppliers").insert(
+        validSuppliers.map((s) => ({
+          item_id: inserted.id,
+          supplier: s.supplier.trim(),
+          cost: Number(s.cost) || 0,
+          notes: s.notes.trim() || null,
+        })),
+      );
+      if (supErr) toast.error(`Item added, but suppliers failed: ${supErr.message}`);
+    }
+
+    setSaving(false);
     toast.success("Item added");
     reset();
     onClose();
@@ -599,12 +628,12 @@ function AddItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Add inventory item</DialogTitle>
           <DialogDescription>New item in the current category.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3">
+        <div className="grid gap-3 max-h-[70vh] overflow-y-auto pr-1">
           <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Unit"><Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="kg, L, bags…" /></Field>
@@ -612,8 +641,50 @@ function AddItemDialog({
             <Field label="Par level"><Input type="number" value={par} onChange={(e) => setPar(e.target.value)} /></Field>
             <Field label="Reorder threshold"><Input type="number" value={threshold} onChange={(e) => setThreshold(e.target.value)} /></Field>
           </div>
-          <Field label="Supplier (optional)"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
           <Field label="Notes (optional)"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></Field>
+
+          <div className="border-t pt-3">
+            <Label className="text-xs">Suppliers & costs (optional)</Label>
+            <div className="space-y-2 mt-1">
+              {suppliers.map((s, i) => (
+                <div key={i} className="grid grid-cols-[1fr_90px_1fr_auto] gap-2 items-center">
+                  <Input
+                    placeholder="Supplier"
+                    value={s.supplier}
+                    onChange={(e) => updateSupplier(i, { supplier: e.target.value })}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Cost"
+                    value={s.cost}
+                    onChange={(e) => updateSupplier(i, { cost: e.target.value })}
+                  />
+                  <Input
+                    placeholder="Notes"
+                    value={s.notes}
+                    onChange={(e) => updateSupplier(i, { notes: e.target.value })}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={() => setSuppliers((r) => (r.length > 1 ? r.filter((_, idx) => idx !== i) : r))}
+                    disabled={suppliers.length === 1}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => setSuppliers((r) => [...r, { supplier: "", cost: "", notes: "" }])}
+            >
+              <Plus className="h-4 w-4" /> Add another supplier
+            </Button>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
