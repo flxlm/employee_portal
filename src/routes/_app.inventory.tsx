@@ -53,7 +53,7 @@ function InventoryPage() {
 
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [adjustItem, setAdjustItem] = useState<InventoryItem | null>(null);
-  const flagItem = async (it: InventoryItem) => {
+  const flagForReorder = async (it: InventoryItem) => {
     const need = Math.max(0, Number(it.par_level) - Number(it.current_quantity));
     const { error } = await supabase.from("order_requests").insert({
       inventory_item_id: it.id,
