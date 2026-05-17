@@ -462,10 +462,12 @@ export const insertRow = createServerFn({ method: "POST" })
   .inputValidator((input) => insertInputSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    // Narrow select: client already has every other field locally (it built
+    // the optimistic row); we only need these to reconcile.
     const { data: row, error } = await supabase
       .from(data.table)
       .insert(data.values as never)
-      .select()
+      .select("id, version, display_order, created_at")
       .single();
     if (error) throw error;
     console.info(`[menu] insert ${data.table}/${row.id} by ${context.userId}`);
