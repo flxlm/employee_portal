@@ -25,7 +25,7 @@ const MENU_ANIMATION_SRC = "/menu-animation-v2.webm";
 const ASTERISK_ANIMATION_SRC = "/asterisk-animation.webm";
 
 
-export const Route = createFileRoute("/display/$token")({
+export const Route = createFileRoute("/menu")({
   validateSearch: (s: Record<string, unknown>): { debug?: boolean; menu?: MenuFilter; lang?: "fr" | "en" } => {
     const debug = s.debug === true || s.debug === "1" || s.debug === "true";
     const menu = typeof s.menu === "string" && s.menu.length > 0 ? s.menu : undefined;
