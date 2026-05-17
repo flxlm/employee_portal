@@ -107,6 +107,7 @@ function InventoryPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "inventory_items" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "order_requests" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "inventory_categories" }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "inventory_item_suppliers" }, () => loadAll())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
