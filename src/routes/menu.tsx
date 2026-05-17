@@ -264,6 +264,11 @@ const COLUMN_CSS = `
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
 }
+.menu-flow .subsection-title-with-first {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
 .menu-end-logo {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -736,11 +741,16 @@ function DisplayPage() {
                 data-section-index={mi}
                 style={dim ? { opacity: 0.35 } : undefined}
               >
-                <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
-                  {sub.subsection}
-                </h2>
-                {sub.items.map((item, ii) => (
-                  <div key={ii}>{renderItem(item, soldOut || !!item.soldOut)}</div>
+                <div className="subsection-title-with-first">
+                  <h2 className="menu-section-title" style={{ ...styleFor("subsection"), ...(soldOut ? { color: SOLD_OUT_COLOR, borderBottomColor: SOLD_OUT_COLOR } : {}) }}>
+                    {sub.subsection}
+                  </h2>
+                  {sub.items[0] && (
+                    <div>{renderItem(sub.items[0], soldOut || !!sub.items[0].soldOut)}</div>
+                  )}
+                </div>
+                {sub.items.slice(1).map((item, ii) => (
+                  <div key={ii + 1}>{renderItem(item, soldOut || !!item.soldOut)}</div>
                 ))}
               </section>
             );
