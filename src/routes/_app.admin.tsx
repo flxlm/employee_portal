@@ -95,6 +95,42 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle><Webhook className="h-4 w-4 inline mr-2" />Menu change webhook</CardTitle>
+          <CardDescription>
+            URL that receives a POST <code>{`{ event: "menu_updated", timestamp }`}</code> whenever the menu is republished. Leave blank to disable.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              type="url"
+              placeholder="https://example.com/webhooks/menu"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={webhookSaving}
+              onClick={async () => {
+                setWebhookSaving(true);
+                try {
+                  await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
+                  toast.success("Webhook URL saved");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Failed to save");
+                } finally {
+                  setWebhookSaving(false);
+                }
+              }}
+            >
+              <Save className="h-4 w-4 mr-2" /> {webhookSaving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Allowed emails</CardTitle>
