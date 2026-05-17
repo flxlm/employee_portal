@@ -30,13 +30,15 @@ export const Route = createFileRoute("/api/public/menu")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const token = url.searchParams.get("token") ?? "";
-        if (!token) {
-          return jsonResponse({ error: "token required" }, { status: 401 });
+        const expected =
+          process.env.MENU_DISPLAY_TOKEN || "YtXYdKR1kwQYV7OeoqeuQM0PurNAxKdU";
+        if (!token || token !== expected) {
+          return jsonResponse({ error: "Invalid token" }, { status: 401 });
         }
 
         try {
           const [menu, formatting, schedule] = await Promise.all([
-            getDisplayMenu({ data: { token } }),
+            getDisplayMenu({ data: {} }),
             getMenuFormatting(),
             listMenuSchedulePublic(),
           ]);
