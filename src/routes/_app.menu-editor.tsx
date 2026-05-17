@@ -1142,6 +1142,11 @@ function MenuEditorPage() {
                   onDelete={() => removeRow("menu_sections", sec.id)}
                   onAddDescription={() => revealDesc(sec.id)}
                   canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
+                  onTranslateMissing={() => handleTranslateMissing("menu_sections", sec.id)}
+                  canTranslateMissing={!sec.do_not_translate && (
+                    (!!sec.name?.trim() !== !!sec.name_en?.trim()) ||
+                    (!!sec.description?.trim() !== !!sec.description_en?.trim())
+                  )}
                 />
                 <Button
                   size="icon"
