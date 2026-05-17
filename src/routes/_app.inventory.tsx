@@ -20,6 +20,7 @@ import {
   timeAgo,
   type InventoryCategory,
   type InventoryItem,
+  type InventoryItemSupplier,
   type OrderRequest,
 } from "@/lib/inventory-types";
 
