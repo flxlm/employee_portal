@@ -477,9 +477,9 @@ function DisplayPage() {
 
   const activeMenuKey = useMemo(() => {
     if (!isAuto) return menu;
-    const picked = pickActiveMenuKey(scheduleEntries, new Date(nowTick));
+    const picked = pickActiveMenuKey(scheduleEntries, new Date(nowTick), specialEntries);
     return picked ?? undefined;
-  }, [isAuto, menu, scheduleEntries, nowTick]);
+  }, [isAuto, menu, scheduleEntries, specialEntries, nowTick]);
 
   const menus = useMemo(
     () => mapDisplayMenuToMenus(displayMenu, activeMenuKey, lang),
