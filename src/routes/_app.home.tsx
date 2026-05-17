@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Wine, ClipboardCheck, Users, Zap, BookOpen, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, Zap, BookOpen, UtensilsCrossed, Package, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
