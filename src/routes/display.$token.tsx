@@ -388,7 +388,7 @@ const COLUMN_CSS = `
 
 function DisplayPage() {
   const { token } = Route.useParams();
-  const { debug, menu } = Route.useSearch();
+  const { debug, menu, lang } = Route.useSearch();
   const { formatting, displayMenu, scheduleEntries } = Route.useLoaderData();
   const router = useRouter();
   const invalidateCache = useServerFn(invalidateDisplayMenuCache);
@@ -472,8 +472,8 @@ function DisplayPage() {
   }, [isAuto, menu, scheduleEntries, nowTick]);
 
   const menus = useMemo(
-    () => mapDisplayMenuToMenus(displayMenu, activeMenuKey),
-    [displayMenu, activeMenuKey],
+    () => mapDisplayMenuToMenus(displayMenu, activeMenuKey, lang),
+    [displayMenu, activeMenuKey, lang],
   );
 
   const SOLD_OUT_COLOR = "#e5e5e5";
