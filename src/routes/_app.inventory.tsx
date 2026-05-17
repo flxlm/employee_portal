@@ -47,9 +47,16 @@ function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>(() => {
-    if (typeof window === "undefined") return "name";
-    return (window.localStorage.getItem(SORT_STORAGE) as SortKey) || "name";
+  const [sort, setSort] = useState<SortConfig>(() => {
+    if (typeof window === "undefined") return { key: "name", dir: "asc" };
+    const stored = window.localStorage.getItem(SORT_STORAGE);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as SortConfig;
+        if (parsed.key && parsed.dir) return parsed;
+      } catch { /* fallthrough */ }
+    }
+    return { key: "name", dir: "asc" };
   });
 
   const [addItemOpen, setAddItemOpen] = useState(false);
