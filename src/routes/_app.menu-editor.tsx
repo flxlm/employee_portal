@@ -1669,7 +1669,8 @@ function MenuEditorPage() {
                         {item.modifications.length > 0 && (
                           <div className="pl-7 space-y-1">
                             {item.modifications.map((m, mIdx) => (
-                              <div key={m.id} className="flex items-center gap-2">
+                              <div key={m.id} className={`flex items-center gap-2 ${failedTempIds.has(m.id) ? "ring-2 ring-destructive rounded" : ""} ${savingTempIds.has(m.id) ? "opacity-70" : ""}`}>
+                                {renderTempStatus(m.id)}
                                 <div className="flex flex-col rounded-md border bg-background shrink-0">
                                   <Button size="icon" variant="ghost" className="h-5 w-5 rounded-b-none" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move modification up">
                                     <ChevronUp className="h-3 w-3" />
