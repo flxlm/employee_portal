@@ -427,6 +427,23 @@ function MenuEditorPage() {
     refreshDisplay({}).catch((e) => console.error("[menu] refresh failed", e));
   };
 
+  const refreshWebsite = useServerFn(refreshWebsiteMenu);
+  const [refreshingWebsite, setRefreshingWebsite] = useState(false);
+  const [lastWebsiteRefresh, setLastWebsiteRefresh] = useState<string | null>(null);
+  const handleRefreshWebsite = async () => {
+    if (refreshingWebsite) return;
+    setRefreshingWebsite(true);
+    try {
+      const r = await refreshWebsite({});
+      setLastWebsiteRefresh(r.refreshed_at);
+      toast.success("Website menu refreshed");
+    } catch (err) {
+      console.error("[menu] refresh website failed", err);
+      toast.error(err instanceof Error ? err.message : "Refresh failed");
+    } finally {
+      setRefreshingWebsite(false);
+    }
+  };
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [menus, setMenus] = useState<MenuOption[]>([]);
   const [loading, setLoading] = useState(true);
