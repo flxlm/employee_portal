@@ -1357,6 +1357,11 @@ function MenuEditorPage() {
                               patchItem(sec.id, sub.id, item.id, { do_not_translate: next });
                               queueEdit("menu_items", item.id, item.version, { do_not_translate: next });
                             }}
+                            onTranslateMissing={() => handleTranslateMissing("menu_items", item.id)}
+                            canTranslateMissing={!item.do_not_translate && (
+                              (!!item.title?.trim() !== !!item.title_en?.trim()) ||
+                              (!!item.description?.trim() !== !!item.description_en?.trim())
+                            )}
                           />
                         </div>
 
