@@ -108,6 +108,50 @@ function LiveMenuTimetablePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // ============ Specials ============
+  const listSpecials = useServerFn(listMenuSpecials);
+  const addSpecial = useServerFn(addMenuSpecial);
+  const removeSpecial = useServerFn(deleteMenuSpecial);
+
+  const { data: specialsRes } = useQuery({
+    queryKey: ["menu-specials"],
+    queryFn: () => listSpecials(),
+  });
+  const specials = specialsRes?.specials ?? [];
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [spMenuKey, setSpMenuKey] = useState<string>("");
+  const [spDate, setSpDate] = useState(todayStr);
+  const [spStart, setSpStart] = useState("12:00");
+  const [spEnd, setSpEnd] = useState("14:00");
+
+  const addSpecialMut = useMutation({
+    mutationFn: () =>
+      addSpecial({
+        data: {
+          menu_key: spMenuKey,
+          slot_date: spDate,
+          start_time: spStart,
+          end_time: spEnd,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["menu-specials"] });
+      toast.success("Special slot added");
+      setSpMenuKey("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeSpecialMut = useMutation({
+    mutationFn: (id: string) => removeSpecial({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["menu-specials"] });
+      toast.success("Removed");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
