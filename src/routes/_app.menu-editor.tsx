@@ -1235,14 +1235,6 @@ function MenuEditorPage() {
                           <Plus className="h-3 w-3" /> Add description
                         </button>
                       )}
-                      <MenuToggles
-                        options={menus}
-                        value={sub.visible_menus}
-                        onChange={(next) => {
-                          patchSubsection(sec.id, sub.id, { visible_menus: next });
-                          queueEdit("menu_subsections", sub.id, sub.version, { visible_menus: next });
-                        }}
-                      />
                     </div>
                     <RowSettingsMenu
                       hidden={sub.is_hidden}
