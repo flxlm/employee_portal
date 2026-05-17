@@ -38,7 +38,7 @@ import {
   softDeleteRow,
   reorderRows,
   translateMissingRow,
-  translateAllMissing,
+  listMissingTranslations,
   type MenuSection,
   type MenuSubsection,
   type MenuItem,
@@ -372,28 +372,54 @@ function MenuEditorPage() {
       toast.error("Translation failed");
     }
   };
-  const translateAll = useServerFn(translateAllMissing);
+  const listMissing = useServerFn(listMissingTranslations);
   const [translatingAll, setTranslatingAll] = useState(false);
+  const [translateProgress, setTranslateProgress] = useState<{ done: number; total: number } | null>(null);
   const handleTranslateAll = async () => {
     if (translatingAll) return;
     setTranslatingAll(true);
+    setTranslateProgress(null);
     try {
-      toast.info("Translating missing fields…");
-      const r = await translateAll({});
-      if (r.fieldsTranslated > 0) {
+      const { targets } = await listMissing({});
+      if (targets.length === 0) {
+        toast.info("Nothing to translate");
+        return;
+      }
+      setTranslateProgress({ done: 0, total: targets.length });
+      let translated = 0;
+      let failures = 0;
+      const CONCURRENCY = 3;
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < targets.length) {
+          const idx = cursor++;
+          const t = targets[idx];
+          try {
+            const r = await translateMissing({ data: { table: t.table, id: t.id } });
+            translated += r.translated || 0;
+          } catch (e) {
+            console.error("[menu] translate row failed", t, e);
+            failures++;
+          }
+          setTranslateProgress((p) => (p ? { done: p.done + 1, total: p.total } : p));
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, worker));
+      if (translated > 0) {
         toast.success(
-          `Translated ${r.fieldsTranslated} field${r.fieldsTranslated > 1 ? "s" : ""} across ${r.rowsTouched} row${r.rowsTouched > 1 ? "s" : ""}${r.failures ? ` (${r.failures} failed)` : ""}`,
+          `Translated ${translated} field${translated > 1 ? "s" : ""} across ${targets.length} row${targets.length > 1 ? "s" : ""}${failures ? ` (${failures} failed)` : ""}`,
         );
         await reload();
         triggerRefresh();
       } else {
-        toast.info("Nothing to translate");
+        toast.info(failures ? `All ${failures} attempts failed` : "Nothing to translate");
       }
     } catch (e) {
       console.error("[menu] translateAll failed", e);
       toast.error("Bulk translation failed");
     } finally {
       setTranslatingAll(false);
+      setTranslateProgress(null);
     }
   };
   const refreshDisplay = useServerFn(refreshDisplayMenu);
@@ -1014,7 +1040,11 @@ function MenuEditorPage() {
             <Button size="sm" variant="outline" onClick={handleTranslateAll} disabled={translatingAll}>
               <Sparkles className="h-4 w-4" />
               <span className="hidden xs:inline sm:inline">
-                {translatingAll ? "Translating…" : "Translate missing"}
+                {translatingAll
+                  ? translateProgress
+                    ? `Translating ${translateProgress.done}/${translateProgress.total}…`
+                    : "Translating…"
+                  : "Translate missing"}
               </span>
             </Button>
             <DropdownMenu>
