@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_app/inventory")({
 });
 
 type SortKey = "name" | "status" | "updated";
+type SortConfig = { key: SortKey; dir: "asc" | "desc" };
 const SORT_STORAGE = "inventory:sort";
 
 const STATUS_ORDER = { OUT: 0, LOW: 1, "AT PAR": 2, OK: 3 } as const;
