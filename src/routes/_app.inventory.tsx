@@ -125,6 +125,16 @@ function InventoryPage() {
     [orderRequests],
   );
 
+  // Cheapest supplier per item (paired supplier+cost view)
+  const bestSupplierByItem = useMemo(() => {
+    const map: Record<string, InventoryItemSupplier> = {};
+    for (const s of itemSuppliers) {
+      const cur = map[s.item_id];
+      if (!cur || Number(s.cost) < Number(cur.cost)) map[s.item_id] = s;
+    }
+    return map;
+  }, [itemSuppliers]);
+
   const visibleItems = useMemo(() => {
     let rows = items.filter((i) => i.category_id === activeCategory);
     const q = search.trim().toLowerCase();
