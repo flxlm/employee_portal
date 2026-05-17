@@ -143,6 +143,12 @@ function InventoryPage() {
     return map;
   }, [itemSuppliers]);
 
+  const categoryMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const c of categories) m[c.id] = c.name;
+    return m;
+  }, [categories]);
+
   const visibleItems = useMemo(() => {
     let rows = items.filter((i) => i.category_id === activeCategory);
     const q = search.trim().toLowerCase();
