@@ -73,8 +73,7 @@ function AppLayout() {
   if (typeof window !== "undefined" && isMenuHost(window.location.host)) {
     return (
       <Navigate
-        to="/display/$token"
-        params={{ token: DEFAULT_DISPLAY_TOKEN }}
+        to="/menu"
         search={{ menu: "auto", lang: "fr" }}
         replace
       />
