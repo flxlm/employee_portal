@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, Link, useRouter, useLocation, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useLocation, Navigate, redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -19,7 +20,31 @@ function isMenuHost(host: string | null | undefined): boolean {
   return h === "menu.savsav.net" || h.startsWith("menu.");
 }
 
+const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
+  const { getRequestHost } = await import("@tanstack/react-start/server");
+  try {
+    return getRequestHost() ?? null;
+  } catch {
+    return null;
+  }
+});
+
 export const Route = createFileRoute("/_app")({
+  beforeLoad: async () => {
+    const host =
+      typeof window === "undefined"
+        ? await getServerHost()
+        : window.location.host;
+
+    if (isMenuHost(host)) {
+      throw redirect({
+        to: "/display/$token",
+        params: { token: DEFAULT_DISPLAY_TOKEN },
+        search: { menu: "auto", lang: "fr" },
+        replace: true,
+      });
+    }
+  },
   component: AppLayout,
 });
 
