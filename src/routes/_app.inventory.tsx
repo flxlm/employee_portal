@@ -251,17 +251,21 @@ function InventoryPage() {
                   <option value="status">Sort: Status</option>
                   <option value="updated">Sort: Last updated</option>
                 </select>
+                <Button size="sm" variant="outline" onClick={() => setAdHocOpen(true)}>
+                  <Plus className="h-4 w-4" /> Ad-hoc request
+                </Button>
                 <Button size="sm" onClick={() => setAddItemOpen(true)}>
                   <Plus className="h-4 w-4" /> Add item
                 </Button>
               </div>
 
-              <PendingPanel
-                requests={orderRequests}
-                items={items}
-                userName={userName}
-                onAdHoc={() => setAdHocOpen(true)}
-              />
+              {isAdmin && (
+                <PendingPanel
+                  requests={orderRequests}
+                  items={items}
+                  userName={userName}
+                />
+              )}
 
               <Card className="overflow-hidden">
                 <div className="border-b bg-muted/40 px-4 py-2">
