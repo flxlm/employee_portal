@@ -119,7 +119,21 @@ function HomePage() {
           <Button
             variant={editing ? "default" : "outline"}
             size="sm"
-            onClick={() => setEditing((v) => !v)}
+            onClick={() => {
+              if (editing) {
+                if (draftOrder !== null) {
+                  setOrder(draftOrder);
+                  if (storageKey) {
+                    try { localStorage.setItem(storageKey, JSON.stringify(draftOrder)); } catch { /* ignore */ }
+                  }
+                }
+                setDraftOrder(null);
+                setEditing(false);
+              } else {
+                setDraftOrder(order ?? []);
+                setEditing(true);
+              }
+            }}
           >
             {editing ? <><Check className="h-4 w-4 mr-1" /> Done</> : <><Pencil className="h-4 w-4 mr-1" /> Reorder</>}
           </Button>
