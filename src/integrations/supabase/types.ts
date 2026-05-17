@@ -524,6 +524,39 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_schedule_specials: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          menu_key: string
+          notes: string | null
+          slot_date: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          menu_key: string
+          notes?: string | null
+          slot_date: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          menu_key?: string
+          notes?: string | null
+          slot_date?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_sections: {
         Row: {
           created_at: string
