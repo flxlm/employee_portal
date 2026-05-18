@@ -412,6 +412,9 @@ function renderBlock(block:
         alignItems: "baseline",
         paddingTop: "clamp(0.5rem, 1vh, 1.25rem)",
         paddingBottom: "clamp(0.5rem, 1vh, 1.25rem)",
+        breakInside: "avoid",
+        WebkitColumnBreakInside: "avoid",
+        pageBreakInside: "avoid",
       }}
     >
       <div style={{ minWidth: 0 }}>
