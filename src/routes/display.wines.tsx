@@ -32,7 +32,7 @@ function mapColourToGroup(colour: string): Group | null {
 
 function formatPrice(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return `$${n.toFixed(0)}`;
+  return `${n.toFixed(0)}`;
 }
 
 function DisplayWinesPage() {
