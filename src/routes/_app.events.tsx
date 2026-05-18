@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getEventInquiries, updateEventInquiry, type EventInquiry } from "@/lib/sheets.functions";
 import { draftEstimateEmail } from "@/lib/estimate.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -219,6 +220,23 @@ function EventsPage() {
       setEditing(false);
     }
   }, [selected]);
+
+  // Realtime: refetch when event_inquiries changes (debounced, skip while editing)
+  const editingRef = useRef(false);
+  useEffect(() => { editingRef.current = editing; }, [editing]);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const channel = supabase
+      .channel("events-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "event_inquiries" }, () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => {
+          if (!editingRef.current) qc.invalidateQueries({ queryKey: ["event-inquiries"] });
+        }, 400);
+      })
+      .subscribe();
+    return () => { if (t) clearTimeout(t); supabase.removeChannel(channel); };
+  }, [qc]);
 
   const mutation = useMutation({
     mutationFn: async (vars: { id: string; updates: Record<string, string> }) =>

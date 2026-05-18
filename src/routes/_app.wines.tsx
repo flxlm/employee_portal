@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { getWineList, addWine, updateWineStock, updateWine, type WineEntry } from "@/lib/sheets.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -22,11 +23,25 @@ export const Route = createFileRoute("/_app/wines")({
 
 function WinesPage() {
   const fetchFn = useServerFn(getWineList);
+  const qc = useQueryClient();
   const { data, isLoading, refetch, isFetching, error } = useQuery({
     queryKey: ["wine-list"],
     queryFn: () => fetchFn(),
   });
   const [q, setQ] = useState("");
+
+  // Realtime: refetch on any wines change (debounced)
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const channel = supabase
+      .channel("wines-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "wines" }, () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => qc.invalidateQueries({ queryKey: ["wine-list"] }), 400);
+      })
+      .subscribe();
+    return () => { if (t) clearTimeout(t); supabase.removeChannel(channel); };
+  }, [qc]);
   const [colour, setColour] = useState("all");
   const [stock, setStock] = useState<"in" | "all">("in");
   const [selected, setSelected] = useState<WineEntry | null>(null);
