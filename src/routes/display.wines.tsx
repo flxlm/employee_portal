@@ -58,8 +58,38 @@ function DisplayWinesPage() {
     };
   }, [fetchFn]);
 
-  // Hide cursor + wake lock
+  // Fullscreen state — drives cursor hiding, pagination, wake lock
+  const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
+    const onChange = () => {
+      setIsFullscreen(
+        !!document.fullscreenElement ||
+          !!(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement,
+      );
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  const enterFullscreen = async () => {
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+    };
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+    } catch {
+      /* noop */
+    }
+  };
+
+  // Hide cursor + wake lock — only while fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
     const prevCursor = document.body.style.cursor;
     document.body.style.cursor = "none";
     let wakeLock: { release: () => Promise<void> } | null = null;
@@ -87,7 +117,8 @@ function DisplayWinesPage() {
         /* noop */
       }
     };
-  }, []);
+  }, [isFullscreen]);
+
 
   const grouped = useMemo(() => {
     const buckets: Record<Group, PublicWine[]> = {
