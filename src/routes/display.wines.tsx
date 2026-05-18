@@ -282,6 +282,7 @@ function DisplayWinesPage() {
       <style>{`
         @import url('https://api.fontshare.com/v2/css?f[]=neue-montreal@400,500,700&display=swap');
         .display-wines[data-fullscreen="true"], .display-wines[data-fullscreen="true"] * { cursor: none !important; }
+        .display-wines { text-transform: uppercase; }
         .wine-name, .wine-section, .wine-title { font-family: 'Neue Montreal', system-ui, sans-serif; }
         .wine-meta, .wine-price { font-family: 'Neue Montreal', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
       `}</style>
