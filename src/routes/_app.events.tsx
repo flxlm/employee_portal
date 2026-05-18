@@ -223,7 +223,7 @@ function EventsPage() {
 
   // Realtime: refetch when event_inquiries changes (debounced, skip while editing)
   const editingRef = useRef(false);
-  useEffect(() => { editingRef.current = editing || mutation.isPending; });
+  useEffect(() => { editingRef.current = editing; }, [editing]);
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
