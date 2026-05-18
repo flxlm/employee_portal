@@ -239,8 +239,9 @@ function DisplayWinesPage() {
     };
   }, [blocks]);
 
-  // Auto-advance pages with fade
+  // Auto-advance pages with fade — only while fullscreen
   useEffect(() => {
+    if (!isFullscreen) return;
     if (pages.length <= 1) return;
     const PAGE_MS = 20_000;
     const FADE_MS = 800;
@@ -252,7 +253,8 @@ function DisplayWinesPage() {
       }, FADE_MS);
     }, PAGE_MS);
     return () => clearInterval(advance);
-  }, [pages.length]);
+  }, [pages.length, isFullscreen]);
+
 
   const currentBlockIdxs = pages[pageIdx] ?? blocks.map((_, i) => i);
 
