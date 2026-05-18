@@ -381,6 +381,8 @@ function renderBlock(block:
         style={{
           marginTop: "clamp(1.5rem, 3vh, 4rem)",
           marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
+          breakInside: "avoid",
+          pageBreakInside: "avoid",
         }}
       >
         <h2
