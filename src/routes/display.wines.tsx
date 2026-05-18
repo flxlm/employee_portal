@@ -174,7 +174,7 @@ function DisplayWinesPage() {
       const measureEl = measureRef.current;
       const contentEl = contentRef.current;
       if (!measureEl || !contentEl) return;
-      const available = contentEl.clientHeight;
+      const available = contentEl.clientHeight * 2; // 2-column layout shares vertical space
       const children = Array.from(measureEl.children) as HTMLElement[];
       if (children.length === 0) return;
 
