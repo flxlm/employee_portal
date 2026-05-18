@@ -141,22 +141,14 @@ function DisplayWinesPage() {
       .filter((s) => s.wines.length > 0);
   }, [data]);
 
-  // Build a flat list of "blocks" (group header + each wine row), then
-  // paginate by measuring after layout.
-  type Block =
-    | { kind: "header"; group: Group; key: string }
-    | { kind: "wine"; wine: PublicWine; key: string };
+  // One block per section (header + all wines) so columns never split a section.
+  type Block = { group: Group; wines: PublicWine[]; key: string };
 
-  const blocks: Block[] = useMemo(() => {
-    const out: Block[] = [];
-    for (const section of grouped) {
-      out.push({ kind: "header", group: section.group, key: `h-${section.group}` });
-      for (const w of section.wines) {
-        out.push({ kind: "wine", wine: w, key: `w-${w.id}` });
-      }
-    }
-    return out;
-  }, [grouped]);
+  const blocks: Block[] = useMemo(
+    () => grouped.map((s) => ({ group: s.group, wines: s.wines, key: `s-${s.group}` })),
+    [grouped],
+  );
+
 
   const measureRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -183,42 +175,18 @@ function DisplayWinesPage() {
       let usedHeight = 0;
       for (let i = 0; i < children.length; i++) {
         const h = children[i].getBoundingClientRect().height;
-        const block = blocks[i];
-        // Don't end a page on a group header — push it to next page with its rows
         if (usedHeight + h > available && current.length > 0) {
-          // If the last item on current page is a header, pull it forward to next page
-          const lastBlockIdx = current[current.length - 1];
-          if (blocks[lastBlockIdx]?.kind === "header") {
-            current.pop();
-          }
-          if (current.length > 0) result.push(current);
-          current = [];
-          usedHeight = 0;
-          // If the header was popped, re-add it as first of next page
-          if (lastBlockIdx !== undefined && blocks[lastBlockIdx]?.kind === "header") {
-            const hh = children[lastBlockIdx].getBoundingClientRect().height;
-            current.push(lastBlockIdx);
-            usedHeight += hh;
-          }
-        }
-        current.push(i);
-        usedHeight += h;
-        // If a single block is taller than the page, still place it alone
-        if (usedHeight > available && current.length === 1) {
           result.push(current);
           current = [];
           usedHeight = 0;
         }
-        // Avoid orphan: if this is a header and next won't fit, defer to next page
-        if (
-          block.kind === "header" &&
-          i + 1 < children.length &&
-          usedHeight + children[i + 1].getBoundingClientRect().height > available
-        ) {
-          current.pop();
-          if (current.length > 0) result.push(current);
-          current = [i];
-          usedHeight = h;
+        current.push(i);
+        usedHeight += h;
+        // A single section taller than the page still gets its own page
+        if (usedHeight > available && current.length === 1) {
+          result.push(current);
+          current = [];
+          usedHeight = 0;
         }
       }
       if (current.length > 0) result.push(current);
@@ -374,42 +342,11 @@ function DisplayWinesPage() {
   );
 }
 
-function renderBlock(block:
-  | { kind: "header"; group: string; key: string }
-  | { kind: "wine"; wine: PublicWine; key: string }) {
-  if (block.kind === "header") {
-    return (
-      <div
-        key={block.key}
-        style={{
-          marginTop: "clamp(1.5rem, 3vh, 4rem)",
-          marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
-          breakInside: "avoid",
-          pageBreakInside: "avoid",
-        }}
-      >
-        <h2
-          className="wine-section"
-          style={{
-            fontSize: "clamp(1.75rem, 3.5vw, 5rem)",
-            fontWeight: 500,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            margin: 0,
-            paddingBottom: "clamp(0.4rem, 0.8vh, 1rem)",
-            borderBottom: "1px solid #111111",
-          }}
-        >
-          {block.group}
-        </h2>
-      </div>
-    );
-  }
-  const w = block.wine;
+function renderWineRow(w: PublicWine) {
   const origin = [w.domaine, w.country].filter(Boolean).join(" · ");
   return (
     <div
-      key={block.key}
+      key={`w-${w.id}`}
       style={{
         display: "grid",
         gridTemplateColumns: "1fr auto",
@@ -417,8 +354,6 @@ function renderBlock(block:
         alignItems: "baseline",
         paddingTop: "clamp(0.5rem, 1vh, 1.25rem)",
         paddingBottom: "clamp(0.5rem, 1vh, 1.25rem)",
-        breakInside: "avoid",
-        pageBreakInside: "avoid",
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -457,6 +392,37 @@ function renderBlock(block:
       >
         {formatPrice(w.togo)}
       </div>
+    </div>
+  );
+}
+
+function renderBlock(block: { group: string; wines: PublicWine[]; key: string }) {
+  return (
+    <div
+      key={block.key}
+      style={{
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
+        marginTop: "clamp(1.5rem, 3vh, 4rem)",
+        marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
+      }}
+    >
+      <h2
+        className="wine-section"
+        style={{
+          fontSize: "clamp(1.75rem, 3.5vw, 5rem)",
+          fontWeight: 500,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          margin: 0,
+          marginBottom: "clamp(0.5rem, 1vh, 1.25rem)",
+          paddingBottom: "clamp(0.4rem, 0.8vh, 1rem)",
+          borderBottom: "1px solid #111111",
+        }}
+      >
+        {block.group}
+      </h2>
+      {block.wines.map((w) => renderWineRow(w))}
     </div>
   );
 }
