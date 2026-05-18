@@ -174,7 +174,7 @@ function DisplayWinesPage() {
       const measureEl = measureRef.current;
       const contentEl = contentRef.current;
       if (!measureEl || !contentEl) return;
-      const available = contentEl.clientHeight;
+      const available = contentEl.clientHeight * 2; // 2-column layout shares vertical space
       const children = Array.from(measureEl.children) as HTMLElement[];
       if (children.length === 0) return;
 
@@ -341,6 +341,9 @@ function DisplayWinesPage() {
           position: "relative",
           opacity: isFullscreen ? (fade ? 1 : 0) : 1,
           transition: "opacity 700ms ease-in-out",
+          columnCount: 2,
+          columnGap: "clamp(2rem, 5vw, 6rem)",
+          columnFill: "balance",
         }}
       >
         {isFullscreen
@@ -381,6 +384,8 @@ function renderBlock(block:
         style={{
           marginTop: "clamp(1.5rem, 3vh, 4rem)",
           marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
+          breakInside: "avoid",
+          pageBreakInside: "avoid",
         }}
       >
         <h2
@@ -412,6 +417,8 @@ function renderBlock(block:
         alignItems: "baseline",
         paddingTop: "clamp(0.5rem, 1vh, 1.25rem)",
         paddingBottom: "clamp(0.5rem, 1vh, 1.25rem)",
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -448,7 +455,7 @@ function renderBlock(block:
           whiteSpace: "nowrap",
         }}
       >
-        {formatPrice(w.bottle)}
+        {formatPrice(w.togo)}
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export type PublicWine = {
   country: string;
   colour: string;
   bottle: number;
+  togo: number;
   inventory: number;
 };
 
@@ -15,7 +16,7 @@ export const getPublicInStockWines = createServerFn({ method: "GET" }).handler(
   async (): Promise<PublicWine[]> => {
     const { data, error } = await supabaseAdmin
       .from("wines")
-      .select("id, name, domaine, country, colour, bottle, inventory")
+      .select("id, name, domaine, country, colour, bottle, togo, inventory")
       .gt("inventory", 0)
       .limit(2000);
     if (error) throw new Error(error.message);
@@ -26,6 +27,7 @@ export const getPublicInStockWines = createServerFn({ method: "GET" }).handler(
       country: String(r.country ?? ""),
       colour: String(r.colour ?? ""),
       bottle: Number(r.bottle ?? 0),
+      togo: Number(r.togo ?? 0),
       inventory: Number(r.inventory ?? 0),
     }));
   },
