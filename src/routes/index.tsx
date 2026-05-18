@@ -8,6 +8,12 @@ function isMenuHost(host: string | null | undefined): boolean {
   return h === "menu.savsav.net" || h.startsWith("menu.");
 }
 
+function isWineHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return h === "wine.savsav.net" || h.startsWith("wine.");
+}
+
 import { createServerFn } from "@tanstack/react-start";
 
 const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
@@ -40,6 +46,10 @@ export const Route = createFileRoute("/")({
         search: { menu: (search.menu as string | undefined) ?? "auto", lang: "fr" },
         replace: true,
       });
+    }
+
+    if (isWineHost(host)) {
+      throw redirect({ to: "/display/wines", replace: true });
     }
   },
   component: IndexPage,
