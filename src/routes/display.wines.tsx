@@ -141,22 +141,14 @@ function DisplayWinesPage() {
       .filter((s) => s.wines.length > 0);
   }, [data]);
 
-  // Build a flat list of "blocks" (group header + each wine row), then
-  // paginate by measuring after layout.
-  type Block =
-    | { kind: "header"; group: Group; key: string }
-    | { kind: "wine"; wine: PublicWine; key: string };
+  // One block per section (header + all wines) so columns never split a section.
+  type Block = { group: Group; wines: PublicWine[]; key: string };
 
-  const blocks: Block[] = useMemo(() => {
-    const out: Block[] = [];
-    for (const section of grouped) {
-      out.push({ kind: "header", group: section.group, key: `h-${section.group}` });
-      for (const w of section.wines) {
-        out.push({ kind: "wine", wine: w, key: `w-${w.id}` });
-      }
-    }
-    return out;
-  }, [grouped]);
+  const blocks: Block[] = useMemo(
+    () => grouped.map((s) => ({ group: s.group, wines: s.wines, key: `s-${s.group}` })),
+    [grouped],
+  );
+
 
   const measureRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
