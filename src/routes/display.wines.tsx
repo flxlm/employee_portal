@@ -403,8 +403,8 @@ function renderBlock(block: { group: string; wines: PublicWine[]; key: string })
       style={{
         breakInside: "avoid",
         pageBreakInside: "avoid",
-        marginTop: "clamp(1.5rem, 3vh, 4rem)",
-        marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
+        marginTop: 0,
+        marginBottom: "clamp(2rem, 4vh, 5rem)",
       }}
     >
       <h2
