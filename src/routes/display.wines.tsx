@@ -58,8 +58,38 @@ function DisplayWinesPage() {
     };
   }, [fetchFn]);
 
-  // Hide cursor + wake lock
+  // Fullscreen state — drives cursor hiding, pagination, wake lock
+  const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
+    const onChange = () => {
+      setIsFullscreen(
+        !!document.fullscreenElement ||
+          !!(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement,
+      );
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  const enterFullscreen = async () => {
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+    };
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+    } catch {
+      /* noop */
+    }
+  };
+
+  // Hide cursor + wake lock — only while fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
     const prevCursor = document.body.style.cursor;
     document.body.style.cursor = "none";
     let wakeLock: { release: () => Promise<void> } | null = null;
@@ -87,7 +117,8 @@ function DisplayWinesPage() {
         /* noop */
       }
     };
-  }, []);
+  }, [isFullscreen]);
+
 
   const grouped = useMemo(() => {
     const buckets: Record<Group, PublicWine[]> = {
@@ -208,8 +239,9 @@ function DisplayWinesPage() {
     };
   }, [blocks]);
 
-  // Auto-advance pages with fade
+  // Auto-advance pages with fade — only while fullscreen
   useEffect(() => {
+    if (!isFullscreen) return;
     if (pages.length <= 1) return;
     const PAGE_MS = 20_000;
     const FADE_MS = 800;
@@ -221,22 +253,24 @@ function DisplayWinesPage() {
       }, FADE_MS);
     }, PAGE_MS);
     return () => clearInterval(advance);
-  }, [pages.length]);
+  }, [pages.length, isFullscreen]);
+
 
   const currentBlockIdxs = pages[pageIdx] ?? blocks.map((_, i) => i);
 
   return (
     <div
       className="display-wines"
+      data-fullscreen={isFullscreen ? "true" : "false"}
       style={{
-        position: "fixed",
-        inset: 0,
+        position: isFullscreen ? "fixed" : "relative",
+        inset: isFullscreen ? 0 : undefined,
+        minHeight: isFullscreen ? undefined : "100vh",
         background: "#FFFFFF",
         color: "#111111",
-        overflow: "hidden",
+        overflow: isFullscreen ? "hidden" : "auto",
         fontFamily: "'Neue Montreal', 'Inter', system-ui, sans-serif",
         WebkitFontSmoothing: "antialiased",
-        // Side margins fluid
         paddingLeft: "clamp(1.5rem, 6vw, 7.5rem)",
         paddingRight: "clamp(1.5rem, 6vw, 7.5rem)",
         paddingTop: "clamp(1.5rem, 4vh, 5rem)",
@@ -247,10 +281,34 @@ function DisplayWinesPage() {
     >
       <style>{`
         @import url('https://api.fontshare.com/v2/css?f[]=neue-montreal@400,500,700&display=swap');
-        .display-wines, .display-wines * { cursor: none !important; }
+        .display-wines[data-fullscreen="true"], .display-wines[data-fullscreen="true"] * { cursor: none !important; }
         .wine-name, .wine-section, .wine-title { font-family: 'Neue Montreal', system-ui, sans-serif; }
         .wine-meta, .wine-price { font-family: 'Neue Montreal', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
       `}</style>
+
+      {!isFullscreen && (
+        <button
+          onClick={enterFullscreen}
+          style={{
+            position: "fixed",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 100,
+            background: "#fff",
+            color: "#000",
+            border: "1px solid #000",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: "0.75rem",
+            padding: "0.5rem 1rem",
+            cursor: "pointer",
+            fontFamily: "'Neue Montreal', 'Inter', system-ui, sans-serif",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+          }}
+        >
+          Play Fullscreen
+        </button>
+      )}
 
       {/* Header */}
       <header
@@ -273,37 +331,41 @@ function DisplayWinesPage() {
         </h1>
       </header>
 
-      {/* Visible content area */}
+      {/* Visible content area — paginated in fullscreen, fully scrollable otherwise */}
       <div
         ref={contentRef}
         style={{
-          flex: 1,
+          flex: isFullscreen ? 1 : undefined,
           minHeight: 0,
           position: "relative",
-          opacity: fade ? 1 : 0,
+          opacity: isFullscreen ? (fade ? 1 : 0) : 1,
           transition: "opacity 700ms ease-in-out",
         }}
       >
-        {currentBlockIdxs.map((i) => renderBlock(blocks[i]))}
+        {isFullscreen
+          ? currentBlockIdxs.map((i) => renderBlock(blocks[i]))
+          : blocks.map((b) => renderBlock(b))}
       </div>
 
-      {/* Hidden measurement layer — identical styling, full block list */}
-      <div
-        ref={measureRef}
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          visibility: "hidden",
-          pointerEvents: "none",
-          paddingLeft: "clamp(1.5rem, 6vw, 7.5rem)",
-          paddingRight: "clamp(1.5rem, 6vw, 7.5rem)",
-        }}
-      >
-        {blocks.map((b) => renderBlock(b))}
-      </div>
+      {/* Hidden measurement layer — only needed for fullscreen pagination */}
+      {isFullscreen && (
+        <div
+          ref={measureRef}
+          aria-hidden
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            visibility: "hidden",
+            pointerEvents: "none",
+            paddingLeft: "clamp(1.5rem, 6vw, 7.5rem)",
+            paddingRight: "clamp(1.5rem, 6vw, 7.5rem)",
+          }}
+        >
+          {blocks.map((b) => renderBlock(b))}
+        </div>
+      )}
     </div>
   );
 }
