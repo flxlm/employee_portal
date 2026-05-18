@@ -448,7 +448,7 @@ function renderBlock(block:
           whiteSpace: "nowrap",
         }}
       >
-        {formatPrice(w.bottle)}
+        {formatPrice(w.togo)}
       </div>
     </div>
   );
