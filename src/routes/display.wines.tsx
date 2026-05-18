@@ -246,10 +246,10 @@ function DisplayWinesPage() {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500&display=swap');
+        @import url('https://api.fontshare.com/v2/css?f[]=neue-montreal@400,500,700&display=swap');
         .display-wines, .display-wines * { cursor: none !important; }
-        .wine-name, .wine-section, .wine-title { font-family: 'Cormorant Garamond', 'EB Garamond', Georgia, serif; }
-        .wine-meta, .wine-price { font-family: 'Inter', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+        .wine-name, .wine-section, .wine-title { font-family: 'Neue Montreal', system-ui, sans-serif; }
+        .wine-meta, .wine-price { font-family: 'Neue Montreal', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
       `}</style>
 
       {/* Header */}
