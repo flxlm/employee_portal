@@ -64,18 +64,36 @@ function RecipesPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    const load = async () => {
       const { data, error } = await supabase
         .from("recipes")
         .select("id, category, product, recipe, dish_used, special_instructions, sort_order")
         .order("sort_order", { ascending: true });
+      if (cancelled) return;
       if (error) {
         toast.error(error.message);
       } else {
         setRecipes((data ?? []) as Recipe[]);
       }
       setLoading(false);
-    })();
+    };
+    load();
+
+    // Realtime: re-load when recipes change remotely (skip while a dialog is open)
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const channel = supabase
+      .channel("recipes-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "recipes" }, () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => { if (!cancelled) load(); }, 400);
+      })
+      .subscribe();
+    return () => {
+      cancelled = true;
+      if (t) clearTimeout(t);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const categories = useMemo(
