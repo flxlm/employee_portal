@@ -221,6 +221,23 @@ function EventsPage() {
     }
   }, [selected]);
 
+  // Realtime: refetch when event_inquiries changes (debounced, skip while editing)
+  const editingRef = useRef(false);
+  useEffect(() => { editingRef.current = editing || mutation.isPending; });
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const channel = supabase
+      .channel("events-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "event_inquiries" }, () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => {
+          if (!editingRef.current) qc.invalidateQueries({ queryKey: ["event-inquiries"] });
+        }, 400);
+      })
+      .subscribe();
+    return () => { if (t) clearTimeout(t); supabase.removeChannel(channel); };
+  }, [qc]);
+
   const mutation = useMutation({
     mutationFn: async (vars: { id: string; updates: Record<string, string> }) =>
       updateFn({ data: vars }),
