@@ -23,11 +23,25 @@ export const Route = createFileRoute("/_app/wines")({
 
 function WinesPage() {
   const fetchFn = useServerFn(getWineList);
+  const qc = useQueryClient();
   const { data, isLoading, refetch, isFetching, error } = useQuery({
     queryKey: ["wine-list"],
     queryFn: () => fetchFn(),
   });
   const [q, setQ] = useState("");
+
+  // Realtime: refetch on any wines change (debounced)
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const channel = supabase
+      .channel("wines-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "wines" }, () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => qc.invalidateQueries({ queryKey: ["wine-list"] }), 400);
+      })
+      .subscribe();
+    return () => { if (t) clearTimeout(t); supabase.removeChannel(channel); };
+  }, [qc]);
   const [colour, setColour] = useState("all");
   const [stock, setStock] = useState<"in" | "all">("in");
   const [selected, setSelected] = useState<WineEntry | null>(null);
