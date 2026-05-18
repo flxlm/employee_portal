@@ -448,6 +448,15 @@ function MenuEditorPage() {
   const [dirtyCount, setDirtyCount] = useState(0);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
+  const didInitCollapse = useRef(false);
+  useEffect(() => {
+    if (didInitCollapse.current) return;
+    if (sections.length > 0) {
+      didInitCollapse.current = true;
+      setCollapsed(new Set(sections.map((s) => s.id)));
+      setCollapsedSubs(new Set(sections.flatMap((s) => s.subsections.map((ss) => ss.id))));
+    }
+  }, [sections]);
   const [showDesc, setShowDesc] = useState<Set<string>>(new Set());
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [newMenuLabel, setNewMenuLabel] = useState("");
