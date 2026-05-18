@@ -341,6 +341,9 @@ function DisplayWinesPage() {
           position: "relative",
           opacity: isFullscreen ? (fade ? 1 : 0) : 1,
           transition: "opacity 700ms ease-in-out",
+          columnCount: 2,
+          columnGap: "clamp(2rem, 5vw, 6rem)",
+          columnFill: "balance",
         }}
       >
         {isFullscreen
