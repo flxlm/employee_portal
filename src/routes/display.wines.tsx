@@ -413,7 +413,6 @@ function renderBlock(block:
         paddingTop: "clamp(0.5rem, 1vh, 1.25rem)",
         paddingBottom: "clamp(0.5rem, 1vh, 1.25rem)",
         breakInside: "avoid",
-        WebkitColumnBreakInside: "avoid",
         pageBreakInside: "avoid",
       }}
     >
