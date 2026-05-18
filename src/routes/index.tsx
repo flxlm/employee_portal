@@ -47,6 +47,10 @@ export const Route = createFileRoute("/")({
         replace: true,
       });
     }
+
+    if (isWineHost(host)) {
+      throw redirect({ to: "/display/wines", replace: true });
+    }
   },
   component: IndexPage,
 });
