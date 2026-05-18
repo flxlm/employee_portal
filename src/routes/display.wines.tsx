@@ -175,42 +175,18 @@ function DisplayWinesPage() {
       let usedHeight = 0;
       for (let i = 0; i < children.length; i++) {
         const h = children[i].getBoundingClientRect().height;
-        const block = blocks[i];
-        // Don't end a page on a group header — push it to next page with its rows
         if (usedHeight + h > available && current.length > 0) {
-          // If the last item on current page is a header, pull it forward to next page
-          const lastBlockIdx = current[current.length - 1];
-          if (blocks[lastBlockIdx]?.kind === "header") {
-            current.pop();
-          }
-          if (current.length > 0) result.push(current);
-          current = [];
-          usedHeight = 0;
-          // If the header was popped, re-add it as first of next page
-          if (lastBlockIdx !== undefined && blocks[lastBlockIdx]?.kind === "header") {
-            const hh = children[lastBlockIdx].getBoundingClientRect().height;
-            current.push(lastBlockIdx);
-            usedHeight += hh;
-          }
-        }
-        current.push(i);
-        usedHeight += h;
-        // If a single block is taller than the page, still place it alone
-        if (usedHeight > available && current.length === 1) {
           result.push(current);
           current = [];
           usedHeight = 0;
         }
-        // Avoid orphan: if this is a header and next won't fit, defer to next page
-        if (
-          block.kind === "header" &&
-          i + 1 < children.length &&
-          usedHeight + children[i + 1].getBoundingClientRect().height > available
-        ) {
-          current.pop();
-          if (current.length > 0) result.push(current);
-          current = [i];
-          usedHeight = h;
+        current.push(i);
+        usedHeight += h;
+        // A single section taller than the page still gets its own page
+        if (usedHeight > available && current.length === 1) {
+          result.push(current);
+          current = [];
+          usedHeight = 0;
         }
       }
       if (current.length > 0) result.push(current);
