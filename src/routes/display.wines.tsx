@@ -234,7 +234,7 @@ function DisplayWinesPage() {
         background: "#FFFFFF",
         color: "#111111",
         overflow: "hidden",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Neue Montreal', 'Inter', system-ui, sans-serif",
         WebkitFontSmoothing: "antialiased",
         // Side margins fluid
         paddingLeft: "clamp(1.5rem, 6vw, 7.5rem)",
