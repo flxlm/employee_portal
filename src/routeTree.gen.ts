@@ -14,6 +14,7 @@ import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DisplayWinesRouteImport } from './routes/display.wines'
 import { Route as AppWinesRouteImport } from './routes/_app.wines'
 import { Route as AppRecipesRouteImport } from './routes/_app.recipes'
 import { Route as AppOrderListRouteImport } from './routes/_app.order-list'
@@ -52,6 +53,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisplayWinesRoute = DisplayWinesRouteImport.update({
+  id: '/display/wines',
+  path: '/display/wines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWinesRoute = AppWinesRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
+  '/display/wines': typeof DisplayWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/order-list': typeof AppOrderListRoute
   '/recipes': typeof AppRecipesRoute
   '/wines': typeof AppWinesRoute
+  '/display/wines': typeof DisplayWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_app/order-list': typeof AppOrderListRoute
   '/_app/recipes': typeof AppRecipesRoute
   '/_app/wines': typeof AppWinesRoute
+  '/display/wines': typeof DisplayWinesRoute
   '/api/public/jotform-event-inquiry': typeof ApiPublicJotformEventInquiryRoute
   '/api/public/menu': typeof ApiPublicMenuRoute
   '/api/public/menu-refresh': typeof ApiPublicMenuRefreshRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/order-list'
     | '/recipes'
     | '/wines'
+    | '/display/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/order-list'
     | '/recipes'
     | '/wines'
+    | '/display/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/_app/order-list'
     | '/_app/recipes'
     | '/_app/wines'
+    | '/display/wines'
     | '/api/public/jotform-event-inquiry'
     | '/api/public/menu'
     | '/api/public/menu-refresh'
@@ -269,6 +281,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   SignupRoute: typeof SignupRoute
+  DisplayWinesRoute: typeof DisplayWinesRoute
   ApiPublicJotformEventInquiryRoute: typeof ApiPublicJotformEventInquiryRoute
   ApiPublicMenuRoute: typeof ApiPublicMenuRoute
   ApiPublicMenuRefreshRoute: typeof ApiPublicMenuRefreshRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/display/wines': {
+      id: '/display/wines'
+      path: '/display/wines'
+      fullPath: '/display/wines'
+      preLoaderRoute: typeof DisplayWinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/wines': {
@@ -456,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   SignupRoute: SignupRoute,
+  DisplayWinesRoute: DisplayWinesRoute,
   ApiPublicJotformEventInquiryRoute: ApiPublicJotformEventInquiryRoute,
   ApiPublicMenuRoute: ApiPublicMenuRoute,
   ApiPublicMenuRefreshRoute: ApiPublicMenuRefreshRoute,

@@ -62,11 +62,13 @@ function DisplayWinesPage() {
   useEffect(() => {
     const prevCursor = document.body.style.cursor;
     document.body.style.cursor = "none";
-    let wakeLock: WakeLockSentinel | null = null;
+    let wakeLock: { release: () => Promise<void> } | null = null;
     const requestLock = async () => {
       try {
-        // @ts-expect-error wakeLock typing
-        wakeLock = await navigator.wakeLock?.request("screen");
+        const nav = navigator as Navigator & {
+          wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> };
+        };
+        wakeLock = (await nav.wakeLock?.request("screen")) ?? null;
       } catch {
         /* noop */
       }
