@@ -51,6 +51,7 @@ import {
 } from "@/lib/menu.functions";
 import { refreshDisplayMenu, refreshWebsiteMenu } from "@/lib/menu-display.functions";
 import { listMenus, addMenu, type MenuOption } from "@/lib/menus.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 import { cn } from "@/lib/utils";
 
@@ -597,6 +598,34 @@ function MenuEditorPage() {
 
   useEffect(() => {
     reload().finally(() => setLoading(false));
+  }, []);
+
+  // Realtime: refresh when other clients change menu data. Skip while the
+  // current user has unsaved edits or in-flight optimistic inserts to avoid
+  // stomping their work.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const safeReload = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (dirtyRef.current.size > 0) return;
+        if (pendingInsertsRef.current.size > 0) return;
+        if (savingCount > 0) return;
+        reload().catch((e) => console.error("[menu] realtime reload failed", e));
+      }, 400);
+    };
+    const channel = supabase
+      .channel("menu-editor-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_sections" }, safeReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_subsections" }, safeReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, safeReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "item_modifications" }, safeReload)
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Warn on unload if there are unsaved edits
@@ -1459,7 +1488,7 @@ function MenuEditorPage() {
                   onAddDescription={() => revealDesc(sec.id)}
                   canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
                   onTranslateMissing={() => handleTranslateMissing("menu_sections", sec.id)}
-                  canTranslateMissing={!sec.do_not_translate && (
+                  canTranslateMissing={!sec.do_not_translate && !isTempUnresolved(sec.id) && (
                     (!!sec.name?.trim() !== !!sec.name_en?.trim()) ||
                     (!!sec.description?.trim() !== !!sec.description_en?.trim())
                   )}
@@ -1562,7 +1591,7 @@ function MenuEditorPage() {
                       onAddDescription={() => revealDesc(sub.id)}
                       canAddDescription={!hasDesc(sub.id, sub.description)}
                       onTranslateMissing={() => handleTranslateMissing("menu_subsections", sub.id)}
-                      canTranslateMissing={!sub.do_not_translate && (
+                      canTranslateMissing={!sub.do_not_translate && !isTempUnresolved(sub.id) && (
                         (!!sub.name?.trim() !== !!sub.name_en?.trim()) ||
                         (!!sub.description?.trim() !== !!sub.description_en?.trim())
                       )}
@@ -1668,7 +1697,7 @@ function MenuEditorPage() {
                               queueEdit("menu_items", item.id, item.version, { do_not_translate: next });
                             }}
                             onTranslateMissing={() => handleTranslateMissing("menu_items", item.id)}
-                            canTranslateMissing={!item.do_not_translate && (
+                            canTranslateMissing={!item.do_not_translate && !isTempUnresolved(item.id) && (
                               (!!item.title?.trim() !== !!item.title_en?.trim()) ||
                               (!!item.description?.trim() !== !!item.description_en?.trim())
                             )}
