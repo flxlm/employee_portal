@@ -342,42 +342,11 @@ function DisplayWinesPage() {
   );
 }
 
-function renderBlock(block:
-  | { kind: "header"; group: string; key: string }
-  | { kind: "wine"; wine: PublicWine; key: string }) {
-  if (block.kind === "header") {
-    return (
-      <div
-        key={block.key}
-        style={{
-          marginTop: "clamp(1.5rem, 3vh, 4rem)",
-          marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
-          breakInside: "avoid",
-          pageBreakInside: "avoid",
-        }}
-      >
-        <h2
-          className="wine-section"
-          style={{
-            fontSize: "clamp(1.75rem, 3.5vw, 5rem)",
-            fontWeight: 500,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            margin: 0,
-            paddingBottom: "clamp(0.4rem, 0.8vh, 1rem)",
-            borderBottom: "1px solid #111111",
-          }}
-        >
-          {block.group}
-        </h2>
-      </div>
-    );
-  }
-  const w = block.wine;
+function renderWineRow(w: PublicWine) {
   const origin = [w.domaine, w.country].filter(Boolean).join(" · ");
   return (
     <div
-      key={block.key}
+      key={`w-${w.id}`}
       style={{
         display: "grid",
         gridTemplateColumns: "1fr auto",
@@ -385,8 +354,6 @@ function renderBlock(block:
         alignItems: "baseline",
         paddingTop: "clamp(0.5rem, 1vh, 1.25rem)",
         paddingBottom: "clamp(0.5rem, 1vh, 1.25rem)",
-        breakInside: "avoid",
-        pageBreakInside: "avoid",
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -425,6 +392,37 @@ function renderBlock(block:
       >
         {formatPrice(w.togo)}
       </div>
+    </div>
+  );
+}
+
+function renderBlock(block: { group: string; wines: PublicWine[]; key: string }) {
+  return (
+    <div
+      key={block.key}
+      style={{
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
+        marginTop: "clamp(1.5rem, 3vh, 4rem)",
+        marginBottom: "clamp(0.75rem, 1.5vh, 2rem)",
+      }}
+    >
+      <h2
+        className="wine-section"
+        style={{
+          fontSize: "clamp(1.75rem, 3.5vw, 5rem)",
+          fontWeight: 500,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          margin: 0,
+          marginBottom: "clamp(0.5rem, 1vh, 1.25rem)",
+          paddingBottom: "clamp(0.4rem, 0.8vh, 1rem)",
+          borderBottom: "1px solid #111111",
+        }}
+      >
+        {block.group}
+      </h2>
+      {block.wines.map((w) => renderWineRow(w))}
     </div>
   );
 }
