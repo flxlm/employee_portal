@@ -106,6 +106,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         replace: true,
       });
     }
+
+    if (isWineHost(host) && location.pathname !== "/display/wines") {
+      throw redirect({
+        to: "/display/wines",
+        replace: true,
+      });
+    }
   },
   head: () => ({
     meta: [
