@@ -186,16 +186,46 @@ function RootShell({ children }: { children: React.ReactNode }) {
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/install-prompt";
+import { useEffect, useState } from "react";
+
+function isPublicDisplayHost(host: string): boolean {
+  const h = host.toLowerCase().split(":")[0];
+  return h.startsWith("wine.") || h.startsWith("menu.");
+}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [isPublicDisplay, setIsPublicDisplay] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const publicDisplay = isPublicDisplayHost(window.location.host);
+    setIsPublicDisplay(publicDisplay);
+
+    if (publicDisplay) {
+      // Remove staff PWA manifest link if SSR included it
+      document
+        .querySelectorAll('link[rel="manifest"]')
+        .forEach((el) => el.parentNode?.removeChild(el));
+
+      // Unregister any previously-installed service workers and purge caches
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.unregister());
+        });
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
-        <InstallPrompt />
+        {!isPublicDisplay && <InstallPrompt />}
       </AuthProvider>
     </QueryClientProvider>
   );
