@@ -713,6 +713,17 @@ function DisplayPage() {
           + {item.inlineNote.replace(/^\s*\+\s*/, "").replace(/\+\s*(\d+(?:[.,]\d+)?)\s*$/, "$1").trim()}
         </span>
       )}
+      {item.modifications && item.modifications.length > 0 && item.modifications.map((m, idx) => {
+        const cents = m.price_modifier_cents || 0;
+        const priceStr = cents !== 0
+          ? ` ${cents < 0 ? "-" : "+"}${(Math.abs(cents) / 100).toFixed(Math.abs(cents) % 100 === 0 ? 0 : 2)}`
+          : "";
+        return (
+          <span key={idx} className="menu-item-note" style={{ ...styleFor("modification"), ...(soldOut ? { color: SOLD_OUT_COLOR } : {}) }}>
+            + {m.name}{priceStr}
+          </span>
+        );
+      })}
     </div>
   );
 
