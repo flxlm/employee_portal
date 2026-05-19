@@ -626,65 +626,80 @@ function PendingPanel({
 
   return (
     <Card className="p-4 h-fit">
-      <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
-        <h2 className="font-semibold text-sm">Pending order requests</h2>
-        <div className="inline-flex rounded-md border border-border p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setGroupBy("category")}
-            className={`px-2 py-1 rounded ${groupBy === "category" ? "bg-muted font-medium" : "text-muted-foreground"}`}
-          >
-            By category
-          </button>
-          <button
-            type="button"
-            onClick={() => setGroupBy("supplier")}
-            className={`px-2 py-1 rounded ${groupBy === "supplier" ? "bg-muted font-medium" : "text-muted-foreground"}`}
-          >
-            By supplier
-          </button>
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground mb-3">
-        What's already been flagged for reorder. Avoid duplicates.
-      </p>
-      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-        {groups.length === 0 && (
-          <p className="text-xs text-muted-foreground">Nothing flagged.</p>
-        )}
-        {groups.map(([groupName, rows]) => (
-          <div key={groupName} className="space-y-2">
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
-              {groupName} <span className="text-muted-foreground/70">({rows.length})</span>
-            </div>
-            {rows.map((r) => {
-              const name = r.inventory_item_id
-                ? itemMap[r.inventory_item_id]?.name ?? "(item removed)"
-                : r.ad_hoc_name ?? "Ad-hoc request";
-              return (
-                <div key={r.id} className="text-sm border border-border rounded-md p-2 flex items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium">{name}</div>
-                    {r.quantity_needed != null && (
-                      <div className="text-xs text-muted-foreground">
-                        Need {r.quantity_needed} {r.unit ?? ""}
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
-                      {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
-                    </div>
-                    {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => markReceived(r)}>
-                    Received
-                  </Button>
-                </div>
-              );
-            })}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          className="flex items-center gap-2 text-sm font-semibold"
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          Pending order requests
+          <span className="text-xs text-muted-foreground font-normal">({requests.length})</span>
+        </button>
+        {!collapsed && (
+          <div className="inline-flex rounded-md border border-border p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setGroupBy("category")}
+              className={`px-2 py-1 rounded ${groupBy === "category" ? "bg-muted font-medium" : "text-muted-foreground"}`}
+            >
+              By category
+            </button>
+            <button
+              type="button"
+              onClick={() => setGroupBy("supplier")}
+              className={`px-2 py-1 rounded ${groupBy === "supplier" ? "bg-muted font-medium" : "text-muted-foreground"}`}
+            >
+              By supplier
+            </button>
           </div>
-        ))}
+        )}
       </div>
+      {!collapsed && (
+        <>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">
+            What's already been flagged for reorder. Avoid duplicates.
+          </p>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {groups.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nothing flagged.</p>
+            )}
+            {groups.map(([groupName, rows]) => (
+              <div key={groupName} className="space-y-2">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                  {groupName} <span className="text-muted-foreground/70">({rows.length})</span>
+                </div>
+                {rows.map((r) => {
+                  const name = r.inventory_item_id
+                    ? itemMap[r.inventory_item_id]?.name ?? "(item removed)"
+                    : r.ad_hoc_name ?? "Ad-hoc request";
+                  return (
+                    <div key={r.id} className="text-sm border border-border rounded-md p-2 flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium">{name}</div>
+                        {r.quantity_needed != null && (
+                          <div className="text-xs text-muted-foreground">
+                            Need {r.quantity_needed} {r.unit ?? ""}
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {!r.inventory_item_id && <Badge variant="secondary" className="mr-1 text-[10px]">Ad-hoc</Badge>}
+                          {userName(r.flagged_by)} · {timeAgo(r.flagged_at)}
+                        </div>
+                        {r.notes && <div className="text-xs mt-1">{r.notes}</div>}
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => markReceived(r)}>
+                        Received
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </Card>
   );
 }
