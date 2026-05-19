@@ -16,6 +16,12 @@ function isMenuHost(host: string | null | undefined): boolean {
   return h === "menu.savsav.net" || h.startsWith("menu.");
 }
 
+function isWineHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return h === "wine.savsav.net" || h.startsWith("wine.");
+}
+
 const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
   const { getRequestHeader, getRequestHost } = await import("@tanstack/react-start/server");
   try {
@@ -38,6 +44,13 @@ export const Route = createFileRoute("/_app")({
       throw redirect({
         to: "/menu",
         search: { menu: "auto", lang: "fr" },
+        replace: true,
+      });
+    }
+
+    if (isWineHost(host)) {
+      throw redirect({
+        to: "/display/wines",
         replace: true,
       });
     }
@@ -80,6 +93,10 @@ function AppLayout() {
         replace
       />
     );
+  }
+
+  if (typeof window !== "undefined" && isWineHost(window.location.host)) {
+    return <Navigate to="/display/wines" replace />;
   }
 
   if (loading) {
