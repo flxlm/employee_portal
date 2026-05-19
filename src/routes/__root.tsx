@@ -98,12 +98,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: async ({ location }) => {
-    const host =
-      typeof window === "undefined"
-        ? await getServerHost()
-        : window.location.host;
+    const isClient = typeof window !== "undefined";
+    const host = isClient ? window.location.host : await getServerHost();
+    console.log("[__root beforeLoad]", {
+      isClient,
+      host,
+      pathname: location.pathname,
+      isWine: isWineHost(host),
+      isMenu: isMenuHost(host),
+    });
 
     if (isMenuHost(host) && location.pathname !== "/menu") {
+      console.log("[__root] redirecting to /menu");
       throw redirect({
         to: "/menu",
         search: { menu: "auto", lang: "fr" },
@@ -112,6 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }
 
     if (isWineHost(host) && location.pathname !== "/display/wines") {
+      console.log("[__root] redirecting to /display/wines");
       throw redirect({
         to: "/display/wines",
         replace: true,
