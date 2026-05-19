@@ -132,7 +132,7 @@ function AppLayout() {
     { to: "/menu-editor", label: "Menu Editor", icon: UtensilsCrossed },
     { to: "/inventory", label: "Inventory", icon: Package },
     
-    ...(isAdmin ? [{ to: "/order-list", label: "Order List", icon: ClipboardList } as NavItem] : []),
+    
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users } as NavItem] : []),
   ];
 
