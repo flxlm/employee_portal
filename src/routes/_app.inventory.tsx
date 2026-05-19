@@ -585,6 +585,7 @@ function PendingPanel({
   onReceived: (id: string) => void;
 }) {
   const [groupBy, setGroupBy] = useState<"category" | "supplier">("category");
+  const [collapsed, setCollapsed] = useState(true);
   const itemMap = useMemo(() => {
     const m: Record<string, InventoryItem> = {};
     for (const i of items) m[i.id] = i;
