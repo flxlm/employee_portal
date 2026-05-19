@@ -95,6 +95,10 @@ function AppLayout() {
     );
   }
 
+  if (typeof window !== "undefined" && isWineHost(window.location.host)) {
+    return <Navigate to="/display/wines" replace />;
+  }
+
   if (loading) {
     return (
       <AuthStatusScreen
