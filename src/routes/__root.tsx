@@ -18,6 +18,12 @@ function isMenuHost(host: string | null | undefined): boolean {
   return h === "menu.savsav.net" || h.startsWith("menu.");
 }
 
+function isWineHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return h === "wine.savsav.net" || h.startsWith("wine.");
+}
+
 const getServerHost = createServerFn({ method: "GET" }).handler(async () => {
   const { getRequestHeader, getRequestHost } = await import("@tanstack/react-start/server");
   try {
@@ -97,6 +103,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       throw redirect({
         to: "/menu",
         search: { menu: "auto", lang: "fr" },
+        replace: true,
+      });
+    }
+
+    if (isWineHost(host) && location.pathname !== "/display/wines") {
+      throw redirect({
+        to: "/display/wines",
         replace: true,
       });
     }
