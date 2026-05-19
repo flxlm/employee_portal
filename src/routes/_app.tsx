@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, ChevronDown, BookOpen, PanelLeftClose, PanelLeftOpen, UtensilsCrossed, Package, ClipboardList } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, LogOut, Menu, Home, ChevronDown, BookOpen, PanelLeftClose, PanelLeftOpen, UtensilsCrossed, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.svg";
 import { AuthStatusScreen } from "@/components/auth-status-screen";
@@ -132,7 +132,7 @@ function AppLayout() {
     { to: "/menu-editor", label: "Menu Editor", icon: UtensilsCrossed },
     { to: "/inventory", label: "Inventory", icon: Package },
     
-    ...(isAdmin ? [{ to: "/order-list", label: "Order List", icon: ClipboardList } as NavItem] : []),
+    
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users } as NavItem] : []),
   ];
 

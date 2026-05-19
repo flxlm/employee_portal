@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Wine, ClipboardCheck, Users, BookOpen, UtensilsCrossed, Package, ClipboardList, KeyRound, GripVertical, Check, Pencil } from "lucide-react";
+import { CalendarDays, Wine, ClipboardCheck, Users, BookOpen, UtensilsCrossed, Package, KeyRound, GripVertical, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasscodesDialog } from "@/components/passcodes-dialog";
 import { DailyMessages } from "@/components/daily-messages";
@@ -63,7 +63,7 @@ function HomePage() {
     { key: "menu-editor", to: "/menu-editor", title: "Menu Editor", description: "Edit menu sections, items and modifications. Auto-saves as you type.", icon: UtensilsCrossed },
     { key: "inventory", to: "/inventory", title: "Inventory", description: "Track stock levels and flag items to reorder.", icon: Package },
     { key: "passcodes", onClick: () => setPasscodesOpen(true), title: "Passcodes", description: "View shared passcodes available to your account.", icon: KeyRound },
-    ...(isAdmin ? [{ key: "order-list", to: "/order-list", title: "Order List", description: "Review and process items flagged for reorder.", icon: ClipboardList } as Tile] : []),
+    
     ...(isAdmin ? [{ key: "admin", to: "/admin", title: "Admin", description: "Manage who can sign in to the portal.", icon: Users } as Tile] : []),
   ];
 
