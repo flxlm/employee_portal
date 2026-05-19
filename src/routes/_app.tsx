@@ -47,6 +47,13 @@ export const Route = createFileRoute("/_app")({
         replace: true,
       });
     }
+
+    if (isWineHost(host)) {
+      throw redirect({
+        to: "/display/wines",
+        replace: true,
+      });
+    }
   },
   component: AppLayout,
 });
