@@ -347,6 +347,41 @@ function RowSettingsMenu({
   );
 }
 
+function SettingsActions({
+  hidden, soldOut, doNotTranslate,
+  onToggleHidden, onToggleSoldOut, onToggleDoNotTranslate,
+  onTranslateMissing, canTranslateMissing,
+}: {
+  hidden: boolean;
+  soldOut: boolean;
+  doNotTranslate: boolean;
+  onToggleHidden: () => void;
+  onToggleSoldOut: () => void;
+  onToggleDoNotTranslate: () => void;
+  onTranslateMissing: () => void;
+  canTranslateMissing: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <Button variant="outline" size="sm" className="w-full justify-start" onClick={onToggleHidden}>
+        {hidden ? <><Eye className="h-4 w-4" /> Show on live menu</> : <><EyeOff className="h-4 w-4" /> Hide on live menu</>}
+      </Button>
+      <Button variant="outline" size="sm" className="w-full justify-start" onClick={onToggleSoldOut}>
+        {soldOut ? <><RotateCcw className="h-4 w-4" /> Mark as available</> : <><Ban className="h-4 w-4" /> Mark as sold out (today)</>}
+      </Button>
+      <Button variant="outline" size="sm" className="w-full justify-start" onClick={onToggleDoNotTranslate}>
+        <Languages className="h-4 w-4" />
+        {doNotTranslate ? "Allow translation" : "Same in both languages"}
+      </Button>
+      {canTranslateMissing && (
+        <Button variant="outline" size="sm" className="w-full justify-start" onClick={onTranslateMissing}>
+          <Sparkles className="h-4 w-4" /> Translate missing language
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function MenuEditorPage() {
   const list = useServerFn(listMenu);
   const insert = useServerFn(insertRow);
