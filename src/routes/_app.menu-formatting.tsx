@@ -1,8 +1,8 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Save, RotateCcw } from "lucide-react";
+import { Save, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -321,11 +321,6 @@ function MenuFormattingPage() {
       )}
       <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/menu-editor">
-              <ArrowLeft className="h-4 w-4" /> Back to menu editor
-            </Link>
-          </Button>
           <h1 className="text-2xl font-semibold">Menu formatting</h1>
         </div>
         <Button onClick={handleSave} disabled={saving || !isDirty}>

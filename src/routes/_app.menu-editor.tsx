@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw, MoreHorizontal, Pencil, MoreVertical } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw, MoreHorizontal, Pencil, MoreVertical } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
@@ -1333,9 +1333,6 @@ function MenuEditorPage() {
       )}
       <header className="mb-6 space-y-4 lg:flex lg:items-end lg:justify-between lg:gap-6 lg:space-y-0">
         <div>
-          <Link to="/functions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-            <ArrowLeft className="h-4 w-4" /> Back to Functions
-          </Link>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Menu Editor</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {sections.length} sections · {totalItems} items

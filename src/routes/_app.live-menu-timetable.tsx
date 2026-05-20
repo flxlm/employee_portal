@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/live-menu-timetable")({
@@ -154,9 +154,6 @@ function LiveMenuTimetablePage() {
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
-      <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-        <ArrowLeft className="h-4 w-4" /> Back to Admin
-      </Link>
       <h1 className="text-3xl mb-2">Live Menu Timetable</h1>
       <p className="text-muted-foreground mb-6 text-sm">
         Define which menu is shown on the Live Menu display, by day and time. The Live Menu page automatically switches to the matching menu.
