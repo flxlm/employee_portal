@@ -1623,6 +1623,49 @@ function MenuEditorPage() {
                                           <span className="shrink-0 text-sm tabular-nums whitespace-nowrap text-muted-foreground">
                                             ${formatPrice(item.base_price_cents)}
                                           </span>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-7 w-7 shrink-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                                aria-label="Item actions"
+                                              >
+                                                <MoreHorizontal className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = !item.is_hidden; patchItem(sec.id, sub.id, item.id, { is_hidden: next }); queueEdit("menu_items", item.id, item.version, { is_hidden: next }); }}>
+                                                {item.is_hidden ? <><Eye className="h-4 w-4" /> Show on live menu</> : <><EyeOff className="h-4 w-4" /> Hide on live menu</>}
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = soldOut ? null : todayISO(); patchItem(sec.id, sub.id, item.id, { sold_out_date: next }); queueEdit("menu_items", item.id, item.version, { sold_out_date: next }); }}>
+                                                {soldOut ? <><RotateCcw className="h-4 w-4" /> Mark as available</> : <><Ban className="h-4 w-4" /> Mark sold out today</>}
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = !item.do_not_translate; patchItem(sec.id, sub.id, item.id, { do_not_translate: next }); queueEdit("menu_items", item.id, item.version, { do_not_translate: next }); }}>
+                                                <Languages className="h-4 w-4" /> {item.do_not_translate ? "Allow translation" : "Same in both languages"}
+                                              </DropdownMenuItem>
+                                              {canTranslateMissing && (
+                                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleTranslateMissing("menu_items", item.id); }}>
+                                                  <Sparkles className="h-4 w-4" /> Translate missing
+                                                </DropdownMenuItem>
+                                              )}
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
+                                                <ChevronUp className="h-4 w-4" /> Move up
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
+                                                <ChevronDown className="h-4 w-4" /> Move down
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
+                                                <Copy className="h-4 w-4" /> Duplicate
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
+                                                <Trash2 className="h-4 w-4" /> Delete
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
                                         </div>
                                         {itemExpanded && (
                                           <div className="border-t border-border/40 bg-background">
