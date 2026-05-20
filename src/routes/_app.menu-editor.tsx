@@ -1594,95 +1594,168 @@ function MenuEditorPage() {
                                   )}
                                 >
                                   {renderTempStatus(item.id)}
-                                  <div
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => toggleExpandedItem(item.id)}
-                                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpandedItem(item.id); } }}
-                                    className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] cursor-pointer select-none"
-                                    aria-expanded={itemExpanded}
-                                  >
-                                    <span className={cn("flex-1 text-sm min-w-0", itemExpanded ? "whitespace-normal" : "truncate")}>
-                                      {itemName}
-                                    </span>
-                                    <span className="shrink-0 text-sm tabular-nums whitespace-nowrap">
-                                      ${formatPrice(item.base_price_cents)}
-                                    </span>
-                                    <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150", itemExpanded && "rotate-90")} />
-                                  </div>
-                                  {itemExpanded && (
-                                    <div className="px-3 pb-3 space-y-3">
-                                      <dl className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 text-xs">
-                                        <dt className="text-muted-foreground">Name (FR)</dt>
-                                        <dd>{item.title || <span className="text-muted-foreground italic">—</span>}</dd>
-                                        <dt className="text-muted-foreground">Name (EN)</dt>
-                                        <dd>{item.title_en || <span className="text-muted-foreground italic">—</span>}</dd>
-                                        <dt className="text-muted-foreground">Price</dt>
-                                        <dd className="tabular-nums">${formatPrice(item.base_price_cents)}</dd>
-                                        <dt className="text-muted-foreground">Desc (FR)</dt>
-                                        <dd className="whitespace-pre-wrap">{item.description || <span className="text-muted-foreground italic">—</span>}</dd>
-                                        <dt className="text-muted-foreground">Desc (EN)</dt>
-                                        <dd className="whitespace-pre-wrap">{item.description_en || <span className="text-muted-foreground italic">—</span>}</dd>
-                                        <dt className="text-muted-foreground">Mods</dt>
-                                        <dd>
-                                          {item.modifications.length === 0 ? (
-                                            <span className="text-muted-foreground italic">None yet</span>
-                                          ) : (
-                                            <ul className="space-y-0.5">
-                                              {item.modifications.map((m) => (
-                                                <li key={m.id} className="flex justify-between gap-2">
-                                                  <span>{m.modification_name}</span>
-                                                  <span className="tabular-nums text-muted-foreground">
-                                                    {m.price_modifier_cents > 0 ? "+" : ""}${formatPrice(m.price_modifier_cents)}
-                                                  </span>
-                                                </li>
-                                              ))}
-                                            </ul>
+                                  {(() => {
+                                    const descPreview = (item.description_en || item.description || "").replace(/\s+/g, " ").trim();
+                                    const soldOut = isSoldOutToday(item.sold_out_date);
+                                    const canTranslateMissing = !item.do_not_translate && !isTempUnresolved(item.id) && ((!!item.title?.trim() !== !!item.title_en?.trim()) || (!!item.description?.trim() !== !!item.description_en?.trim()));
+                                    return (
+                                      <>
+                                        <div
+                                          role="button"
+                                          tabIndex={0}
+                                          onClick={() => toggleExpandedItem(item.id)}
+                                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpandedItem(item.id); } }}
+                                          className="flex items-center gap-2 px-3 py-1.5 min-h-[36px] cursor-pointer select-none"
+                                          aria-expanded={itemExpanded}
+                                        >
+                                          <ChevronRight className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150", itemExpanded && "rotate-90")} />
+                                          <span className={cn("text-sm font-medium min-w-0 shrink-0 max-w-[40%]", itemExpanded ? "whitespace-normal" : "truncate")}>
+                                            {itemName}
+                                          </span>
+                                          {!itemExpanded && descPreview && (
+                                            <span className="hidden sm:block flex-1 min-w-0 truncate text-xs text-muted-foreground">
+                                              {descPreview}
+                                            </span>
                                           )}
-                                        </dd>
-                                        {(item.is_hidden || isSoldOutToday(item.sold_out_date)) && (
-                                          <>
-                                            <dt className="text-muted-foreground">Status</dt>
-                                            <dd>
-                                              {item.is_hidden && <span>Hidden</span>}
-                                              {item.is_hidden && isSoldOutToday(item.sold_out_date) && " · "}
-                                              {isSoldOutToday(item.sold_out_date) && <span>Sold out today</span>}
-                                            </dd>
-                                          </>
+                                          {!itemExpanded && <span className="flex-1" />}
+                                          {item.modifications.length > 0 && (
+                                            <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground tabular-nums">
+                                              {item.modifications.length} mod{item.modifications.length === 1 ? "" : "s"}
+                                            </span>
+                                          )}
+                                          {item.is_hidden && <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">Hidden</span>}
+                                          {soldOut && <span className="shrink-0 text-[10px] uppercase tracking-wide text-destructive">Sold out</span>}
+                                          <span className="shrink-0 text-sm tabular-nums whitespace-nowrap text-muted-foreground">
+                                            ${formatPrice(item.base_price_cents)}
+                                          </span>
+                                        </div>
+                                        {itemExpanded && (
+                                          <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/40 bg-background">
+                                            <BilingualField
+                                              fr={item.title} en={item.title_en}
+                                              sourceLang={item.title_source_lang}
+                                              isManualOverrideFr={item.title_source_lang === "en" && item.title_is_manual_override}
+                                              isManualOverrideEn={item.title_source_lang === "fr" && item.title_is_manual_override}
+                                              doNotTranslate={item.do_not_translate}
+                                              placeholderFr="Titre" placeholderEn="Title"
+                                              inputClassName="h-7 text-sm py-0"
+                                              onChange={({ fr, en, hint }) => {
+                                                patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
+                                                queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: hint });
+                                              }}
+                                            />
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-10 shrink-0">Price</span>
+                                              <PriceInput
+                                                className="h-7 w-24 text-sm"
+                                                cents={item.base_price_cents}
+                                                onCommit={(cents) => {
+                                                  patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
+                                                  queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
+                                                }}
+                                              />
+                                              <div className="flex-1" />
+                                              <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" aria-label="More item actions">
+                                                    <MoreHorizontal className="h-3.5 w-3.5" /> More
+                                                  </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = !item.is_hidden; patchItem(sec.id, sub.id, item.id, { is_hidden: next }); queueEdit("menu_items", item.id, item.version, { is_hidden: next }); }}>
+                                                    {item.is_hidden ? <><Eye className="h-4 w-4" /> Show on live menu</> : <><EyeOff className="h-4 w-4" /> Hide on live menu</>}
+                                                  </DropdownMenuItem>
+                                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = soldOut ? null : todayISO(); patchItem(sec.id, sub.id, item.id, { sold_out_date: next }); queueEdit("menu_items", item.id, item.version, { sold_out_date: next }); }}>
+                                                    {soldOut ? <><RotateCcw className="h-4 w-4" /> Mark as available</> : <><Ban className="h-4 w-4" /> Mark sold out today</>}
+                                                  </DropdownMenuItem>
+                                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); const next = !item.do_not_translate; patchItem(sec.id, sub.id, item.id, { do_not_translate: next }); queueEdit("menu_items", item.id, item.version, { do_not_translate: next }); }}>
+                                                    <Languages className="h-4 w-4" /> {item.do_not_translate ? "Allow translation" : "Same in both languages"}
+                                                  </DropdownMenuItem>
+                                                  {canTranslateMissing && (
+                                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleTranslateMissing("menu_items", item.id); }}>
+                                                      <Sparkles className="h-4 w-4" /> Translate missing
+                                                    </DropdownMenuItem>
+                                                  )}
+                                                  <DropdownMenuSeparator />
+                                                  <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
+                                                    <ChevronUp className="h-4 w-4" /> Move up
+                                                  </DropdownMenuItem>
+                                                  <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
+                                                    <ChevronDown className="h-4 w-4" /> Move down
+                                                  </DropdownMenuItem>
+                                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
+                                                    <Copy className="h-4 w-4" /> Duplicate
+                                                  </DropdownMenuItem>
+                                                  <DropdownMenuSeparator />
+                                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
+                                                    <Trash2 className="h-4 w-4" /> Delete
+                                                  </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                              </DropdownMenu>
+                                            </div>
+                                            <BilingualField
+                                              multiline rows={2}
+                                              fr={item.description} en={item.description_en}
+                                              sourceLang={item.description_source_lang}
+                                              isManualOverrideFr={item.description_source_lang === "en" && item.description_is_manual_override}
+                                              isManualOverrideEn={item.description_source_lang === "fr" && item.description_is_manual_override}
+                                              doNotTranslate={item.do_not_translate}
+                                              placeholderFr="Description" placeholderEn="Description"
+                                              inputClassName="text-sm min-h-[48px] py-1.5 leading-snug"
+                                              onChange={({ fr, en, hint }) => {
+                                                patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
+                                                queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: hint });
+                                              }}
+                                            />
+                                            <div className="pt-1">
+                                              <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Modifications</span>
+                                                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
+                                                  <Plus className="h-3 w-3" /> Add
+                                                </Button>
+                                              </div>
+                                              {item.modifications.length === 0 ? (
+                                                <p className="text-xs text-muted-foreground italic">None</p>
+                                              ) : (
+                                                <div className="space-y-1">
+                                                  {item.modifications.map((m, mIdx) => (
+                                                    <div key={m.id} className={cn("flex items-center gap-1", failedTempIds.has(m.id) && "ring-2 ring-destructive rounded", savingTempIds.has(m.id) && "opacity-70")}>
+                                                      <Input
+                                                        className="h-7 flex-1 text-sm py-0"
+                                                        value={m.modification_name}
+                                                        onChange={(e) => {
+                                                          patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
+                                                          queueEdit("item_modifications", m.id, m.version, { modification_name: e.target.value });
+                                                        }}
+                                                        placeholder="Modification"
+                                                      />
+                                                      <PriceInput
+                                                        className="h-7 w-20 text-sm"
+                                                        cents={m.price_modifier_cents}
+                                                        onCommit={(cents) => {
+                                                          patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
+                                                          queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
+                                                        }}
+                                                      />
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
+                                                        <ChevronUp className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
+                                                        <ChevronDown className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
+                                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
                                         )}
-                                      </dl>
-                                      <div className="flex flex-wrap gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => setSettingsTarget({ kind: "item", sectionId: sec.id, subId: sub.id, itemId: item.id })}>
-                                          <Pencil className="h-3 w-3" /> Edit
-                                        </Button>
-                                        <Button size="sm" variant="outline" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
-                                          <Plus className="h-3 w-3" /> Add modification
-                                        </Button>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button size="sm" variant="ghost" aria-label="More item actions">
-                                              <MoreVertical className="h-3 w-3" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
-                                              <ChevronUp className="h-4 w-4" /> Move up
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
-                                              <ChevronDown className="h-4 w-4" /> Move down
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
-                                              <Copy className="h-4 w-4" /> Duplicate
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
-                                              <Trash2 className="h-4 w-4" /> Delete
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
-                                    </div>
-                                  )}
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                               );
                             })}
