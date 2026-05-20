@@ -1668,114 +1668,110 @@ function MenuEditorPage() {
                                           </DropdownMenu>
                                         </div>
                                         {itemExpanded && (
-                                          <div className="border-t border-border/40 bg-background">
-                                            {/* Field table: [label | value] — one row per language */}
-                                            <div className="divide-y divide-border/40 text-sm">
-                                              {/* Name FR */}
-                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center gap-1">Name <span className="text-[9px] uppercase tracking-wide opacity-70">FR</span></div>
-                                                <div className="border-l border-border/40">
-                                                  <Input
-                                                    value={item.title}
-                                                    placeholder="Titre"
-                                                    className={cn("h-8 rounded-none border-0 shadow-none focus-visible:ring-1 text-sm", item.title_source_lang === "fr" && !item.do_not_translate && "border-l-[3px] border-l-primary")}
-                                                    onChange={(e) => {
-                                                      const fr = e.target.value;
-                                                      const en = item.do_not_translate ? fr : (item.title_en ?? "");
-                                                      patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
-                                                      queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: "fr" });
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
-                                              {/* Name EN */}
-                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center gap-1">Name <span className="text-[9px] uppercase tracking-wide opacity-70">EN</span></div>
-                                                <div className="border-l border-border/40">
-                                                  <Input
-                                                    value={item.title_en ?? ""}
-                                                    placeholder="Title"
-                                                    className={cn("h-8 rounded-none border-0 shadow-none focus-visible:ring-1 text-sm", item.title_source_lang === "en" && !item.do_not_translate && "border-l-[3px] border-l-primary", item.do_not_translate && "opacity-70")}
-                                                    onChange={(e) => {
-                                                      const en = e.target.value;
-                                                      const fr = item.do_not_translate ? en : item.title;
-                                                      patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
-                                                      queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: "en" });
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
-                                              {/* Description FR */}
-                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-start gap-1 pt-2">Description <span className="text-[9px] uppercase tracking-wide opacity-70">FR</span></div>
-                                                <div className="border-l border-border/40">
-                                                  <Textarea
-                                                    rows={2}
-                                                    value={item.description}
-                                                    placeholder="Description"
-                                                    className={cn("min-h-[48px] rounded-none border-0 shadow-none focus-visible:ring-1 text-sm leading-snug py-1.5", item.description_source_lang === "fr" && !item.do_not_translate && "border-l-[3px] border-l-primary")}
-                                                    onChange={(e) => {
-                                                      const fr = e.target.value;
-                                                      const en = item.do_not_translate ? fr : (item.description_en ?? "");
-                                                      patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
-                                                      queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: "fr" });
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
-                                              {/* Description EN */}
-                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-start gap-1 pt-2">Description <span className="text-[9px] uppercase tracking-wide opacity-70">EN</span></div>
-                                                <div className="border-l border-border/40">
-                                                  <Textarea
-                                                    rows={2}
-                                                    value={item.description_en ?? ""}
-                                                    placeholder="Description"
-                                                    className={cn("min-h-[48px] rounded-none border-0 shadow-none focus-visible:ring-1 text-sm leading-snug py-1.5", item.description_source_lang === "en" && !item.do_not_translate && "border-l-[3px] border-l-primary", item.do_not_translate && "opacity-70")}
-                                                    onChange={(e) => {
-                                                      const en = e.target.value;
-                                                      const fr = item.do_not_translate ? en : item.description;
-                                                      patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
-                                                      queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: "en" });
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
-                                              {/* Price */}
-                                              <div className="grid grid-cols-[110px_1fr] items-center">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center">Price</div>
-                                                <div className="border-l border-border/40 px-2 py-1 flex items-center gap-2">
-                                                  <PriceInput
-                                                    className="h-8 w-28 text-sm"
-                                                    cents={item.base_price_cents}
-                                                    onCommit={(cents) => {
-                                                      patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
-                                                      queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
-                                              {/* Modifications header */}
-                                              <div className="grid grid-cols-[110px_1fr] items-center bg-muted/20">
-                                                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground truncate">Mods</div>
-                                                <div className="border-l border-border/40 px-2 py-1 flex items-center justify-end">
-                                                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
-                                                    <Plus className="h-3 w-3" /> Add
-                                                  </Button>
-                                                </div>
+                                          <div className="border-t border-border/40 bg-background px-3 py-3 space-y-3">
+                                            {/* Name FR */}
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                                Name <span className="opacity-70">· FR</span>
+                                                {item.title_source_lang === "fr" && !item.do_not_translate && <span className="text-primary normal-case tracking-normal">• source</span>}
+                                              </label>
+                                              <Input
+                                                value={item.title}
+                                                placeholder="Titre"
+                                                className="h-9 text-sm bg-transparent border-0 border-b border-border/60 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors"
+                                                onChange={(e) => {
+                                                  const fr = e.target.value;
+                                                  const en = item.do_not_translate ? fr : (item.title_en ?? "");
+                                                  patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
+                                                  queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: "fr" });
+                                                }}
+                                              />
+                                            </div>
+                                            {/* Name EN */}
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                                Name <span className="opacity-70">· EN</span>
+                                                {item.title_source_lang === "en" && !item.do_not_translate && <span className="text-primary normal-case tracking-normal">• source</span>}
+                                              </label>
+                                              <Input
+                                                value={item.title_en ?? ""}
+                                                placeholder="Title"
+                                                className={cn("h-9 text-sm bg-transparent border-0 border-b border-border/60 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors", item.do_not_translate && "opacity-70")}
+                                                onChange={(e) => {
+                                                  const en = e.target.value;
+                                                  const fr = item.do_not_translate ? en : item.title;
+                                                  patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
+                                                  queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: "en" });
+                                                }}
+                                              />
+                                            </div>
+                                            {/* Description FR */}
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                                Description <span className="opacity-70">· FR</span>
+                                                {item.description_source_lang === "fr" && !item.do_not_translate && <span className="text-primary normal-case tracking-normal">• source</span>}
+                                              </label>
+                                              <Textarea
+                                                rows={2}
+                                                value={item.description}
+                                                placeholder="Description"
+                                                className="min-h-[44px] text-sm leading-snug bg-transparent border-0 border-b border-border/60 rounded-none px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors resize-none"
+                                                onChange={(e) => {
+                                                  const fr = e.target.value;
+                                                  const en = item.do_not_translate ? fr : (item.description_en ?? "");
+                                                  patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
+                                                  queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: "fr" });
+                                                }}
+                                              />
+                                            </div>
+                                            {/* Description EN */}
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                                Description <span className="opacity-70">· EN</span>
+                                                {item.description_source_lang === "en" && !item.do_not_translate && <span className="text-primary normal-case tracking-normal">• source</span>}
+                                              </label>
+                                              <Textarea
+                                                rows={2}
+                                                value={item.description_en ?? ""}
+                                                placeholder="Description"
+                                                className={cn("min-h-[44px] text-sm leading-snug bg-transparent border-0 border-b border-border/60 rounded-none px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors resize-none", item.do_not_translate && "opacity-70")}
+                                                onChange={(e) => {
+                                                  const en = e.target.value;
+                                                  const fr = item.do_not_translate ? en : item.description;
+                                                  patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
+                                                  queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: "en" });
+                                                }}
+                                              />
+                                            </div>
+                                            {/* Price */}
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Price</label>
+                                              <PriceInput
+                                                className="h-9 w-32 text-sm bg-transparent border-0 border-b border-border/60 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors"
+                                                cents={item.base_price_cents}
+                                                onCommit={(cents) => {
+                                                  patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
+                                                  queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
+                                                }}
+                                              />
+                                            </div>
+                                            {/* Modifications */}
+                                            <div className="space-y-1.5 pt-1">
+                                              <div className="flex items-center justify-between">
+                                                <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Modifications</label>
+                                                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
+                                                  <Plus className="h-3 w-3" /> Add
+                                                </Button>
                                               </div>
                                               {item.modifications.length === 0 ? (
-                                                <div className="grid grid-cols-[110px_1fr]">
-                                                  <div />
-                                                  <div className="border-l border-border/40 px-3 py-1.5 text-xs italic text-muted-foreground">None</div>
-                                                </div>
+                                                <div className="text-xs italic text-muted-foreground">None</div>
                                               ) : (
-                                                item.modifications.map((m, mIdx) => (
-                                                  <div key={m.id} className={cn("grid grid-cols-[110px_1fr] items-center", failedTempIds.has(m.id) && "ring-2 ring-destructive", savingTempIds.has(m.id) && "opacity-70")}>
-                                                    <div className="px-3 py-1 text-[11px] text-muted-foreground tabular-nums">#{mIdx + 1}</div>
-                                                    <div className="border-l border-border/40 flex items-center">
+                                                <div className="space-y-1.5">
+                                                  {item.modifications.map((m, mIdx) => (
+                                                    <div key={m.id} className={cn("flex items-center gap-2", failedTempIds.has(m.id) && "ring-2 ring-destructive", savingTempIds.has(m.id) && "opacity-70")}>
+                                                      <span className="text-[10px] text-muted-foreground tabular-nums w-5 shrink-0">#{mIdx + 1}</span>
                                                       <Input
-                                                        className="h-8 flex-1 rounded-none border-0 shadow-none focus-visible:ring-1 text-sm"
+                                                        className="h-8 flex-1 text-sm bg-transparent border-0 border-b border-border/60 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors"
                                                         value={m.modification_name}
                                                         onChange={(e) => {
                                                           patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
@@ -1783,28 +1779,26 @@ function MenuEditorPage() {
                                                         }}
                                                         placeholder="Modification"
                                                       />
-                                                      <div className="border-l border-border/40 px-2 py-1 flex items-center gap-1">
-                                                        <PriceInput
-                                                          className="h-7 w-20 text-sm"
-                                                          cents={m.price_modifier_cents}
-                                                          onCommit={(cents) => {
-                                                            patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
-                                                            queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
-                                                          }}
-                                                        />
-                                                        <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
-                                                          <ChevronUp className="h-3 w-3" />
-                                                        </Button>
-                                                        <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
-                                                          <ChevronDown className="h-3 w-3" />
-                                                        </Button>
-                                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
-                                                          <Trash2 className="h-3 w-3 text-destructive" />
-                                                        </Button>
-                                                      </div>
+                                                      <PriceInput
+                                                        className="h-8 w-20 text-sm bg-transparent border-0 border-b border-border/60 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors"
+                                                        cents={m.price_modifier_cents}
+                                                        onCommit={(cents) => {
+                                                          patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
+                                                          queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
+                                                        }}
+                                                      />
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
+                                                        <ChevronUp className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
+                                                        <ChevronDown className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
+                                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                                      </Button>
                                                     </div>
-                                                  </div>
-                                                ))
+                                                  ))}
+                                                </div>
                                               )}
                                             </div>
                                           </div>
