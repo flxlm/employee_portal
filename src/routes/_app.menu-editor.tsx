@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw, MoreHorizontal, Pencil, MoreVertical } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, ExternalLink, ChevronRight, Settings2, Eye, EyeOff, Copy, Ban, RotateCcw, Languages, Lock, Sparkles, RefreshCw, MoreHorizontal, Pencil, MoreVertical } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
