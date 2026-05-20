@@ -1610,119 +1610,79 @@ function MenuEditorPage() {
                                     </span>
                                     <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150", itemExpanded && "rotate-90")} />
                                   </div>
-                                   {itemExpanded && (
-                                     <div className="px-3 pb-3 space-y-3 border-t border-border/40 pt-3">
-                                       <div className="space-y-1.5">
-                                         <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Name</Label>
-                                         <BilingualField
-                                           fr={item.title} en={item.title_en}
-                                           sourceLang={item.title_source_lang}
-                                           isManualOverrideFr={item.title_source_lang === "en" && item.title_is_manual_override}
-                                           isManualOverrideEn={item.title_source_lang === "fr" && item.title_is_manual_override}
-                                           doNotTranslate={item.do_not_translate}
-                                           placeholderFr="Titre" placeholderEn="Title"
-                                           onChange={({ fr, en, hint }) => {
-                                             patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
-                                             queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: hint });
-                                           }}
-                                         />
-                                       </div>
-                                       <div className="space-y-1.5">
-                                         <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Price</Label>
-                                         <PriceInput
-                                           cents={item.base_price_cents}
-                                           onCommit={(cents) => {
-                                             patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
-                                             queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
-                                           }}
-                                         />
-                                       </div>
-                                       <div className="space-y-1.5">
-                                         <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Description</Label>
-                                         <BilingualField
-                                           multiline rows={2}
-                                           fr={item.description} en={item.description_en}
-                                           sourceLang={item.description_source_lang}
-                                           isManualOverrideFr={item.description_source_lang === "en" && item.description_is_manual_override}
-                                           isManualOverrideEn={item.description_source_lang === "fr" && item.description_is_manual_override}
-                                           doNotTranslate={item.do_not_translate}
-                                           placeholderFr="Description" placeholderEn="Description"
-                                           onChange={({ fr, en, hint }) => {
-                                             patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
-                                             queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: hint });
-                                           }}
-                                         />
-                                       </div>
-                                       <div className="space-y-1.5">
-                                         <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Modifications</Label>
-                                         {item.modifications.length === 0 && (
-                                           <p className="text-xs text-muted-foreground">None yet</p>
-                                         )}
-                                         <div className="space-y-1.5">
-                                           {item.modifications.map((m, mIdx) => (
-                                             <div key={m.id} className={cn("flex items-center gap-1.5", failedTempIds.has(m.id) && "ring-2 ring-destructive rounded", savingTempIds.has(m.id) && "opacity-70")}>
-                                               <Input
-                                                 className="h-8 flex-1"
-                                                 value={m.modification_name}
-                                                 onChange={(e) => {
-                                                   patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
-                                                   queueEdit("item_modifications", m.id, m.version, { modification_name: e.target.value });
-                                                 }}
-                                                 placeholder="Modification"
-                                               />
-                                               <PriceInput
-                                                 className="h-8 w-20"
-                                                 cents={m.price_modifier_cents}
-                                                 onCommit={(cents) => {
-                                                   patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
-                                                   queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
-                                                 }}
-                                               />
-                                               <Button size="icon" variant="ghost" className="h-7 w-7" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
-                                                 <ChevronUp className="h-3 w-3" />
-                                               </Button>
-                                               <Button size="icon" variant="ghost" className="h-7 w-7" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
-                                                 <ChevronDown className="h-3 w-3" />
-                                               </Button>
-                                               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
-                                                 <Trash2 className="h-3 w-3 text-destructive" />
-                                               </Button>
-                                             </div>
-                                           ))}
-                                         </div>
-                                       </div>
-                                       <div className="flex flex-wrap gap-2">
-                                         <Button size="sm" variant="outline" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
-                                           <Plus className="h-3 w-3" /> Add modification
-                                         </Button>
-                                         <Button size="sm" variant="ghost" onClick={() => setSettingsTarget({ kind: "item", sectionId: sec.id, subId: sub.id, itemId: item.id })}>
-                                           More settings
-                                         </Button>
-                                         <DropdownMenu>
-                                           <DropdownMenuTrigger asChild>
-                                             <Button size="sm" variant="ghost" aria-label="More item actions">
-                                               <MoreVertical className="h-3 w-3" />
-                                             </Button>
-                                           </DropdownMenuTrigger>
-                                           <DropdownMenuContent align="end">
-                                             <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
-                                               <ChevronUp className="h-4 w-4" /> Move up
-                                             </DropdownMenuItem>
-                                             <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
-                                               <ChevronDown className="h-4 w-4" /> Move down
-                                             </DropdownMenuItem>
-                                             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
-                                               <Copy className="h-4 w-4" /> Duplicate
-                                             </DropdownMenuItem>
-                                             <DropdownMenuSeparator />
-                                             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
-                                               <Trash2 className="h-4 w-4" /> Delete
-                                             </DropdownMenuItem>
-                                           </DropdownMenuContent>
-                                         </DropdownMenu>
-                                       </div>
-                                     </div>
-                                   )}
+                                  {itemExpanded && (
+                                    <div className="px-3 pb-3 space-y-3">
+                                      <dl className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 text-xs">
+                                        <dt className="text-muted-foreground">Name (FR)</dt>
+                                        <dd>{item.title || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Name (EN)</dt>
+                                        <dd>{item.title_en || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Price</dt>
+                                        <dd className="tabular-nums">${formatPrice(item.base_price_cents)}</dd>
+                                        <dt className="text-muted-foreground">Desc (FR)</dt>
+                                        <dd className="whitespace-pre-wrap">{item.description || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Desc (EN)</dt>
+                                        <dd className="whitespace-pre-wrap">{item.description_en || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Mods</dt>
+                                        <dd>
+                                          {item.modifications.length === 0 ? (
+                                            <span className="text-muted-foreground italic">None yet</span>
+                                          ) : (
+                                            <ul className="space-y-0.5">
+                                              {item.modifications.map((m) => (
+                                                <li key={m.id} className="flex justify-between gap-2">
+                                                  <span>{m.modification_name}</span>
+                                                  <span className="tabular-nums text-muted-foreground">
+                                                    {m.price_modifier_cents > 0 ? "+" : ""}${formatPrice(m.price_modifier_cents)}
+                                                  </span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </dd>
+                                        {(item.is_hidden || isSoldOutToday(item.sold_out_date)) && (
+                                          <>
+                                            <dt className="text-muted-foreground">Status</dt>
+                                            <dd>
+                                              {item.is_hidden && <span>Hidden</span>}
+                                              {item.is_hidden && isSoldOutToday(item.sold_out_date) && " · "}
+                                              {isSoldOutToday(item.sold_out_date) && <span>Sold out today</span>}
+                                            </dd>
+                                          </>
+                                        )}
+                                      </dl>
+                                      <div className="flex flex-wrap gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => setSettingsTarget({ kind: "item", sectionId: sec.id, subId: sub.id, itemId: item.id })}>
+                                          <Pencil className="h-3 w-3" /> Edit
+                                        </Button>
+                                        <Button size="sm" variant="outline" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
+                                          <Plus className="h-3 w-3" /> Add modification
+                                        </Button>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button size="sm" variant="ghost" aria-label="More item actions">
+                                              <MoreVertical className="h-3 w-3" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
+                                              <ChevronUp className="h-4 w-4" /> Move up
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
+                                              <ChevronDown className="h-4 w-4" /> Move down
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
+                                              <Copy className="h-4 w-4" /> Duplicate
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
+                                              <Trash2 className="h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
