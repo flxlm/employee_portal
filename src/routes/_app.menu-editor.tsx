@@ -1626,17 +1626,11 @@ function MenuEditorPage() {
                                         </div>
                                         {itemExpanded && (
                                           <div className="border-t border-border/40 bg-background">
-                                            {/* Field table: [label | FR | EN] */}
+                                            {/* Field table: [label | value] — one row per language */}
                                             <div className="divide-y divide-border/40 text-sm">
-                                              {/* Header */}
-                                              <div className="grid grid-cols-[80px_1fr_1fr] items-center bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
-                                                <div className="px-3 py-1.5">Field</div>
-                                                <div className="px-2 py-1.5 border-l border-border/40">Français</div>
-                                                <div className="px-2 py-1.5 border-l border-border/40">English</div>
-                                              </div>
-                                              {/* Name row */}
-                                              <div className="grid grid-cols-[80px_1fr_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center">Name</div>
+                                              {/* Name FR */}
+                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
+                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center gap-1">Name <span className="text-[9px] uppercase tracking-wide opacity-70">FR</span></div>
                                                 <div className="border-l border-border/40">
                                                   <Input
                                                     value={item.title}
@@ -1650,6 +1644,10 @@ function MenuEditorPage() {
                                                     }}
                                                   />
                                                 </div>
+                                              </div>
+                                              {/* Name EN */}
+                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
+                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center gap-1">Name <span className="text-[9px] uppercase tracking-wide opacity-70">EN</span></div>
                                                 <div className="border-l border-border/40">
                                                   <Input
                                                     value={item.title_en ?? ""}
@@ -1664,9 +1662,9 @@ function MenuEditorPage() {
                                                   />
                                                 </div>
                                               </div>
-                                              {/* Description row */}
-                                              <div className="grid grid-cols-[80px_1fr_1fr] items-stretch">
-                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-start pt-2">Description</div>
+                                              {/* Description FR */}
+                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
+                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-start gap-1 pt-2">Description <span className="text-[9px] uppercase tracking-wide opacity-70">FR</span></div>
                                                 <div className="border-l border-border/40">
                                                   <Textarea
                                                     rows={2}
@@ -1681,6 +1679,10 @@ function MenuEditorPage() {
                                                     }}
                                                   />
                                                 </div>
+                                              </div>
+                                              {/* Description EN */}
+                                              <div className="grid grid-cols-[110px_1fr] items-stretch">
+                                                <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-start gap-1 pt-2">Description <span className="text-[9px] uppercase tracking-wide opacity-70">EN</span></div>
                                                 <div className="border-l border-border/40">
                                                   <Textarea
                                                     rows={2}
@@ -1696,10 +1698,10 @@ function MenuEditorPage() {
                                                   />
                                                 </div>
                                               </div>
-                                              {/* Price row */}
-                                              <div className="grid grid-cols-[80px_1fr_1fr] items-center">
+                                              {/* Price */}
+                                              <div className="grid grid-cols-[110px_1fr] items-center">
                                                 <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center">Price</div>
-                                                <div className="col-span-2 border-l border-border/40 px-2 py-1 flex items-center gap-2">
+                                                <div className="border-l border-border/40 px-2 py-1 flex items-center gap-2">
                                                   <PriceInput
                                                     className="h-8 w-28 text-sm"
                                                     cents={item.base_price_cents}
@@ -1748,27 +1750,27 @@ function MenuEditorPage() {
                                                   </DropdownMenu>
                                                 </div>
                                               </div>
-                                              {/* Modifications rows */}
-                                              <div className="grid grid-cols-[80px_1fr_1fr] items-center bg-muted/20">
+                                              {/* Modifications header */}
+                                              <div className="grid grid-cols-[110px_1fr] items-center bg-muted/20">
                                                 <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">Modifications</div>
-                                                <div className="col-span-2 border-l border-border/40 px-2 py-1 flex items-center justify-end">
+                                                <div className="border-l border-border/40 px-2 py-1 flex items-center justify-end">
                                                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
                                                     <Plus className="h-3 w-3" /> Add
                                                   </Button>
                                                 </div>
                                               </div>
                                               {item.modifications.length === 0 ? (
-                                                <div className="grid grid-cols-[80px_1fr_1fr]">
+                                                <div className="grid grid-cols-[110px_1fr]">
                                                   <div />
-                                                  <div className="col-span-2 border-l border-border/40 px-3 py-1.5 text-xs italic text-muted-foreground">None</div>
+                                                  <div className="border-l border-border/40 px-3 py-1.5 text-xs italic text-muted-foreground">None</div>
                                                 </div>
                                               ) : (
                                                 item.modifications.map((m, mIdx) => (
-                                                  <div key={m.id} className={cn("grid grid-cols-[80px_1fr_1fr] items-center", failedTempIds.has(m.id) && "ring-2 ring-destructive", savingTempIds.has(m.id) && "opacity-70")}>
+                                                  <div key={m.id} className={cn("grid grid-cols-[110px_1fr] items-center", failedTempIds.has(m.id) && "ring-2 ring-destructive", savingTempIds.has(m.id) && "opacity-70")}>
                                                     <div className="px-3 py-1 text-[11px] text-muted-foreground tabular-nums">#{mIdx + 1}</div>
-                                                    <div className="border-l border-border/40">
+                                                    <div className="border-l border-border/40 flex items-center">
                                                       <Input
-                                                        className="h-8 rounded-none border-0 shadow-none focus-visible:ring-1 text-sm"
+                                                        className="h-8 flex-1 rounded-none border-0 shadow-none focus-visible:ring-1 text-sm"
                                                         value={m.modification_name}
                                                         onChange={(e) => {
                                                           patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
@@ -1776,26 +1778,25 @@ function MenuEditorPage() {
                                                         }}
                                                         placeholder="Modification"
                                                       />
-                                                    </div>
-                                                    <div className="border-l border-border/40 px-2 py-1 flex items-center gap-1">
-                                                      <PriceInput
-                                                        className="h-7 w-20 text-sm"
-                                                        cents={m.price_modifier_cents}
-                                                        onCommit={(cents) => {
-                                                          patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
-                                                          queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
-                                                        }}
-                                                      />
-                                                      <div className="flex-1" />
-                                                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
-                                                        <ChevronUp className="h-3 w-3" />
-                                                      </Button>
-                                                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
-                                                        <ChevronDown className="h-3 w-3" />
-                                                      </Button>
-                                                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
-                                                        <Trash2 className="h-3 w-3 text-destructive" />
-                                                      </Button>
+                                                      <div className="border-l border-border/40 px-2 py-1 flex items-center gap-1">
+                                                        <PriceInput
+                                                          className="h-7 w-20 text-sm"
+                                                          cents={m.price_modifier_cents}
+                                                          onCommit={(cents) => {
+                                                            patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
+                                                            queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
+                                                          }}
+                                                        />
+                                                        <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
+                                                          <ChevronUp className="h-3 w-3" />
+                                                        </Button>
+                                                        <Button size="icon" variant="ghost" className="h-6 w-6" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
+                                                          <ChevronDown className="h-3 w-3" />
+                                                        </Button>
+                                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
+                                                          <Trash2 className="h-3 w-3 text-destructive" />
+                                                        </Button>
+                                                      </div>
                                                     </div>
                                                   </div>
                                                 ))
