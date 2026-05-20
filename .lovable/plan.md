@@ -1,47 +1,74 @@
-# Inventory: CAD dollar sign + per-supplier pack size
+# Menu Editor Redesign — Plan
 
-## 1. Change currency symbol
+## Goal
+Replace the all-expanded, side-by-side bilingual editor with a three-level collapsible tree (Section → Subsection → Item). Everything starts collapsed; tapping drills in. All existing data, save plumbing, translation, and optimistic-insert behavior stays intact.
 
-Replace the single `€` in the inventory list with `$`.
+## Scope
 
-- `src/routes/_app.inventory.tsx` line 388: `€{best.cost}` → `${best.cost}`.
+### In scope (this pass)
+- New collapsible tree UI inside `src/routes/_app.menu-editor.tsx`.
+- Three row types matching the spec (dark brand bar / cream subsection / white item).
+- Inline read-only detail panel under each expanded item showing every field as a key/value table.
+- Slim page header (back link, title, "N sections · N items", View menus / More / Add buttons).
+- Dashed "+ Add item" / "+ Add subsection" buttons inside expanded containers (wired to existing `addItem` / `addSubsection`).
+- Per-row kebab menus: rename, edit, move up/down, hide, sold-out, duplicate, translate missing, delete. Move up/down lives **inside** the kebab now (not on the row).
+- Bottom-sheet kebab on mobile, dropdown on desktop.
+- All three levels collapsed on first load; independent per-row toggle state; smooth ~150ms expand/collapse with chevron rotation.
 
-No other euro signs exist in inventory views.
+### Out of scope (explicit non-goals from spec)
+- Data model / API changes.
+- Drag-and-drop reordering.
+- New fields.
 
-## 2. Per-supplier pack size
+### Decision needed — the "Edit" modal
+The spec says "Edit" opens "the existing full edit modal" — but there is no edit modal today; all editing is inline (`BilingualField`, `MenuToggles`, `RowSettingsMenu`, etc.). I see two reasonable options:
 
-Today each supplier row has `supplier`, `cost`, `notes`. A supplier may sell the item in a different pack size than the item's base unit (e.g. item unit = KG, supplier A sells 1 KG for $100, supplier B sells 2 KG for $100). Add a `pack_size` field per supplier so we can record and compare these honestly.
+**A. Build new edit modals (bigger change, matches spec literally).**
+Three modals — section, subsection, item — each wrapping the current inline editors (`BilingualField` for names/descriptions, `MenuToggles` for visible menus, price input, modification editor). Save/dirty/translate plumbing keeps working unchanged because the same `queueEdit` calls are wired into the modal fields.
 
-### Schema change
+**B. Reuse the existing inline editors in-place (smaller change).**
+The detail panel under an expanded item stays read-only as specced, but the "Edit" button toggles the panel into an editable view using the existing `BilingualField` + price input + modification list. Section/subsection editing happens the same way via their kebab → "Edit" → inline editable header.
 
-Add column to `inventory_item_suppliers`:
+I recommend **B** for this pass — it ships the redesign without a big modal-extraction refactor, keeps every existing behavior (translate hint, manual-override badge, do-not-translate lock, sold-out, hidden, visible-menus toggle) intact, and leaves modal extraction as a future cleanup. If you want A, say so and I'll do A.
 
-- `pack_size numeric NOT NULL DEFAULT 1` — how many of the item's unit are included for that supplier's `cost`.
+## Technical approach
 
-Existing rows keep `pack_size = 1` (current behaviour preserved).
+### State
+- Keep existing `collapsed` (sections) and `collapsedSubs` (subsections) sets, both initialized to "all collapsed" (already done).
+- Add `collapsedItems: Set<string>`, initialized to all item ids on first load.
+- Add `editingId: Set<string>` for option B — toggles the inline-editor view inside an expanded item/sub/section.
+- All existing refs (`dirtyRef`, `pendingInsertsRef`, `retryFnsRef`, `savingTempIds`, `failedTempIds`) untouched.
 
-### UI changes (all in `src/routes/_app.inventory.tsx`)
+### Components (new, all internal to the file)
+- `SectionRow` — dark brand bar, chevron + name + meta (`visible_menus` summary, subsection count) + kebab.
+- `SubsectionRow` — cream bar, chevron + name + item count + kebab.
+- `ItemRow` — white row, name + price + chevron; expands to detail panel.
+- `ItemDetailPanel` — read-only two-column table of all fields; "Edit" + "Add modification" buttons at the bottom.
+- `RowKebab` — wraps `DropdownMenu` on desktop, `Sheet` (side="bottom") on mobile via `useIsMobile`. Hosts move-up/move-down + existing `RowSettingsMenu` actions + Edit + Delete.
 
-**Add Item dialog (`AddItemDialog`)**
+### Layout / tokens
+- Max width `max-w-3xl` (≈768px) centered, per spec.
+- Brand brown bar uses existing `--primary` / brown token (will check `src/styles.css`); white text.
+- Subsection uses `bg-muted` (cream equivalent).
+- Row min-height 44px; kebab/chevron buttons 32×32 tap area.
+- Indent per level: 12px mobile, 24px desktop (via responsive padding).
+- `transition-[grid-template-rows] duration-150` or `Collapsible` from `@/components/ui/collapsible` for smooth open/close.
 
-- Add a `pack_size` input next to each supplier row, suffixed with the item's `unit` (live from the Unit field above — falls back to "unit" if blank).
-- Layout per row: `Supplier name | Cost ($) | Pack size (unit) | Notes | remove`.
-- Default `pack_size` to `1`. Insert it into `inventory_item_suppliers` along with the existing fields.
+### Header changes
+- Remove inline section name editors, meal-period toggle, "Add description" from the top header — those move into section kebab → Edit (inline editable view).
+- Keep dirty-changes sticky banner, save/discard, translate-all progress.
 
-**Suppliers & Costs dialog (`SuppliersDialog`)**
+## Files touched
+- `src/routes/_app.menu-editor.tsx` — full render restructure (≈ lines 1267–1945 rewritten; helpers above stay).
+- No other files.
 
-- Show a `Pack size` column with inline editing (reuse `InlineNumber`), suffixed with `item.unit`.
-- "Add supplier" form gets a `Pack size` input (default 1) alongside Supplier / Cost.
-- Header copy: clarify "Cost is for the listed pack size."
+## Risks
+- Large rewrite of one file — risk of dropping a hookup (e.g., `queueEdit` arg for description hint, sold-out date logic). Mitigation: reuse the exact existing handler call shapes; keep `BilingualField` / `PriceInput` / `RowSettingsMenu` / modification editors as-is and only re-arrange where they render.
+- Mobile bottom-sheet kebab adds a `Sheet` import — trivial.
 
-**Cheapest-supplier badge (line 137)**
-
-- Change comparison from raw `cost` to **cost per unit** = `cost / pack_size` (guard divide-by-zero by treating `pack_size <= 0` as 1).
-- Display stays `$<cost>` of the winning row (the actual price you pay), but selection now reflects true value.
-
-### Files touched
-
-- `src/routes/_app.inventory.tsx` — currency swap, AddItemDialog, SuppliersDialog, bestSupplierByItem memo.
-- One migration adding `pack_size` to `inventory_item_suppliers`.
-
-No changes to order-list, types regenerate from the migration.
+## Acceptance check
+- Page loads with only section bars visible.
+- Each level toggles independently.
+- All current data accessible within one extra tap (read-only) or two (edit).
+- 380px width has no horizontal scroll.
+- Save / discard / translate / optimistic-insert all still work.
