@@ -1752,7 +1752,7 @@ function MenuEditorPage() {
                                               </div>
                                               {/* Modifications header */}
                                               <div className="grid grid-cols-[110px_1fr] items-center bg-muted/20">
-                                                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">Modifications</div>
+                                                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground truncate">Mods</div>
                                                 <div className="border-l border-border/40 px-2 py-1 flex items-center justify-end">
                                                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
                                                     <Plus className="h-3 w-3" /> Add
