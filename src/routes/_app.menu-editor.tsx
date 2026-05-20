@@ -1712,10 +1712,10 @@ function MenuEditorPage() {
                                                 {item.description_source_lang === "fr" && !item.do_not_translate && <span className="text-primary normal-case tracking-normal">• source</span>}
                                               </label>
                                               <Textarea
-                                                rows={2}
+                                                rows={1}
                                                 value={item.description}
                                                 placeholder="Description"
-                                                className="min-h-[44px] text-sm leading-snug bg-transparent border-0 border-b border-border/60 rounded-none px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors resize-none"
+                                                className="min-h-[28px] text-sm leading-snug bg-transparent border-0 border-b border-border/60 rounded-none px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:border-primary hover:border-foreground/40 transition-colors resize-none"
                                                 onChange={(e) => {
                                                   const fr = e.target.value;
                                                   const en = item.do_not_translate ? fr : (item.description_en ?? "");
