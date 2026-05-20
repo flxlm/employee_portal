@@ -1612,11 +1612,6 @@ function MenuEditorPage() {
                                           <span className={cn("text-sm font-medium min-w-0 shrink-0 max-w-[40%]", itemExpanded ? "whitespace-normal" : "truncate")}>
                                             {itemName}
                                           </span>
-                                          {!itemExpanded && descPreview && (
-                                            <span className="hidden sm:block flex-1 min-w-0 truncate text-xs text-muted-foreground">
-                                              {descPreview}
-                                            </span>
-                                          )}
                                           {!itemExpanded && <span className="flex-1" />}
                                           {item.modifications.length > 0 && (
                                             <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground tabular-nums">
