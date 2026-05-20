@@ -1514,7 +1514,7 @@ function MenuEditorPage() {
               </div>
 
               {secExpanded && (
-                <div className="p-0 space-y-0">
+                <div className="p-2 sm:p-3 space-y-2">
                   {sec.subsections.length === 0 && (
                     <div className="text-xs text-muted-foreground px-2 py-2">No subsections yet</div>
                   )}
