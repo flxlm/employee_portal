@@ -321,11 +321,6 @@ function MenuFormattingPage() {
       )}
       <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/menu-editor">
-              <ArrowLeft className="h-4 w-4" /> Back to menu editor
-            </Link>
-          </Button>
           <h1 className="text-2xl font-semibold">Menu formatting</h1>
         </div>
         <Button onClick={handleSave} disabled={saving || !isDirty}>
