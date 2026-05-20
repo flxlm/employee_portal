@@ -483,6 +483,19 @@ function MenuEditorPage() {
       else next.add(id);
       return next;
     });
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const toggleExpandedItem = (id: string) =>
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  type SettingsTarget =
+    | { kind: "section"; sectionId: string }
+    | { kind: "subsection"; sectionId: string; subId: string }
+    | { kind: "item"; sectionId: string; subId: string; itemId: string };
+  const [settingsTarget, setSettingsTarget] = useState<SettingsTarget | null>(null);
   const collapseAll = () => setCollapsed(new Set(sections.map((s) => s.id)));
   const expandAll = () => setCollapsed(new Set());
 
