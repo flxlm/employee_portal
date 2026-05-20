@@ -1411,380 +1411,284 @@ function MenuEditorPage() {
         </div>
       </header>
 
-      <div className="space-y-6">
-        {sections.map((sec, sIdx) => (
-          <Card key={sec.id} className={`border-2 ${sec.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sec.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""} ${failedTempIds.has(sec.id) ? "ring-2 ring-destructive" : ""} ${savingTempIds.has(sec.id) ? "opacity-70" : ""}`}>
-            {renderTempStatus(sec.id)}
-            <CardHeader className="space-y-3">
-              <div className="flex items-start gap-2">
-                <div className="flex flex-col rounded-md border bg-muted/40 shrink-0">
-                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={sIdx === 0} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1)} aria-label="Move section up">
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={sIdx === sections.length - 1} onClick={() => move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1)} aria-label="Move section down">
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <BilingualField
-                    fr={sec.name}
-                    en={sec.name_en}
-                    sourceLang={sec.name_source_lang}
-                    isManualOverrideFr={sec.name_source_lang === "en" && sec.name_is_manual_override}
-                    isManualOverrideEn={sec.name_source_lang === "fr" && sec.name_is_manual_override}
-                    doNotTranslate={sec.do_not_translate}
-                    placeholderFr="Nom de section"
-                    placeholderEn="Section name"
-                    inputClassName="text-lg font-semibold"
-                    onChange={({ fr, en, hint }) => {
-                      patchSection(sec.id, { name: fr, name_en: en });
-                      queueEdit("menu_sections", sec.id, sec.version, {
-                        name: fr,
-                        name_en: en,
-                        name_source_lang_hint: hint,
-                      });
-                    }}
-                  />
-                  {!collapsed.has(sec.id) && (
-                    hasDesc(sec.id, sec.description) ? (
-                      <BilingualField
-                        multiline
-                        fr={sec.description}
-                        en={sec.description_en}
-                        sourceLang={sec.description_source_lang}
-                        isManualOverrideFr={sec.description_source_lang === "en" && sec.description_is_manual_override}
-                        isManualOverrideEn={sec.description_source_lang === "fr" && sec.description_is_manual_override}
-                        doNotTranslate={sec.do_not_translate}
-                        placeholderFr="Description (FR)"
-                        placeholderEn="Description (EN)"
-                        onChange={({ fr, en, hint }) => {
-                          patchSection(sec.id, { description: fr, description_en: en });
-                          queueEdit("menu_sections", sec.id, sec.version, {
-                            description: fr,
-                            description_en: en,
-                            description_source_lang_hint: hint,
-                          });
-                        }}
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => revealDesc(sec.id)}
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <Plus className="h-3 w-3" /> Add description
-                      </button>
-                    )
-                  )}
-                  <MenuToggles
-                    options={menus}
-                    value={sec.visible_menus}
-                    onChange={(next) => {
-                      patchSection(sec.id, { visible_menus: next });
-                      queueEdit("menu_sections", sec.id, sec.version, { visible_menus: next });
-                    }}
-                  />
-                </div>
-                <RowSettingsMenu
-                  hidden={sec.is_hidden}
-                  soldOut={isSoldOutToday(sec.sold_out_date)}
-                  onToggleHidden={() => {
-                    const next = !sec.is_hidden;
-                    patchSection(sec.id, { is_hidden: next });
-                    queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next });
-                  }}
-                  onToggleSoldOut={() => {
-                    const next = isSoldOutToday(sec.sold_out_date) ? null : todayISO();
-                    patchSection(sec.id, { sold_out_date: next });
-                    queueEdit("menu_sections", sec.id, sec.version, { sold_out_date: next });
-                  }}
-                  onDuplicate={() => duplicateSection(sec.id)}
-                  onDelete={() => removeRow("menu_sections", sec.id)}
-                  onAddDescription={() => revealDesc(sec.id)}
-                  canAddDescription={!hasDesc(sec.id, sec.description) && !collapsed.has(sec.id)}
-                  onTranslateMissing={() => handleTranslateMissing("menu_sections", sec.id)}
-                  canTranslateMissing={!sec.do_not_translate && !isTempUnresolved(sec.id) && (
-                    (!!sec.name?.trim() !== !!sec.name_en?.trim()) ||
-                    (!!sec.description?.trim() !== !!sec.description_en?.trim())
-                  )}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => toggleCollapsed(sec.id)}
-                  aria-label={collapsed.has(sec.id) ? "Expand section" : "Collapse section"}
-                >
-                  {collapsed.has(sec.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </div>
-            </CardHeader>
-            {!collapsed.has(sec.id) && (
-            <CardContent className="space-y-4">
-              {sec.subsections.map((sub, ssIdx) => (
-                <div key={sub.id} className={`rounded-md border p-3 space-y-3 ${sub.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(sub.sold_out_date) ? "[&_input]:text-muted-foreground/40" : ""} ${failedTempIds.has(sub.id) ? "ring-2 ring-destructive" : ""} ${savingTempIds.has(sub.id) ? "opacity-70" : ""}`}>
-                  {renderTempStatus(sub.id)}
-                  <div className="flex items-start gap-2">
-                    <div className="flex flex-col rounded-md border bg-background shrink-0">
-                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-b-none" disabled={ssIdx === 0} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1)} aria-label="Move subsection up">
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-t-none" disabled={ssIdx === sec.subsections.length - 1} onClick={() => move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1)} aria-label="Move subsection down">
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <BilingualField
-                        fr={sub.name}
-                        en={sub.name_en}
-                        sourceLang={sub.name_source_lang}
-                        isManualOverrideFr={sub.name_source_lang === "en" && sub.name_is_manual_override}
-                        isManualOverrideEn={sub.name_source_lang === "fr" && sub.name_is_manual_override}
-                        doNotTranslate={sub.do_not_translate}
-                        placeholderFr="Nom de sous-section"
-                        placeholderEn="Subsection name"
-                        inputClassName="font-medium"
-                        onChange={({ fr, en, hint }) => {
-                          patchSubsection(sec.id, sub.id, { name: fr, name_en: en });
-                          queueEdit("menu_subsections", sub.id, sub.version, {
-                            name: fr,
-                            name_en: en,
-                            name_source_lang_hint: hint,
-                          });
-                        }}
-                      />
-                      {hasDesc(sub.id, sub.description) ? (
-                        <BilingualField
-                          fr={sub.description}
-                          en={sub.description_en}
-                          sourceLang={sub.description_source_lang}
-                          isManualOverrideFr={sub.description_source_lang === "en" && sub.description_is_manual_override}
-                          isManualOverrideEn={sub.description_source_lang === "fr" && sub.description_is_manual_override}
-                          doNotTranslate={sub.do_not_translate}
-                          placeholderFr="Description (FR)"
-                          placeholderEn="Description (EN)"
-                          onChange={({ fr, en, hint }) => {
-                            patchSubsection(sec.id, sub.id, { description: fr, description_en: en });
-                            queueEdit("menu_subsections", sub.id, sub.version, {
-                              description: fr,
-                              description_en: en,
-                              description_source_lang_hint: hint,
-                            });
-                          }}
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => revealDesc(sub.id)}
-                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          <Plus className="h-3 w-3" /> Add description
-                        </button>
-                      )}
-                    </div>
-                    <RowSettingsMenu
-                      hidden={sub.is_hidden}
-                      soldOut={isSoldOutToday(sub.sold_out_date)}
-                      doNotTranslate={sub.do_not_translate}
-                      onToggleDoNotTranslate={() => {
-                        const next = !sub.do_not_translate;
-                        patchSubsection(sec.id, sub.id, { do_not_translate: next });
-                        queueEdit("menu_subsections", sub.id, sub.version, { do_not_translate: next });
-                      }}
-                      onToggleHidden={() => {
-                        const next = !sub.is_hidden;
-                        patchSubsection(sec.id, sub.id, { is_hidden: next });
-                        queueEdit("menu_subsections", sub.id, sub.version, { is_hidden: next });
-                      }}
-                      onToggleSoldOut={() => {
-                        const next = isSoldOutToday(sub.sold_out_date) ? null : todayISO();
-                        patchSubsection(sec.id, sub.id, { sold_out_date: next });
-                        queueEdit("menu_subsections", sub.id, sub.version, { sold_out_date: next });
-                      }}
-                      onDuplicate={() => duplicateSubsection(sec.id, sub.id)}
-                      onDelete={() => requestDeleteSubsection(sec.id, sub.id)}
-                      onAddDescription={() => revealDesc(sub.id)}
-                      canAddDescription={!hasDesc(sub.id, sub.description)}
-                      onTranslateMissing={() => handleTranslateMissing("menu_subsections", sub.id)}
-                      canTranslateMissing={!sub.do_not_translate && !isTempUnresolved(sub.id) && (
-                        (!!sub.name?.trim() !== !!sub.name_en?.trim()) ||
-                        (!!sub.description?.trim() !== !!sub.description_en?.trim())
-                      )}
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => toggleCollapsedSub(sub.id)}
-                      aria-label={collapsedSubs.has(sub.id) ? "Expand subsection" : "Collapse subsection"}
-                    >
-                      {collapsedSubs.has(sub.id) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
+      <div className="space-y-3">
+        {sections.map((sec, sIdx) => {
+          const secExpanded = !collapsed.has(sec.id);
+          const visibleLabels = sec.visible_menus
+            .map((k) => menus.find((m) => m.key === k)?.label)
+            .filter(Boolean)
+            .join(" · ");
+          const secDisplay = (sec.name_en || sec.name || "Untitled").toUpperCase();
+          const subCountLabel = `${sec.subsections.length} subsection${sec.subsections.length === 1 ? "" : "s"}`;
+          return (
+            <div
+              key={sec.id}
+              className={cn(
+                "rounded-lg border overflow-hidden bg-card",
+                sec.is_hidden && "opacity-60",
+                failedTempIds.has(sec.id) && "ring-2 ring-destructive",
+                savingTempIds.has(sec.id) && "opacity-70",
+              )}
+            >
+              {renderTempStatus(sec.id)}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => toggleCollapsed(sec.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCollapsed(sec.id); } }}
+                className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-3 min-h-[44px] cursor-pointer select-none"
+                aria-expanded={secExpanded}
+              >
+                <ChevronRight className={cn("h-4 w-4 shrink-0 transition-transform duration-150", secExpanded && "rotate-90")} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold tracking-wide uppercase text-sm truncate">{secDisplay}</div>
+                  <div className="text-[11px] opacity-80 truncate sm:hidden">
+                    {[visibleLabels, subCountLabel].filter(Boolean).join(" · ")}
                   </div>
+                </div>
+                <div className="hidden sm:block text-xs opacity-80 truncate max-w-[260px] text-right">
+                  {[visibleLabels, subCountLabel].filter(Boolean).join(" · ")}
+                </div>
+                <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground" aria-label="Section actions">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSettingsTarget({ kind: "section", sectionId: sec.id }); }}>
+                        <Pencil className="h-4 w-4" /> Edit settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled={sIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_sections", sections.map((x) => x.id), sIdx, sIdx - 1); }}>
+                        <ChevronUp className="h-4 w-4" /> Move up
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled={sIdx === sections.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_sections", sections.map((x) => x.id), sIdx, sIdx + 1); }}>
+                        <ChevronDown className="h-4 w-4" /> Move down
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateSection(sec.id); }}>
+                        <Copy className="h-4 w-4" /> Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_sections", sec.id); }} className="text-destructive focus:text-destructive">
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
 
-                  {!collapsedSubs.has(sub.id) && (
-                  <div className="space-y-2 pl-8">
-                    {sub.items.map((item, iIdx) => (
-                      <div key={item.id} className={`rounded border bg-muted/30 p-2 space-y-2 ${item.is_hidden ? "opacity-50" : ""} ${isSoldOutToday(item.sold_out_date) ? "[&_input]:text-muted-foreground/40 [&_textarea]:text-muted-foreground/40" : ""} ${failedTempIds.has(item.id) ? "ring-2 ring-destructive" : ""} ${savingTempIds.has(item.id) ? "opacity-70" : ""}`}>
-                        {renderTempStatus(item.id)}
-                        <div className="flex items-start gap-2">
-                          <div className="flex flex-col rounded-md border bg-background shrink-0">
-                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-b-none" disabled={iIdx === 0} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1)} aria-label="Move item up">
-                              <ChevronUp className="h-3 w-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-t-none" disabled={iIdx === sub.items.length - 1} onClick={() => move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1)} aria-label="Move item down">
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
+              {secExpanded && (
+                <div className="p-2 sm:p-3 space-y-2">
+                  {sec.subsections.length === 0 && (
+                    <div className="text-xs text-muted-foreground px-2 py-2">No subsections yet</div>
+                  )}
+                  {sec.subsections.map((sub, ssIdx) => {
+                    const subExpanded = !collapsedSubs.has(sub.id);
+                    const subDisplay = (sub.name_en || sub.name || "Untitled").toUpperCase();
+                    return (
+                      <div
+                        key={sub.id}
+                        className={cn(
+                          "rounded-md border bg-muted overflow-hidden ml-2 sm:ml-4",
+                          sub.is_hidden && "opacity-60",
+                          failedTempIds.has(sub.id) && "ring-2 ring-destructive",
+                          savingTempIds.has(sub.id) && "opacity-70",
+                        )}
+                      >
+                        {renderTempStatus(sub.id)}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => toggleCollapsedSub(sub.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCollapsedSub(sub.id); } }}
+                          className="flex items-center gap-2 px-3 py-2 min-h-[44px] cursor-pointer select-none"
+                          aria-expanded={subExpanded}
+                        >
+                          <ChevronRight className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-150", subExpanded && "rotate-90")} />
+                          <span className="flex-1 font-semibold uppercase text-xs tracking-wide truncate">{subDisplay}</span>
+                          <span className="text-[11px] text-muted-foreground shrink-0">
+                            {sub.items.length} item{sub.items.length === 1 ? "" : "s"}
+                          </span>
+                          <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Subsection actions">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSettingsTarget({ kind: "subsection", sectionId: sec.id, subId: sub.id }); }}>
+                                  <Pencil className="h-4 w-4" /> Edit settings
+                                </DropdownMenuItem>
+                                <DropdownMenuItem disabled={ssIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx - 1); }}>
+                                  <ChevronUp className="h-4 w-4" /> Move up
+                                </DropdownMenuItem>
+                                <DropdownMenuItem disabled={ssIdx === sec.subsections.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_subsections", sec.subsections.map((x) => x.id), ssIdx, ssIdx + 1); }}>
+                                  <ChevronDown className="h-4 w-4" /> Move down
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateSubsection(sec.id, sub.id); }}>
+                                  <Copy className="h-4 w-4" /> Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); requestDeleteSubsection(sec.id, sub.id); }} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <div className="flex-1 grid gap-2 sm:grid-cols-[1fr_120px]">
-                            <BilingualField
-                              fr={item.title}
-                              en={item.title_en}
-                              sourceLang={item.title_source_lang}
-                              isManualOverrideFr={item.title_source_lang === "en" && item.title_is_manual_override}
-                              isManualOverrideEn={item.title_source_lang === "fr" && item.title_is_manual_override}
-                              doNotTranslate={item.do_not_translate}
-                              placeholderFr="Titre"
-                              placeholderEn="Title"
-                              onChange={({ fr, en, hint }) => {
-                                patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
-                                queueEdit("menu_items", item.id, item.version, {
-                                  title: fr,
-                                  title_en: en,
-                                  title_source_lang_hint: hint,
-                                });
-                              }}
-                            />
-                            <PriceInput
-                              cents={item.base_price_cents}
-                              onCommit={(cents) => {
-                                patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
-                                queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
-                              }}
-                            />
-                            {hasDesc(item.id, item.description) && (
-                              <div className="sm:col-span-2">
-                                <BilingualField
-                                  multiline
-                                  rows={1}
-                                  fr={item.description}
-                                  en={item.description_en}
-                                  sourceLang={item.description_source_lang}
-                                  isManualOverrideFr={item.description_source_lang === "en" && item.description_is_manual_override}
-                                  isManualOverrideEn={item.description_source_lang === "fr" && item.description_is_manual_override}
-                                  doNotTranslate={item.do_not_translate}
-                                  placeholderFr="Description"
-                                  placeholderEn="Description"
-                                  onChange={({ fr, en, hint }) => {
-                                    patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
-                                    queueEdit("menu_items", item.id, item.version, {
-                                      description: fr,
-                                      description_en: en,
-                                      description_source_lang_hint: hint,
-                                    });
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <RowSettingsMenu
-                            size="sm"
-                            hidden={item.is_hidden}
-                            soldOut={isSoldOutToday(item.sold_out_date)}
-                            onToggleHidden={() => {
-                              const next = !item.is_hidden;
-                              patchItem(sec.id, sub.id, item.id, { is_hidden: next });
-                              queueEdit("menu_items", item.id, item.version, { is_hidden: next });
-                            }}
-                            onToggleSoldOut={() => {
-                              const next = isSoldOutToday(item.sold_out_date) ? null : todayISO();
-                              patchItem(sec.id, sub.id, item.id, { sold_out_date: next });
-                              queueEdit("menu_items", item.id, item.version, { sold_out_date: next });
-                            }}
-                            onDuplicate={() => duplicateItem(sec.id, sub.id, item.id)}
-                            onDelete={() => removeRow("menu_items", item.id)}
-                            onAddDescription={() => revealDesc(item.id)}
-                            canAddDescription={!hasDesc(item.id, item.description)}
-                            doNotTranslate={item.do_not_translate}
-                            onToggleDoNotTranslate={() => {
-                              const next = !item.do_not_translate;
-                              patchItem(sec.id, sub.id, item.id, { do_not_translate: next });
-                              queueEdit("menu_items", item.id, item.version, { do_not_translate: next });
-                            }}
-                            onTranslateMissing={() => handleTranslateMissing("menu_items", item.id)}
-                            canTranslateMissing={!item.do_not_translate && !isTempUnresolved(item.id) && (
-                              (!!item.title?.trim() !== !!item.title_en?.trim()) ||
-                              (!!item.description?.trim() !== !!item.description_en?.trim())
-                            )}
-                          />
                         </div>
 
-                        {item.modifications.length > 0 && (
-                          <div className="pl-7 space-y-1">
-                            {item.modifications.map((m, mIdx) => (
-                              <div key={m.id} className={`flex items-center gap-2 ${failedTempIds.has(m.id) ? "ring-2 ring-destructive rounded" : ""} ${savingTempIds.has(m.id) ? "opacity-70" : ""}`}>
-                                {renderTempStatus(m.id)}
-                                <div className="flex flex-col rounded-md border bg-background shrink-0">
-                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-b-none" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move modification up">
-                                    <ChevronUp className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="icon" variant="ghost" className="h-5 w-5 rounded-t-none" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move modification down">
-                                    <ChevronDown className="h-3 w-3" />
-                                  </Button>
+                        {subExpanded && (
+                          <div className="bg-background/60 border-t border-border/50">
+                            {sub.items.length === 0 && (
+                              <div className="text-xs text-muted-foreground px-3 py-2">No items yet</div>
+                            )}
+                            {sub.items.map((item, iIdx) => {
+                              const itemExpanded = expandedItems.has(item.id);
+                              const itemName = item.title_en || item.title || "Untitled";
+                              return (
+                                <div
+                                  key={item.id}
+                                  className={cn(
+                                    "border-b border-border/40 last:border-b-0",
+                                    itemExpanded && "bg-accent/20",
+                                    item.is_hidden && "opacity-60",
+                                    failedTempIds.has(item.id) && "ring-2 ring-destructive",
+                                    savingTempIds.has(item.id) && "opacity-70",
+                                  )}
+                                >
+                                  {renderTempStatus(item.id)}
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => toggleExpandedItem(item.id)}
+                                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpandedItem(item.id); } }}
+                                    className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] cursor-pointer select-none"
+                                    aria-expanded={itemExpanded}
+                                  >
+                                    <span className={cn("flex-1 text-sm min-w-0", itemExpanded ? "whitespace-normal" : "truncate")}>
+                                      {itemName}
+                                    </span>
+                                    <span className="shrink-0 text-sm tabular-nums whitespace-nowrap">
+                                      ${formatPrice(item.base_price_cents)}
+                                    </span>
+                                    <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150", itemExpanded && "rotate-90")} />
+                                  </div>
+                                  {itemExpanded && (
+                                    <div className="px-3 pb-3 space-y-3">
+                                      <dl className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 text-xs">
+                                        <dt className="text-muted-foreground">Name (FR)</dt>
+                                        <dd>{item.title || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Name (EN)</dt>
+                                        <dd>{item.title_en || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Price</dt>
+                                        <dd className="tabular-nums">${formatPrice(item.base_price_cents)}</dd>
+                                        <dt className="text-muted-foreground">Desc (FR)</dt>
+                                        <dd className="whitespace-pre-wrap">{item.description || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Desc (EN)</dt>
+                                        <dd className="whitespace-pre-wrap">{item.description_en || <span className="text-muted-foreground italic">—</span>}</dd>
+                                        <dt className="text-muted-foreground">Mods</dt>
+                                        <dd>
+                                          {item.modifications.length === 0 ? (
+                                            <span className="text-muted-foreground italic">None yet</span>
+                                          ) : (
+                                            <ul className="space-y-0.5">
+                                              {item.modifications.map((m) => (
+                                                <li key={m.id} className="flex justify-between gap-2">
+                                                  <span>{m.modification_name}</span>
+                                                  <span className="tabular-nums text-muted-foreground">
+                                                    {m.price_modifier_cents > 0 ? "+" : ""}${formatPrice(m.price_modifier_cents)}
+                                                  </span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </dd>
+                                        {(item.is_hidden || isSoldOutToday(item.sold_out_date)) && (
+                                          <>
+                                            <dt className="text-muted-foreground">Status</dt>
+                                            <dd>
+                                              {item.is_hidden && <span>Hidden</span>}
+                                              {item.is_hidden && isSoldOutToday(item.sold_out_date) && " · "}
+                                              {isSoldOutToday(item.sold_out_date) && <span>Sold out today</span>}
+                                            </dd>
+                                          </>
+                                        )}
+                                      </dl>
+                                      <div className="flex flex-wrap gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => setSettingsTarget({ kind: "item", sectionId: sec.id, subId: sub.id, itemId: item.id })}>
+                                          <Pencil className="h-3 w-3" /> Edit
+                                        </Button>
+                                        <Button size="sm" variant="outline" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
+                                          <Plus className="h-3 w-3" /> Add modification
+                                        </Button>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button size="sm" variant="ghost" aria-label="More item actions">
+                                              <MoreVertical className="h-3 w-3" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuItem disabled={iIdx === 0} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx - 1); }}>
+                                              <ChevronUp className="h-4 w-4" /> Move up
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem disabled={iIdx === sub.items.length - 1} onSelect={(e) => { e.preventDefault(); move("menu_items", sub.items.map((x) => x.id), iIdx, iIdx + 1); }}>
+                                              <ChevronDown className="h-4 w-4" /> Move down
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); duplicateItem(sec.id, sub.id, item.id); }}>
+                                              <Copy className="h-4 w-4" /> Duplicate
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); removeRow("menu_items", item.id); }} className="text-destructive focus:text-destructive">
+                                              <Trash2 className="h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                                <Input
-                                  className="h-8 flex-1"
-                                  value={m.modification_name}
-                                  onChange={(e) => {
-                                    patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
-                                    queueEdit("item_modifications", m.id, m.version, { modification_name: e.target.value });
-                                  }}
-                                  placeholder="Modification"
-                                />
-                                <PriceInput
-                                  className="h-8 w-24"
-                                  cents={m.price_modifier_cents}
-                                  onCommit={(cents) => {
-                                    patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
-                                    queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
-                                  }}
-                                />
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeRow("item_modifications", m.id)}>
-                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                </Button>
-                              </div>
-                            ))}
+                              );
+                            })}
+                            <div className="p-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={isTempUnresolved(sub.id)}
+                                className="w-full border border-dashed text-muted-foreground hover:text-foreground"
+                                onClick={() => addItem(sec.id, sub.id)}
+                              >
+                                <Plus className="h-3 w-3" /> Add item
+                              </Button>
+                            </div>
                           </div>
                         )}
-
-                        <div className="pl-7">
-                          <Button size="sm" variant="ghost" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
-                            <Plus className="h-3 w-3" /> Add modification
-                          </Button>
-                        </div>
                       </div>
-                    ))}
-                    <Button size="sm" variant="outline" disabled={isTempUnresolved(sub.id)} onClick={() => addItem(sec.id, sub.id)}>
-                      <Plus className="h-3 w-3" /> Add item
-                    </Button>
-                  </div>
-                  )}
+                    );
+                  })}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={isTempUnresolved(sec.id)}
+                    className="w-full border border-dashed text-muted-foreground hover:text-foreground"
+                    onClick={() => addSubsection(sec.id)}
+                  >
+                    <Plus className="h-3 w-3" /> Add subsection
+                  </Button>
                 </div>
-              ))}
-              <Button size="sm" variant="outline" disabled={isTempUnresolved(sec.id)} onClick={() => addSubsection(sec.id)}>
-                <Plus className="h-3 w-3" /> Add subsection
-              </Button>
-            </CardContent>
-            )}
-          </Card>
-        ))}
+              )}
+            </div>
+          );
+        })}
 
         {sections.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
-            No sections yet — click "Section" to add the first one.
+            No sections yet — use "Add" to create the first one.
           </div>
         )}
       </div>
+
 
       <Dialog
         open={!!deleteSubTarget}
