@@ -1857,6 +1857,241 @@ function MenuEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={!!settingsTarget} onOpenChange={(o) => { if (!o) setSettingsTarget(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {(() => {
+            if (!settingsTarget) return null;
+            if (settingsTarget.kind === "section") {
+              const sec = sections.find((s) => s.id === settingsTarget.sectionId);
+              if (!sec) return null;
+              return (
+                <div className="space-y-5">
+                  <SheetHeader>
+                    <SheetTitle>Section settings</SheetTitle>
+                    <SheetDescription>Edit name, description, and visibility for this section.</SheetDescription>
+                  </SheetHeader>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Name</Label>
+                    <BilingualField
+                      fr={sec.name} en={sec.name_en}
+                      sourceLang={sec.name_source_lang}
+                      isManualOverrideFr={sec.name_source_lang === "en" && sec.name_is_manual_override}
+                      isManualOverrideEn={sec.name_source_lang === "fr" && sec.name_is_manual_override}
+                      doNotTranslate={sec.do_not_translate}
+                      placeholderFr="Nom de section" placeholderEn="Section name"
+                      inputClassName="font-semibold"
+                      onChange={({ fr, en, hint }) => {
+                        patchSection(sec.id, { name: fr, name_en: en });
+                        queueEdit("menu_sections", sec.id, sec.version, { name: fr, name_en: en, name_source_lang_hint: hint });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Description</Label>
+                    <BilingualField
+                      multiline rows={2}
+                      fr={sec.description} en={sec.description_en}
+                      sourceLang={sec.description_source_lang}
+                      isManualOverrideFr={sec.description_source_lang === "en" && sec.description_is_manual_override}
+                      isManualOverrideEn={sec.description_source_lang === "fr" && sec.description_is_manual_override}
+                      doNotTranslate={sec.do_not_translate}
+                      placeholderFr="Description (FR)" placeholderEn="Description (EN)"
+                      onChange={({ fr, en, hint }) => {
+                        patchSection(sec.id, { description: fr, description_en: en });
+                        queueEdit("menu_sections", sec.id, sec.version, { description: fr, description_en: en, description_source_lang_hint: hint });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Show on menus</Label>
+                    <MenuToggles
+                      options={menus} value={sec.visible_menus}
+                      onChange={(next) => {
+                        patchSection(sec.id, { visible_menus: next });
+                        queueEdit("menu_sections", sec.id, sec.version, { visible_menus: next });
+                      }}
+                    />
+                  </div>
+                  <Separator />
+                  <SettingsActions
+                    hidden={sec.is_hidden}
+                    soldOut={isSoldOutToday(sec.sold_out_date)}
+                    doNotTranslate={sec.do_not_translate}
+                    onToggleHidden={() => { const next = !sec.is_hidden; patchSection(sec.id, { is_hidden: next }); queueEdit("menu_sections", sec.id, sec.version, { is_hidden: next }); }}
+                    onToggleSoldOut={() => { const next = isSoldOutToday(sec.sold_out_date) ? null : todayISO(); patchSection(sec.id, { sold_out_date: next }); queueEdit("menu_sections", sec.id, sec.version, { sold_out_date: next }); }}
+                    onToggleDoNotTranslate={() => { const next = !sec.do_not_translate; patchSection(sec.id, { do_not_translate: next }); queueEdit("menu_sections", sec.id, sec.version, { do_not_translate: next }); }}
+                    onTranslateMissing={() => handleTranslateMissing("menu_sections", sec.id)}
+                    canTranslateMissing={!sec.do_not_translate && !isTempUnresolved(sec.id) && ((!!sec.name?.trim() !== !!sec.name_en?.trim()) || (!!sec.description?.trim() !== !!sec.description_en?.trim()))}
+                  />
+                </div>
+              );
+            }
+            if (settingsTarget.kind === "subsection") {
+              const sec = sections.find((s) => s.id === settingsTarget.sectionId);
+              const sub = sec?.subsections.find((ss) => ss.id === settingsTarget.subId);
+              if (!sec || !sub) return null;
+              return (
+                <div className="space-y-5">
+                  <SheetHeader>
+                    <SheetTitle>Subsection settings</SheetTitle>
+                    <SheetDescription>Edit name, description, and visibility for this subsection.</SheetDescription>
+                  </SheetHeader>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Name</Label>
+                    <BilingualField
+                      fr={sub.name} en={sub.name_en}
+                      sourceLang={sub.name_source_lang}
+                      isManualOverrideFr={sub.name_source_lang === "en" && sub.name_is_manual_override}
+                      isManualOverrideEn={sub.name_source_lang === "fr" && sub.name_is_manual_override}
+                      doNotTranslate={sub.do_not_translate}
+                      placeholderFr="Nom de sous-section" placeholderEn="Subsection name"
+                      inputClassName="font-medium"
+                      onChange={({ fr, en, hint }) => {
+                        patchSubsection(sec.id, sub.id, { name: fr, name_en: en });
+                        queueEdit("menu_subsections", sub.id, sub.version, { name: fr, name_en: en, name_source_lang_hint: hint });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Description</Label>
+                    <BilingualField
+                      multiline rows={2}
+                      fr={sub.description} en={sub.description_en}
+                      sourceLang={sub.description_source_lang}
+                      isManualOverrideFr={sub.description_source_lang === "en" && sub.description_is_manual_override}
+                      isManualOverrideEn={sub.description_source_lang === "fr" && sub.description_is_manual_override}
+                      doNotTranslate={sub.do_not_translate}
+                      placeholderFr="Description (FR)" placeholderEn="Description (EN)"
+                      onChange={({ fr, en, hint }) => {
+                        patchSubsection(sec.id, sub.id, { description: fr, description_en: en });
+                        queueEdit("menu_subsections", sub.id, sub.version, { description: fr, description_en: en, description_source_lang_hint: hint });
+                      }}
+                    />
+                  </div>
+                  <Separator />
+                  <SettingsActions
+                    hidden={sub.is_hidden}
+                    soldOut={isSoldOutToday(sub.sold_out_date)}
+                    doNotTranslate={sub.do_not_translate}
+                    onToggleHidden={() => { const next = !sub.is_hidden; patchSubsection(sec.id, sub.id, { is_hidden: next }); queueEdit("menu_subsections", sub.id, sub.version, { is_hidden: next }); }}
+                    onToggleSoldOut={() => { const next = isSoldOutToday(sub.sold_out_date) ? null : todayISO(); patchSubsection(sec.id, sub.id, { sold_out_date: next }); queueEdit("menu_subsections", sub.id, sub.version, { sold_out_date: next }); }}
+                    onToggleDoNotTranslate={() => { const next = !sub.do_not_translate; patchSubsection(sec.id, sub.id, { do_not_translate: next }); queueEdit("menu_subsections", sub.id, sub.version, { do_not_translate: next }); }}
+                    onTranslateMissing={() => handleTranslateMissing("menu_subsections", sub.id)}
+                    canTranslateMissing={!sub.do_not_translate && !isTempUnresolved(sub.id) && ((!!sub.name?.trim() !== !!sub.name_en?.trim()) || (!!sub.description?.trim() !== !!sub.description_en?.trim()))}
+                  />
+                </div>
+              );
+            }
+            // item
+            const sec = sections.find((s) => s.id === settingsTarget.sectionId);
+            const sub = sec?.subsections.find((ss) => ss.id === settingsTarget.subId);
+            const item = sub?.items.find((i) => i.id === settingsTarget.itemId);
+            if (!sec || !sub || !item) return null;
+            return (
+              <div className="space-y-5">
+                <SheetHeader>
+                  <SheetTitle>Item settings</SheetTitle>
+                  <SheetDescription>Edit name, price, description, and modifications.</SheetDescription>
+                </SheetHeader>
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Name</Label>
+                  <BilingualField
+                    fr={item.title} en={item.title_en}
+                    sourceLang={item.title_source_lang}
+                    isManualOverrideFr={item.title_source_lang === "en" && item.title_is_manual_override}
+                    isManualOverrideEn={item.title_source_lang === "fr" && item.title_is_manual_override}
+                    doNotTranslate={item.do_not_translate}
+                    placeholderFr="Titre" placeholderEn="Title"
+                    onChange={({ fr, en, hint }) => {
+                      patchItem(sec.id, sub.id, item.id, { title: fr, title_en: en });
+                      queueEdit("menu_items", item.id, item.version, { title: fr, title_en: en, title_source_lang_hint: hint });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Price</Label>
+                  <PriceInput
+                    cents={item.base_price_cents}
+                    onCommit={(cents) => {
+                      patchItem(sec.id, sub.id, item.id, { base_price_cents: cents });
+                      queueEdit("menu_items", item.id, item.version, { base_price_cents: cents });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Description</Label>
+                  <BilingualField
+                    multiline rows={2}
+                    fr={item.description} en={item.description_en}
+                    sourceLang={item.description_source_lang}
+                    isManualOverrideFr={item.description_source_lang === "en" && item.description_is_manual_override}
+                    isManualOverrideEn={item.description_source_lang === "fr" && item.description_is_manual_override}
+                    doNotTranslate={item.do_not_translate}
+                    placeholderFr="Description" placeholderEn="Description"
+                    onChange={({ fr, en, hint }) => {
+                      patchItem(sec.id, sub.id, item.id, { description: fr, description_en: en });
+                      queueEdit("menu_items", item.id, item.version, { description: fr, description_en: en, description_source_lang_hint: hint });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Modifications</Label>
+                  {item.modifications.length === 0 && (
+                    <p className="text-xs text-muted-foreground">None yet</p>
+                  )}
+                  <div className="space-y-1.5">
+                    {item.modifications.map((m, mIdx) => (
+                      <div key={m.id} className={cn("flex items-center gap-1.5", failedTempIds.has(m.id) && "ring-2 ring-destructive rounded", savingTempIds.has(m.id) && "opacity-70")}>
+                        <Input
+                          className="h-8 flex-1"
+                          value={m.modification_name}
+                          onChange={(e) => {
+                            patchMod(sec.id, sub.id, item.id, m.id, { modification_name: e.target.value });
+                            queueEdit("item_modifications", m.id, m.version, { modification_name: e.target.value });
+                          }}
+                          placeholder="Modification"
+                        />
+                        <PriceInput
+                          className="h-8 w-20"
+                          cents={m.price_modifier_cents}
+                          onCommit={(cents) => {
+                            patchMod(sec.id, sub.id, item.id, m.id, { price_modifier_cents: cents });
+                            queueEdit("item_modifications", m.id, m.version, { price_modifier_cents: cents });
+                          }}
+                        />
+                        <Button size="icon" variant="ghost" className="h-7 w-7" disabled={mIdx === 0} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx - 1)} aria-label="Move up">
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" disabled={mIdx === item.modifications.length - 1} onClick={() => move("item_modifications", item.modifications.map((x) => x.id), mIdx, mIdx + 1)} aria-label="Move down">
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeRow("item_modifications", m.id)} aria-label="Delete">
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" variant="outline" disabled={isTempUnresolved(item.id)} onClick={() => addMod(sec.id, sub.id, item.id)}>
+                    <Plus className="h-3 w-3" /> Add modification
+                  </Button>
+                </div>
+                <Separator />
+                <SettingsActions
+                  hidden={item.is_hidden}
+                  soldOut={isSoldOutToday(item.sold_out_date)}
+                  doNotTranslate={item.do_not_translate}
+                  onToggleHidden={() => { const next = !item.is_hidden; patchItem(sec.id, sub.id, item.id, { is_hidden: next }); queueEdit("menu_items", item.id, item.version, { is_hidden: next }); }}
+                  onToggleSoldOut={() => { const next = isSoldOutToday(item.sold_out_date) ? null : todayISO(); patchItem(sec.id, sub.id, item.id, { sold_out_date: next }); queueEdit("menu_items", item.id, item.version, { sold_out_date: next }); }}
+                  onToggleDoNotTranslate={() => { const next = !item.do_not_translate; patchItem(sec.id, sub.id, item.id, { do_not_translate: next }); queueEdit("menu_items", item.id, item.version, { do_not_translate: next }); }}
+                  onTranslateMissing={() => handleTranslateMissing("menu_items", item.id)}
+                  canTranslateMissing={!item.do_not_translate && !isTempUnresolved(item.id) && ((!!item.title?.trim() !== !!item.title_en?.trim()) || (!!item.description?.trim() !== !!item.description_en?.trim()))}
+                />
+              </div>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
