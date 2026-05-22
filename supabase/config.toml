@@ -1,1 +1,4 @@
 project_id = "txehzjvcsdjehshizzjl"
+
+[functions.get-announcement]
+verify_jwt = false
