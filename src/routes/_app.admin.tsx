@@ -83,6 +83,20 @@ function AdminPage() {
 
       <Card className="mb-6">
         <CardHeader>
+          <CardTitle>Announcement bar</CardTitle>
+          <CardDescription>Manage the announcement bar shown on the customer-facing website.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to="/announcements">
+              <Megaphone className="h-4 w-4 mr-2" /> Open announcement editor
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
           <CardTitle>Live Menu timetable</CardTitle>
           <CardDescription>Schedule which menu shows on the Live Menu display by day and time.</CardDescription>
         </CardHeader>
