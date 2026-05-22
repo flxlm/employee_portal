@@ -597,6 +597,34 @@ function EventsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={estimatePreview !== null} onOpenChange={(o) => !o && setEstimatePreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {estimatePreview?.language === "french" ? "French" : "English"} estimate draft
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button size="sm" onClick={handleCopyEstimate}>
+              <Copy className="h-4 w-4 mr-1.5" />
+              Copy to Clipboard
+            </Button>
+          </div>
+          {estimatePreview?.subject && (
+            <div className="text-sm">
+              <span className="text-muted-foreground uppercase tracking-wide text-xs mr-2">Subject</span>
+              {estimatePreview.subject}
+            </div>
+          )}
+          <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded border p-3 text-sm bg-muted/30">
+            {estimatePreview?.body}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEstimatePreview(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
