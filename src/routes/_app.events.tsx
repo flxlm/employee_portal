@@ -409,6 +409,27 @@ function EventsPage() {
                       <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{formatSheetDate(e.eventDate) || "No date"}</div>
                       <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />{e.guests || "?"} guests · {e.reservationType || "—"}</div>
                       <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{e.startTime || "—"} → {e.endTime || "—"}</div>
+                      <div
+                        className="pt-2 flex items-center gap-2"
+                        onClick={(ev) => ev.stopPropagation()}
+                      >
+                        <span className="text-xs uppercase tracking-wide">Change status</span>
+                        <Select
+                          value={e.rawStatus ?? ""}
+                          onValueChange={(v) =>
+                            mutation.mutate({ id: e.id, updates: { rawStatus: v } })
+                          }
+                        >
+                          <SelectTrigger className="h-8 w-[200px] text-xs">
+                            <SelectValue placeholder="Set status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.filter((s) => s !== "").map((s) => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
