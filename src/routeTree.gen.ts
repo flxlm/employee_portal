@@ -24,6 +24,7 @@ import { Route as AppLiveMenuTimetableRouteImport } from './routes/_app.live-men
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppEventsRouteImport } from './routes/_app.events'
+import { Route as AppAnnouncementsRouteImport } from './routes/_app.announcements'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as ApiPublicWebhookRouteImport } from './routes/api/public/webhook'
 import { Route as ApiPublicMenuRefreshRouteImport } from './routes/api/public/menu-refresh'
@@ -104,6 +105,11 @@ const AppEventsRoute = AppEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAnnouncementsRoute = AppAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
+  '/announcements': typeof AppAnnouncementsRoute
   '/events': typeof AppEventsRoute
   '/home': typeof AppHomeRoute
   '/inventory': typeof AppInventoryRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AppAdminRoute
+  '/announcements': typeof AppAnnouncementsRoute
   '/events': typeof AppEventsRoute
   '/home': typeof AppHomeRoute
   '/inventory': typeof AppInventoryRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/menu': typeof MenuRoute
   '/signup': typeof SignupRoute
   '/_app/admin': typeof AppAdminRoute
+  '/_app/announcements': typeof AppAnnouncementsRoute
   '/_app/events': typeof AppEventsRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/inventory': typeof AppInventoryRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/signup'
     | '/admin'
+    | '/announcements'
     | '/events'
     | '/home'
     | '/inventory'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/signup'
     | '/admin'
+    | '/announcements'
     | '/events'
     | '/home'
     | '/inventory'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/signup'
     | '/_app/admin'
+    | '/_app/announcements'
     | '/_app/events'
     | '/_app/home'
     | '/_app/inventory'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/announcements': {
+      id: '/_app/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AppAnnouncementsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -423,6 +442,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
+  AppAnnouncementsRoute: typeof AppAnnouncementsRoute
   AppEventsRoute: typeof AppEventsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppInventoryRoute: typeof AppInventoryRoute
@@ -436,6 +456,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
+  AppAnnouncementsRoute: AppAnnouncementsRoute,
   AppEventsRoute: AppEventsRoute,
   AppHomeRoute: AppHomeRoute,
   AppInventoryRoute: AppInventoryRoute,
