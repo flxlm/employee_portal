@@ -185,6 +185,10 @@ function EventsPage() {
   }, [search.status]);
   const draftFn = useServerFn(draftEstimateEmail);
   const [drafting, setDrafting] = useState<null | "english" | "french">(null);
+  const [estimatePreview, setEstimatePreview] = useState<
+    | { language: "english" | "french"; subject: string; body: string }
+    | null
+  >(null);
 
   const handleDraftEstimate = async (language: "english" | "french") => {
     if (!selected) return;
@@ -196,19 +200,21 @@ function EventsPage() {
         if (v) inquiry[f.label] = v;
       }
       const result = await draftFn({ data: { eventId: selected.id, language, inquiry } });
-      const subject = encodeURIComponent(result.subject || "");
-      const body = encodeURIComponent(result.body || "");
-      try {
-        await navigator.clipboard.writeText(result.body || "");
-        toast.success("Copied to clipboard.");
-      } catch {
-        toast.error("Could not copy to clipboard.");
-      }
-      window.open(`mailto:${selected.email}?subject=${subject}&body=${body}`, "_blank");
+      setEstimatePreview({ language, subject: result.subject || "", body: result.body || "" });
     } catch (e) {
       toast.error(`Draft failed: ${(e as Error).message}`);
     } finally {
       setDrafting(null);
+    }
+  };
+
+  const handleCopyEstimate = async () => {
+    if (!estimatePreview) return;
+    try {
+      await navigator.clipboard.writeText(estimatePreview.body);
+      toast.success("Copied to clipboard.");
+    } catch {
+      toast.error("Could not copy to clipboard.");
     }
   };
 
