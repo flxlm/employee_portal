@@ -400,28 +400,17 @@ function EventsPage() {
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between gap-2">
                         <CardTitle className="text-base font-medium truncate">{e.email || "—"}</CardTitle>
-                        <span className={`text-xs px-2 py-0.5 rounded border ${statusVariant(e.bucket)}`}>
-                          {e.status}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-1 text-muted-foreground">
-                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{formatSheetDate(e.eventDate) || "No date"}</div>
-                      <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />{e.guests || "?"} guests · {e.reservationType || "—"}</div>
-                      <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{e.startTime || "—"} → {e.endTime || "—"}</div>
-                      <div
-                        className="pt-2 flex items-center gap-2"
-                        onClick={(ev) => ev.stopPropagation()}
-                      >
-                        <span className="text-xs uppercase tracking-wide">Change status</span>
                         <Select
                           value={e.rawStatus ?? ""}
                           onValueChange={(v) =>
                             mutation.mutate({ id: e.id, updates: { rawStatus: v } })
                           }
                         >
-                          <SelectTrigger className="h-8 w-[200px] text-xs">
-                            <SelectValue placeholder="Set status" />
+                          <SelectTrigger
+                            className={`h-auto w-auto text-xs px-2 py-0.5 rounded border ${statusVariant(e.bucket)} focus:ring-0 focus:ring-offset-0`}
+                            onClick={(ev) => ev.stopPropagation()}
+                          >
+                            <SelectValue>{e.status}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {STATUS_OPTIONS.filter((s) => s !== "").map((s) => (
@@ -430,6 +419,11 @@ function EventsPage() {
                           </SelectContent>
                         </Select>
                       </div>
+                    </CardHeader>
+                    <CardContent className="text-sm space-y-1 text-muted-foreground">
+                      <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />{formatSheetDate(e.eventDate) || "No date"}</div>
+                      <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />{e.guests || "?"} guests · {e.reservationType || "—"}</div>
+                      <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{e.startTime || "—"} → {e.endTime || "—"}</div>
                     </CardContent>
                   </Card>
                 ))}
