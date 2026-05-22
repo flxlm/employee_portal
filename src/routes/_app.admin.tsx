@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -76,20 +76,6 @@ function AdminPage() {
           <Button asChild variant="outline">
             <Link to="/menu-formatting">
               <Type className="h-4 w-4 mr-2" /> Open formatting editor
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Announcement bar</CardTitle>
-          <CardDescription>Manage the announcement bar shown on the customer-facing website.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
-            <Link to="/announcements">
-              <Megaphone className="h-4 w-4 mr-2" /> Open announcement editor
             </Link>
           </Button>
         </CardContent>
