@@ -198,6 +198,12 @@ function EventsPage() {
       const result = await draftFn({ data: { language, inquiry } });
       const subject = encodeURIComponent(result.subject || "");
       const body = encodeURIComponent(result.body || "");
+      try {
+        await navigator.clipboard.writeText(result.body || "");
+        toast.success("Copied to clipboard.");
+      } catch {
+        toast.error("Could not copy to clipboard.");
+      }
       window.open(`mailto:${selected.email}?subject=${subject}&body=${body}`, "_blank");
     } catch (e) {
       toast.error(`Draft failed: ${(e as Error).message}`);
