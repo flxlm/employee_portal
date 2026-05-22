@@ -195,7 +195,7 @@ function EventsPage() {
         const v = (selected[f.key] as string) ?? "";
         if (v) inquiry[f.label] = v;
       }
-      const result = await draftFn({ data: { language, inquiry } });
+      const result = await draftFn({ data: { eventId: selected.id, language, inquiry } });
       const subject = encodeURIComponent(result.subject || "");
       const body = encodeURIComponent(result.body || "");
       try {
