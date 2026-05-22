@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      estimate_email_drafts: {
+        Row: {
+          body: string
+          created_at: string
+          event_id: string
+          language: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          event_id: string
+          language: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          event_id?: string
+          language?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_inquiries: {
         Row: {
           arrival_time: string
