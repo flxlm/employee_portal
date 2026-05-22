@@ -561,7 +561,7 @@ function EventsPage() {
                       ) : (
                         <Sparkles className="h-4 w-4 mr-1.5" />
                       )}
-                      Send French Estimate
+                      Generate French Estimate
                     </Button>
                   </div>
                   <div className="pt-2">
