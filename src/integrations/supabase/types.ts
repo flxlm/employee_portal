@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          background_color: string
+          id: string
+          is_enabled: boolean
+          link_text: string | null
+          link_url: string | null
+          message: string
+          text_color: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          background_color?: string
+          id?: string
+          is_enabled?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          text_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          background_color?: string
+          id?: string
+          is_enabled?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          text_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string
