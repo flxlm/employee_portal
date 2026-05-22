@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, RefreshCw, Loader2, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Calendar, Users, Clock, RefreshCw, Loader2, Pencil, Sparkles, Trash2, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -185,6 +185,10 @@ function EventsPage() {
   }, [search.status]);
   const draftFn = useServerFn(draftEstimateEmail);
   const [drafting, setDrafting] = useState<null | "english" | "french">(null);
+  const [estimatePreview, setEstimatePreview] = useState<
+    | { language: "english" | "french"; subject: string; body: string }
+    | null
+  >(null);
 
   const handleDraftEstimate = async (language: "english" | "french") => {
     if (!selected) return;
@@ -196,19 +200,21 @@ function EventsPage() {
         if (v) inquiry[f.label] = v;
       }
       const result = await draftFn({ data: { eventId: selected.id, language, inquiry } });
-      const subject = encodeURIComponent(result.subject || "");
-      const body = encodeURIComponent(result.body || "");
-      try {
-        await navigator.clipboard.writeText(result.body || "");
-        toast.success("Copied to clipboard.");
-      } catch {
-        toast.error("Could not copy to clipboard.");
-      }
-      window.open(`mailto:${selected.email}?subject=${subject}&body=${body}`, "_blank");
+      setEstimatePreview({ language, subject: result.subject || "", body: result.body || "" });
     } catch (e) {
       toast.error(`Draft failed: ${(e as Error).message}`);
     } finally {
       setDrafting(null);
+    }
+  };
+
+  const handleCopyEstimate = async () => {
+    if (!estimatePreview) return;
+    try {
+      await navigator.clipboard.writeText(estimatePreview.body);
+      toast.success("Copied to clipboard.");
+    } catch {
+      toast.error("Could not copy to clipboard.");
     }
   };
 
@@ -542,7 +548,7 @@ function EventsPage() {
                       ) : (
                         <Sparkles className="h-4 w-4 mr-1.5" />
                       )}
-                      Send English Estimate
+                      Generate English Estimate
                     </Button>
                     <Button
                       size="sm"
@@ -555,7 +561,7 @@ function EventsPage() {
                       ) : (
                         <Sparkles className="h-4 w-4 mr-1.5" />
                       )}
-                      Send French Estimate
+                      Generate French Estimate
                     </Button>
                   </div>
                   <div className="pt-2">
@@ -589,6 +595,34 @@ function EventsPage() {
               )}
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={estimatePreview !== null} onOpenChange={(o) => !o && setEstimatePreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {estimatePreview?.language === "french" ? "French" : "English"} estimate draft
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button size="sm" onClick={handleCopyEstimate}>
+              <Copy className="h-4 w-4 mr-1.5" />
+              Copy to Clipboard
+            </Button>
+          </div>
+          {estimatePreview?.subject && (
+            <div className="text-sm">
+              <span className="text-muted-foreground uppercase tracking-wide text-xs mr-2">Subject</span>
+              {estimatePreview.subject}
+            </div>
+          )}
+          <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded border p-3 text-sm bg-muted/30">
+            {estimatePreview?.body}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEstimatePreview(null)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
