@@ -36,15 +36,31 @@ async function fetchDocText(): Promise<string> {
 
 export const draftEstimateEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { language: "english" | "french"; inquiry: Record<string, string> }) =>
+  .inputValidator((d: { eventId: string; language: "english" | "french"; inquiry: Record<string, string>; force?: boolean }) =>
     z
       .object({
+        eventId: z.string().min(1),
         language: z.enum(["english", "french"]),
         inquiry: z.record(z.string(), z.string()),
+        force: z.boolean().optional(),
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    if (!data.force) {
+      const { data: cached } = await supabase
+        .from("estimate_email_drafts")
+        .select("subject, body")
+        .eq("event_id", data.eventId)
+        .eq("language", data.language)
+        .maybeSingle();
+      if (cached && (cached.body || cached.subject)) {
+        return { subject: cached.subject ?? "", body: cached.body ?? "", cached: true };
+      }
+    }
+
     const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
@@ -92,8 +108,16 @@ ${docText}
     } catch {
       parsed = { subject: "", body: content };
     }
-    return {
-      subject: parsed.subject ?? "",
-      body: parsed.body ?? "",
-    };
+    const subject = parsed.subject ?? "";
+    const body = parsed.body ?? "";
+
+    await supabase
+      .from("estimate_email_drafts")
+      .upsert(
+        { event_id: data.eventId, language: data.language, subject, body, updated_at: new Date().toISOString() },
+        { onConflict: "event_id,language" },
+      );
+
+    return { subject, body, cached: false };
   });
+
