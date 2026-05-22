@@ -133,6 +133,7 @@ function AppLayout() {
     { to: "/inventory", label: "Inventory", icon: Package },
     
     
+    ...(isAdmin ? [{ to: "/announcements", label: "Announcements", icon: Megaphone } as NavItem] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Users } as NavItem] : []),
   ];
 
