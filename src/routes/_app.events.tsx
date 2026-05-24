@@ -331,7 +331,8 @@ function EventsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
                 <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
-                  <SelectTrigger className="w-[220px] h-10 font-medium">
+                  <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
+
                     <span className="flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${bucketDot(bucketFilter)}`} />
                       <SelectValue />
