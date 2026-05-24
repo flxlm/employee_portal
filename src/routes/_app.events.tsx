@@ -283,7 +283,8 @@ function EventsPage() {
     }, {});
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
+
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl">Event Inquiries</h1>
