@@ -326,9 +326,10 @@ function EventsPage() {
         });
         return (
           <>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="flex flex-wrap items-center gap-3 mr-auto">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:mr-auto min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
                 <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
                   <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
