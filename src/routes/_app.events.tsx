@@ -283,7 +283,8 @@ function EventsPage() {
     }, {});
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
+
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl">Event Inquiries</h1>
@@ -325,12 +326,14 @@ function EventsPage() {
         });
         return (
           <>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="flex flex-wrap items-center gap-3 mr-auto">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:mr-auto min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</span>
                 <Select value={bucketFilter} onValueChange={(v) => { setBucketFilter(v); setOngoingSub("ALL"); }}>
-                  <SelectTrigger className="w-[220px] h-10 font-medium">
+                  <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
+
                     <span className="flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${bucketDot(bucketFilter)}`} />
                       <SelectValue />
@@ -351,10 +354,11 @@ function EventsPage() {
               </div>
 
               {bucketFilter === "ONGOING" && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+
                   <span className="text-muted-foreground">›</span>
                   <Select value={ongoingSub} onValueChange={setOngoingSub}>
-                    <SelectTrigger className="w-[220px] h-10 font-medium">
+                    <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -375,10 +379,11 @@ function EventsPage() {
               )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[240px] h-11 border-2 shadow-sm">
+                  <SelectTrigger className="w-full sm:w-[240px] h-11 border-2 shadow-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
