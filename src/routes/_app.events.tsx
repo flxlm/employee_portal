@@ -356,7 +356,7 @@ function EventsPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">›</span>
                   <Select value={ongoingSub} onValueChange={setOngoingSub}>
-                    <SelectTrigger className="w-[220px] h-10 font-medium">
+                    <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
