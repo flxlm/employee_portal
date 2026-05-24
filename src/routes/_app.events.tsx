@@ -354,7 +354,8 @@ function EventsPage() {
               </div>
 
               {bucketFilter === "ONGOING" && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+
                   <span className="text-muted-foreground">›</span>
                   <Select value={ongoingSub} onValueChange={setOngoingSub}>
                     <SelectTrigger className="w-full sm:w-[220px] h-10 font-medium">
