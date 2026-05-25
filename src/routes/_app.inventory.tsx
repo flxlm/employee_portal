@@ -462,6 +462,7 @@ function InventoryPage() {
         open={addItemOpen}
         onClose={() => setAddItemOpen(false)}
         categoryId={activeCategory}
+        categories={categories}
         userId={user?.id ?? null}
       />
 
@@ -708,13 +709,16 @@ function AddItemDialog({
   open,
   onClose,
   categoryId,
+  categories,
   userId,
 }: {
   open: boolean;
   onClose: () => void;
   categoryId: string;
+  categories: InventoryCategory[];
   userId: string | null;
 }) {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");
   const [qty, setQty] = useState("0");
@@ -726,6 +730,10 @@ function AddItemDialog({
   ]);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (open) setSelectedCategoryId(categoryId || categories[0]?.id || "");
+  }, [open, categoryId, categories]);
+
   const reset = () => {
     setName(""); setUnit(""); setQty("0"); setPar("0"); setThreshold("0"); setNotes("");
     setSuppliers([{ supplier: "", cost: "", pack_size: "1", notes: "" }]);
@@ -736,7 +744,7 @@ function AddItemDialog({
   };
 
   const submit = async () => {
-    if (!name.trim() || !categoryId) {
+    if (!name.trim() || !selectedCategoryId) {
       toast.error("Name and category required");
       return;
     }
@@ -747,7 +755,7 @@ function AddItemDialog({
     const { data: inserted, error } = await supabase
       .from("inventory_items")
       .insert({
-        category_id: categoryId,
+        category_id: selectedCategoryId,
         name: name.trim(),
         unit: unit.trim(),
         current_quantity: Number(qty) || 0,
@@ -790,9 +798,18 @@ function AddItemDialog({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Add inventory item</DialogTitle>
-          <DialogDescription>New item in the current category.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 max-h-[70vh] overflow-y-auto pr-1">
+          <Field label="Category">
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
           <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Unit"><Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="kg, L, bags…" /></Field>
