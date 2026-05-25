@@ -893,7 +893,7 @@ function MenuEditorPage() {
     const optimistic: MenuItem = {
       id: tempId,
       subsection_id: subId,
-      title: "New item",
+      title: "",
       title_en: null,
       title_source_lang: "fr",
       title_translated_from: null,
@@ -915,7 +915,7 @@ function MenuEditorPage() {
     runOptimisticInsert({
       table: "menu_items",
       tempId,
-      values: { subsection_id: subId, title: "New item", base_price_cents: 0, display_order: order },
+      values: { subsection_id: subId, title: "", base_price_cents: 0, display_order: order },
       onReconcile: (real) => {
         setSections((s) =>
           s.map((x) =>
