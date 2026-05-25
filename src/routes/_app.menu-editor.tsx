@@ -389,11 +389,35 @@ function MenuEditorPage() {
   const del = useServerFn(softDeleteRow);
   const reorder = useServerFn(reorderRows);
   const translateMissing = useServerFn(translateMissingRow);
+
+  // Flush a single row's pending dirty write to the DB before translating so the
+  // server sees the user's latest typed content rather than the stale DB value.
+  const flushOne = async (table: string, id: string) => {
+    const key = `${table}:${id}`;
+    const d = dirtyRef.current.get(key);
+    if (!d || isPendingTemp(id)) return;
+    dirtyRef.current.delete(key);
+    setDirtyCount(dirtyRef.current.size);
+    setSavingCount((c) => c + 1);
+    try {
+      await update({
+        data: { table: d.table as never, id: d.id, expectedVersion: d.expectedVersion, patch: d.patch as never },
+      });
+    } catch (e) {
+      dirtyRef.current.set(key, d);
+      setDirtyCount(dirtyRef.current.size);
+      throw e;
+    } finally {
+      setSavingCount((c) => Math.max(0, c - 1));
+    }
+  };
+
   const handleTranslateMissing = async (
     table: "menu_sections" | "menu_subsections" | "menu_items",
     id: string,
   ) => {
     try {
+      await flushOne(table, id);
       const r = await translateMissing({ data: { table, id } });
       if (r.translated > 0) {
         toast.success(`Translated ${r.translated} field${r.translated > 1 ? "s" : ""}`);
