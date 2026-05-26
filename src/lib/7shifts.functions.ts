@@ -81,20 +81,14 @@ export const getLaborCost = createServerFn({ method: "GET" })
       roleMap.set(r.id, r.name);
     }
 
-    // 2. Fetch all time punches for the week (paginated)
-    const punches: any[] = [];
-    let cursor: string | null = null;
-    do {
-      const qs = new URLSearchParams({
-        start: monday.toISOString(),
-        end: sunday.toISOString(),
-        limit: "500",
-      });
-      if (cursor) qs.set("cursor", cursor);
-      const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
-      punches.push(...(punchRes.data ?? []));
-      cursor = punchRes.meta?.cursor ?? null;
-    } while (cursor);
+    // 2. Fetch time punches for the week (single request — a week never exceeds 500 punches)
+    const qs = new URLSearchParams({
+      start: monday.toISOString(),
+      end: sunday.toISOString(),
+      limit: "500",
+    });
+    const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
+    const punches: any[] = punchRes.data ?? [];
 
     // 3. Aggregate by role
     type Acc = {
