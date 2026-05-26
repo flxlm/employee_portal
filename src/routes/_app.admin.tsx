@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, type LaborCostResult, type RoleHours } from "@/lib/7shifts.functions";
+import { getLaborCost, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_app/admin")({
   beforeLoad: async () => {
@@ -50,15 +50,15 @@ function fmtHours(h: number): string {
 
 function fmtCost(c: number | null): string {
   if (c === null) return "—";
-  return "$" + c.toFixed(2);
+  return "$" + c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function LaborCostSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-44 w-full" />
       <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>
@@ -67,70 +67,82 @@ function LaborCostSkeleton() {
 }
 
 function LaborCostContent({ data }: { data: LaborCostResult }) {
+  const hasCost = data.departments.some((d) => d.laborCost !== null);
   return (
     <div className="space-y-6">
-      <LaborBarChart roles={data.roles} />
-      <LaborTable roles={data.roles} totalEstimatedCost={data.totalEstimatedCost} />
+      <LaborBarChart departments={data.departments} hasCost={hasCost} />
+      <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} />
     </div>
   );
 }
 
-function LaborBarChart({ roles }: { roles: RoleHours[] }) {
-  if (roles.length === 0) {
+function LaborBarChart({ departments, hasCost }: { departments: DeptCost[]; hasCost: boolean }) {
+  if (departments.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8">
         No time punches recorded for this week.
       </p>
     );
   }
-  const data = roles.map((r) => ({
-    role: r.roleName.length > 14 ? r.roleName.slice(0, 13) + "…" : r.roleName,
-    Hours: parseFloat(r.totalHours.toFixed(1)),
+  const chartData = departments.map((d) => ({
+    name: d.departmentName,
+    value: hasCost ? parseFloat((d.laborCost ?? 0).toFixed(2)) : parseFloat(d.totalHours.toFixed(1)),
   }));
   return (
-    <div className="h-52 w-full">
+    <div className="h-44 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 4 }}>
+        <BarChart data={chartData} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-          <XAxis dataKey="role" tick={{ fontSize: 11 }} />
-          <YAxis tickFormatter={(v) => `${v}h`} tick={{ fontSize: 11 }} />
+          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+          <YAxis
+            tickFormatter={(v) => hasCost ? `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}` : `${v}h`}
+            tick={{ fontSize: 11 }}
+          />
           <Tooltip
-            formatter={(value: number) => [`${value.toFixed(1)}h`, "Hours"]}
+            formatter={(value: number) => [
+              hasCost ? fmtCost(value) : fmtHours(value),
+              hasCost ? "Labor Cost" : "Hours",
+            ]}
             contentStyle={{ fontSize: 12 }}
           />
-          <Bar dataKey="Hours" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEstimatedCost: number | null }) {
-  const showCost = roles.some((r) => r.estimatedCost !== null);
-  const totalAll = roles.reduce((s, r) => s + r.totalHours, 0);
+function LaborTable({
+  departments, totalHours, totalLaborCost,
+}: {
+  departments: DeptCost[];
+  totalHours: number;
+  totalLaborCost: number | null;
+}) {
+  const hasCost = departments.some((d) => d.laborCost !== null);
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Role</TableHead>
-          <TableHead className="text-right">Total Hours</TableHead>
-          {showCost && <TableHead className="text-right">Est. Cost</TableHead>}
+          <TableHead>Department</TableHead>
+          <TableHead className="text-right">Hours</TableHead>
+          {hasCost && <TableHead className="text-right">Labor Cost</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
-        {roles.map((r) => (
-          <TableRow key={r.roleId}>
-            <TableCell className="font-medium">{r.roleName}</TableCell>
-            <TableCell className="text-right tabular-nums font-medium">{fmtHours(r.totalHours)}</TableCell>
-            {showCost && <TableCell className="text-right tabular-nums">{fmtCost(r.estimatedCost)}</TableCell>}
+        {departments.map((d) => (
+          <TableRow key={d.departmentId}>
+            <TableCell className="font-medium">{d.departmentName}</TableCell>
+            <TableCell className="text-right tabular-nums">{fmtHours(d.totalHours)}</TableCell>
+            {hasCost && <TableCell className="text-right tabular-nums font-medium">{fmtCost(d.laborCost)}</TableCell>}
           </TableRow>
         ))}
       </TableBody>
       <TableFooter>
         <TableRow>
           <TableCell className="font-semibold">Total</TableCell>
-          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalAll)}</TableCell>
-          {showCost && <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalEstimatedCost)}</TableCell>}
+          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalHours)}</TableCell>
+          {hasCost && <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalLaborCost)}</TableCell>}
         </TableRow>
       </TableFooter>
     </Table>
@@ -167,8 +179,7 @@ function AdminPage() {
   const { data, isLoading } = useQuery({ queryKey: ["allowed-emails"], queryFn: () => list() });
 
   const addMut = useMutation({
-    mutationFn: (vars: { email: string; as_admin: boolean }) =>
-      add({ data: vars }),
+    mutationFn: (vars: { email: string; as_admin: boolean }) => add({ data: vars }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["allowed-emails"] });
       setEmail("");
@@ -267,16 +278,16 @@ function AdminPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-2">
             <div>
               <CardTitle><DollarSign className="h-4 w-4 inline mr-2" />Labor Cost</CardTitle>
               <CardDescription className="mt-1">
                 {laborData
                   ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}`
-                  : "Current week hours by role"}
+                  : "Current week labor cost by department"}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => setWeekOffset((o) => o - 1)}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>

@@ -2,23 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type RoleHours = {
-  roleId: number;
-  roleName: string;
-  regularHours: number;
-  overtimeHours: number;
+export type DeptCost = {
+  departmentId: number;
+  departmentName: string;
   totalHours: number;
-  estimatedCost: number | null;
+  laborCost: number | null;
 };
 
 export type LaborCostResult = {
   weekStart: string;
   weekEnd: string;
-  roles: RoleHours[];
-  totalRegularHours: number;
-  totalOvertimeHours: number;
+  departments: DeptCost[];
   totalHours: number;
-  totalEstimatedCost: number | null;
+  totalLaborCost: number | null;
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
@@ -78,14 +74,22 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    // 1. Get roles → Map<id, name>
-    const rolesRes = await shifts7fetch(`/company/${companyId}/roles`, apiKey);
-    const roleMap = new Map<number, string>();
-    for (const r of rolesRes.data ?? []) {
-      roleMap.set(r.id, r.name);
+    // 1. Fetch departments → Map<departmentId, name>
+    const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
+    const deptMap = new Map<number, string>();
+    for (const d of deptsRes.data ?? []) {
+      deptMap.set(d.id, d.name);
     }
 
-    // 2. Fetch time punches for the week
+    // 2. Fetch employees → Map<userId, hourlyWage>
+    const usersRes = await shifts7fetch(`/company/${companyId}/users?limit=500`, apiKey);
+    const wageMap = new Map<number, number | null>();
+    for (const u of usersRes.data ?? []) {
+      const w = u.wage ?? u.wage_rate ?? u.hourly_rate ?? u.pay_rate ?? null;
+      wageMap.set(u.id, typeof w === "number" && w > 0 ? w : null);
+    }
+
+    // 3. Fetch time punches for the week
     const qs = new URLSearchParams({
       start: monday.toISOString(),
       end: sunday.toISOString(),
@@ -94,63 +98,61 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
     const punches: any[] = punchRes.data ?? [];
 
-    // 3. Aggregate by role — compute hours from clocked_in/clocked_out timestamps
+    // 4. Aggregate by department
     type Acc = {
-      roleName: string;
-      regularHours: number;
-      overtimeHours: number;
-      estimatedCost: number | null;
+      departmentName: string;
+      totalHours: number;
+      laborCost: number;
       hasAllWages: boolean;
     };
     const accMap = new Map<number, Acc>();
 
     for (const punch of punches) {
-      const roleId: number = punch.role_id ?? 0;
-      const roleName = roleMap.get(roleId) ?? (roleId === 0 ? "Unassigned" : `Unknown Role #${roleId}`);
+      const deptId: number = punch.department_id ?? 0;
+      const deptName = deptMap.get(deptId) ?? (deptId === 0 ? "Unassigned" : `Department #${deptId}`);
 
-      // Calculate hours from timestamps; fall back to API fields if present
       let hours = 0;
       if (punch.clocked_in && punch.clocked_out) {
         hours = (new Date(punch.clocked_out).getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60);
-      } else {
-        hours = (punch.regular_hours ?? 0) + (punch.overtime_hours ?? 0);
       }
       hours = Math.max(0, hours);
 
-      const wageRate: number | null = punch.wage_rate ?? null;
+      const wage: number | null = wageMap.get(punch.user_id) ?? null;
 
-      if (!accMap.has(roleId)) {
-        accMap.set(roleId, { roleName, regularHours: 0, overtimeHours: 0, estimatedCost: 0, hasAllWages: true });
+      if (!accMap.has(deptId)) {
+        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, hasAllWages: true });
       }
-      const acc = accMap.get(roleId)!;
-      acc.regularHours += hours;
+      const acc = accMap.get(deptId)!;
+      acc.totalHours += hours;
 
-      if (wageRate !== null && acc.hasAllWages) {
-        (acc.estimatedCost as number) += hours * wageRate;
+      if (wage !== null && acc.hasAllWages) {
+        acc.laborCost += hours * wage;
       } else {
         acc.hasAllWages = false;
-        acc.estimatedCost = null;
+        acc.laborCost = 0;
       }
     }
 
-    const roles: RoleHours[] = Array.from(accMap.entries()).map(([roleId, acc]) => ({
-      roleId,
-      roleName: acc.roleName,
-      regularHours: acc.regularHours,
-      overtimeHours: acc.overtimeHours,
-      totalHours: acc.regularHours + acc.overtimeHours,
-      estimatedCost: acc.hasAllWages ? acc.estimatedCost : null,
+    const departments: DeptCost[] = Array.from(accMap.entries()).map(([departmentId, acc]) => ({
+      departmentId,
+      departmentName: acc.departmentName,
+      totalHours: acc.totalHours,
+      laborCost: acc.hasAllWages ? acc.laborCost : null,
     }));
 
-    roles.sort((a, b) => b.totalHours - a.totalHours);
+    // FOH before BOH, then anything else alphabetically
+    departments.sort((a, b) => {
+      const order = (n: string) =>
+        /foh|front/i.test(n) ? 0 : /boh|back/i.test(n) ? 1 : 2;
+      return order(a.departmentName) - order(b.departmentName) ||
+        a.departmentName.localeCompare(b.departmentName);
+    });
 
-    const totalRegularHours = roles.reduce((s, r) => s + r.regularHours, 0);
-    const totalOvertimeHours = roles.reduce((s, r) => s + r.overtimeHours, 0);
-    const totalHours = totalRegularHours + totalOvertimeHours;
-    const anyNullCost = roles.some((r) => r.estimatedCost === null);
-    const totalEstimatedCost = anyNullCost
+    const totalHours = departments.reduce((s, d) => s + d.totalHours, 0);
+    const anyNullCost = departments.some((d) => d.laborCost === null);
+    const totalLaborCost = anyNullCost
       ? null
-      : roles.reduce((s, r) => s + (r.estimatedCost ?? 0), 0);
+      : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
 
-    return { weekStart, weekEnd, roles, totalRegularHours, totalOvertimeHours, totalHours, totalEstimatedCost };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost };
   });
