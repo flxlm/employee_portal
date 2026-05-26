@@ -5,13 +5,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
+import { getLaborCost, type LaborCostResult, type RoleHours } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_app/admin")({
   beforeLoad: async () => {
@@ -28,6 +33,129 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
+// ─── Labor Cost helpers & sub-components ────────────────────────────────────
+
+function formatWeekLabel(weekStart: string, weekEnd: string): string {
+  const fmt = (s: string, opts: Intl.DateTimeFormatOptions) =>
+    new Date(s + "T12:00:00Z").toLocaleDateString("en-US", { ...opts, timeZone: "UTC" });
+  const start = fmt(weekStart, { weekday: "short", month: "short", day: "numeric" });
+  const end = fmt(weekEnd, { weekday: "short", month: "short", day: "numeric" });
+  const year = new Date(weekEnd + "T12:00:00Z").getUTCFullYear();
+  return `${start} – ${end}, ${year}`;
+}
+
+function fmtHours(h: number): string {
+  return h.toFixed(1) + "h";
+}
+
+function fmtCost(c: number | null): string {
+  if (c === null) return "—";
+  return "$" + c.toFixed(2);
+}
+
+function LaborCostSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-48 w-full" />
+      <div className="space-y-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LaborCostContent({ data }: { data: LaborCostResult }) {
+  return (
+    <div className="space-y-6">
+      <LaborBarChart roles={data.roles} />
+      <LaborTable roles={data.roles} totalEstimatedCost={data.totalEstimatedCost} />
+    </div>
+  );
+}
+
+function LaborBarChart({ roles }: { roles: RoleHours[] }) {
+  if (roles.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-8">
+        No time punches recorded for this week.
+      </p>
+    );
+  }
+  const data = roles.map((r) => ({
+    role: r.roleName.length > 14 ? r.roleName.slice(0, 13) + "…" : r.roleName,
+    regularHours: parseFloat(r.regularHours.toFixed(1)),
+    overtimeHours: parseFloat(r.overtimeHours.toFixed(1)),
+  }));
+  return (
+    <div className="h-52 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+          <XAxis dataKey="role" tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v) => `${v}h`} tick={{ fontSize: 11 }} />
+          <Tooltip
+            formatter={(value: number, name: string) => [
+              `${value.toFixed(1)}h`,
+              name === "regularHours" ? "Regular" : "Overtime",
+            ]}
+            contentStyle={{ fontSize: 12 }}
+          />
+          <Legend
+            formatter={(value) => (value === "regularHours" ? "Regular" : "Overtime")}
+            wrapperStyle={{ fontSize: 12 }}
+          />
+          <Bar dataKey="regularHours" name="regularHours" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="overtimeHours" name="overtimeHours" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEstimatedCost: number | null }) {
+  const showCost = roles.some((r) => r.estimatedCost !== null);
+  const totalRegular = roles.reduce((s, r) => s + r.regularHours, 0);
+  const totalOvertime = roles.reduce((s, r) => s + r.overtimeHours, 0);
+  const totalAll = totalRegular + totalOvertime;
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Role</TableHead>
+          <TableHead className="text-right">Regular</TableHead>
+          <TableHead className="text-right">Overtime</TableHead>
+          <TableHead className="text-right">Total Hours</TableHead>
+          {showCost && <TableHead className="text-right">Est. Cost</TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {roles.map((r) => (
+          <TableRow key={r.roleId}>
+            <TableCell className="font-medium">{r.roleName}</TableCell>
+            <TableCell className="text-right tabular-nums">{fmtHours(r.regularHours)}</TableCell>
+            <TableCell className="text-right tabular-nums">{fmtHours(r.overtimeHours)}</TableCell>
+            <TableCell className="text-right tabular-nums font-medium">{fmtHours(r.totalHours)}</TableCell>
+            {showCost && <TableCell className="text-right tabular-nums">{fmtCost(r.estimatedCost)}</TableCell>}
+          </TableRow>
+        ))}
+      </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableCell className="font-semibold">Total</TableCell>
+          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalRegular)}</TableCell>
+          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalOvertime)}</TableCell>
+          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalAll)}</TableCell>
+          {showCost && <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalEstimatedCost)}</TableCell>}
+        </TableRow>
+      </TableFooter>
+    </Table>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 function AdminPage() {
   const list = useServerFn(listAllowedEmails);
   const add = useServerFn(addAllowedEmail);
@@ -35,6 +163,14 @@ function AdminPage() {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [asAdmin, setAsAdmin] = useState(false);
+
+  const fetchLaborCost = useServerFn(getLaborCost);
+  const { data: laborData, isLoading: laborLoading, error: laborError } = useQuery({
+    queryKey: ["labor-cost"],
+    queryFn: () => fetchLaborCost(),
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  });
 
   const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
   const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
@@ -142,6 +278,28 @@ function AdminPage() {
               <Save className="h-4 w-4 mr-2" /> {webhookSaving ? "Saving…" : "Save"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle><DollarSign className="h-4 w-4 inline mr-2" />Labor Cost</CardTitle>
+          <CardDescription>
+            {laborData
+              ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}`
+              : "Current week hours by role"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {laborLoading && <LaborCostSkeleton />}
+          {laborError && !laborLoading && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Failed to load labor data</AlertTitle>
+              <AlertDescription>{(laborError as Error).message}</AlertDescription>
+            </Alert>
+          )}
+          {laborData && !laborLoading && <LaborCostContent data={laborData} />}
         </CardContent>
       </Card>
 
