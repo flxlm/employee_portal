@@ -48,7 +48,8 @@ function fmtHours(h: number): string {
   return h.toFixed(1) + "h";
 }
 
-function fmtCost(c: number): string {
+function fmtCost(c: number | null): string {
+  if (c === null) return "—";
   return "$" + c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -82,9 +83,12 @@ function LaborBarChart({ departments }: { departments: DeptCost[] }) {
       </p>
     );
   }
+  const hasCost = departments.some((d) => d.laborCost !== null);
   const chartData = departments.map((d) => ({
     name: d.departmentName,
-    value: parseFloat(d.laborCost.toFixed(2)),
+    value: hasCost
+      ? (d.laborCost !== null ? parseFloat(d.laborCost.toFixed(2)) : 0)
+      : parseFloat(d.totalHours.toFixed(1)),
   }));
   return (
     <div className="h-44 w-full">
@@ -93,11 +97,18 @@ function LaborBarChart({ departments }: { departments: DeptCost[] }) {
           <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis
-            tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
+            tickFormatter={(v) =>
+              hasCost
+                ? `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`
+                : `${v}h`
+            }
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(value: number) => [fmtCost(value), "Labor Cost"]}
+            formatter={(value: number) => [
+              hasCost ? fmtCost(value) : fmtHours(value),
+              hasCost ? "Labor Cost" : "Hours",
+            ]}
             contentStyle={{ fontSize: 12 }}
           />
           <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -110,7 +121,7 @@ function LaborBarChart({ departments }: { departments: DeptCost[] }) {
 function LaborTable({ departments, totalHours, totalLaborCost }: {
   departments: DeptCost[];
   totalHours: number;
-  totalLaborCost: number;
+  totalLaborCost: number | null;
 }) {
   return (
     <Table>
