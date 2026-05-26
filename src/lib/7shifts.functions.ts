@@ -54,8 +54,8 @@ export const getLaborCost = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<LaborCostResult> => {
     await ensureAdmin(context.supabase, context.userId);
 
-    const apiKey = process.env.secret_7shifts_API_key;
-    if (!apiKey) throw new Error("7shifts API key is not configured (secret_7shifts_API_key).");
+    const apiKey = process.env.SECRET_7SHIFTS_API_KEY;
+    if (!apiKey) throw new Error("7shifts API key is not configured (SECRET_7SHIFTS_API_KEY).");
 
     // Compute current ISO week: Monday–Sunday in UTC
     const now = new Date();
