@@ -58,7 +58,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const apiKey = process.env.SECRET_7SHIFTS_API_KEY;
     if (!apiKey) throw new Error("7shifts API key is not configured (SECRET_7SHIFTS_API_KEY).");
 
-    const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID;
+    const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID?.trim();
     if (!companyId) throw new Error("7shifts company ID is not configured (SEVEN_SHIFTS_COMPANY_ID).");
 
     // Compute ISO week Monday
@@ -88,15 +88,13 @@ export const getLaborCost = createServerFn({ method: "GET" })
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
     // 3. Hours & wages report
-    // Endpoint: GET /v2/reports/hours_and_wages
-    // company_id is a query param, not in the path
     const qs = new URLSearchParams({
       company_id: companyId,
       from: weekStart,
       to: weekEnd,
       punches: "true",
     });
-    const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID;
+    const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID?.trim();
     if (locationId) qs.set("location_id", locationId);
     const reportRes = await shifts7fetch(`/reports/hours_and_wages?${qs}`, apiKey);
 
