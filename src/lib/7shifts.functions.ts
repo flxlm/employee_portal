@@ -6,7 +6,7 @@ export type DeptCost = {
   departmentId: number;
   departmentName: string;
   totalHours: number;
-  laborCost: number | null; // null if any punch in this dept has no known wage
+  laborCost: number | null;
 };
 
 export type LaborCostResult = {
@@ -50,7 +50,8 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
 export const getLaborCost = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({ weekOffset: z.number().int().optional().default(0) }).parse(input)
+    // z.coerce.number() because GET params arrive as strings from URL serialization
+    z.object({ weekOffset: z.coerce.number().int().optional().default(0) }).parse(input)
   )
   .handler(async ({ data: input, context }): Promise<LaborCostResult> => {
     await ensureAdmin(context.supabase, context.userId);
@@ -63,7 +64,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
 
     const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID?.trim() || undefined;
 
-    // Compute ISO week Monday–Sunday
+    // Compute ISO week Monday–Sunday with weekOffset
     const now = new Date();
     const day = now.getUTCDay();
     const diffToMon = day === 0 ? -6 : 1 - day;
@@ -89,17 +90,30 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
-    // 3. Wages from hours_and_wages report (approved punches only, but gives us wages)
-    // Key: `${userId}:${roleId}` → hourly wage
-    const wageQs = new URLSearchParams({ company_id: companyId, from: weekStart, to: weekEnd, punches: "true" });
+    // 3. Build wage map from hours_and_wages report.
+    // Look back 4 weeks so we have wages even when the target week has no approved punches.
+    const wageWindowStart = new Date(monday);
+    wageWindowStart.setUTCDate(monday.getUTCDate() - 21);
+    const wageQs = new URLSearchParams({
+      company_id: companyId,
+      from: toISODate(wageWindowStart),
+      to: weekEnd,
+      punches: "true",
+    });
     if (locationId) wageQs.set("location_id", locationId);
+
+    // Key: `${userId}:${roleId}` → hourly wage
     const wageMap = new Map<string, number>();
     try {
       const reportRes = await shifts7fetch(`/reports/hours_and_wages?${wageQs}`, apiKey);
-      for (const userEntry of reportRes.users ?? []) {
+      // Response shape: { data: { users: [...] } } or { users: [...] }
+      const users: any[] = reportRes.data?.users ?? reportRes.users ?? [];
+      for (const userEntry of users) {
+        // user_id is on userEntry, NOT on individual shifts
+        const userId = userEntry.user_id ?? userEntry.id;
         for (const weekEntry of userEntry.weeks ?? []) {
           for (const shift of weekEntry.shifts ?? []) {
-            const key = `${shift.user_id}:${shift.role_id}`;
+            const key = `${userId}:${shift.role_id}`;
             if (!wageMap.has(key) && typeof shift.wage === "number" && shift.wage > 0) {
               wageMap.set(key, shift.wage);
             }
@@ -107,7 +121,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
         }
       }
     } catch {
-      // If the wage report fails, we still show hours below
+      // wage report unavailable; hours will still show, costs will be null
     }
 
     // 4. All time punches for the week (approved AND unapproved)
@@ -120,7 +134,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${punchQs}`, apiKey);
     const punches: any[] = punchRes.data ?? [];
 
-    // 5. Aggregate by department using hours from punches and wages from report
+    // 5. Aggregate by department
     type Acc = {
       departmentName: string;
       totalHours: number;
