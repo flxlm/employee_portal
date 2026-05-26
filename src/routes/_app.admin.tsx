@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
+import { getLaborCost, getLaborDebug, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableC
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight, Bug } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -33,8 +33,6 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-// ─── Labor Cost helpers & sub-components ──────────────────────────────────────────────
-
 function formatWeekLabel(weekStart: string, weekEnd: string): string {
   const fmt = (s: string, opts: Intl.DateTimeFormatOptions) =>
     new Date(s + "T12:00:00Z").toLocaleDateString("en-US", { ...opts, timeZone: "UTC" });
@@ -44,9 +42,7 @@ function formatWeekLabel(weekStart: string, weekEnd: string): string {
   return `${start} – ${end}, ${year}`;
 }
 
-function fmtHours(h: number): string {
-  return h.toFixed(1) + "h";
-}
+function fmtHours(h: number): string { return h.toFixed(1) + "h"; }
 
 function fmtCost(c: number | null): string {
   if (c === null) return "—";
@@ -58,9 +54,7 @@ function LaborCostSkeleton() {
     <div className="space-y-4">
       <Skeleton className="h-44 w-full" />
       <div className="space-y-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
+        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
       </div>
     </div>
   );
@@ -77,11 +71,7 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
 
 function LaborBarChart({ departments }: { departments: DeptCost[] }) {
   if (departments.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground text-center py-8">
-        No shifts recorded for this week.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground text-center py-8">No shifts recorded for this week.</p>;
   }
   const hasCost = departments.some((d) => d.laborCost !== null);
   const chartData = departments.map((d) => ({
@@ -97,18 +87,11 @@ function LaborBarChart({ departments }: { departments: DeptCost[] }) {
           <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis
-            tickFormatter={(v) =>
-              hasCost
-                ? `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`
-                : `${v}h`
-            }
+            tickFormatter={(v) => hasCost ? `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}` : `${v}h`}
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(value: number) => [
-              hasCost ? fmtCost(value) : fmtHours(value),
-              hasCost ? "Labor Cost" : "Hours",
-            ]}
+            formatter={(value: number) => [hasCost ? fmtCost(value) : fmtHours(value), hasCost ? "Labor Cost" : "Hours"]}
             contentStyle={{ fontSize: 12 }}
           />
           <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -152,8 +135,6 @@ function LaborTable({ departments, totalHours, totalLaborCost }: {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 function AdminPage() {
   const list = useServerFn(listAllowedEmails);
   const add = useServerFn(addAllowedEmail);
@@ -170,6 +151,10 @@ function AdminPage() {
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
+
+  const fetchDebug = useServerFn(getLaborDebug);
+  const [debugData, setDebugData] = useState<any>(null);
+  const [debugLoading, setDebugLoading] = useState(false);
 
   const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
   const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
@@ -208,9 +193,7 @@ function AdminPage() {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link to="/menu-formatting">
-              <Type className="h-4 w-4 mr-2" /> Open formatting editor
-            </Link>
+            <Link to="/menu-formatting"><Type className="h-4 w-4 mr-2" /> Open formatting editor</Link>
           </Button>
         </CardContent>
       </Card>
@@ -222,9 +205,7 @@ function AdminPage() {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link to="/announcements">
-              <Megaphone className="h-4 w-4 mr-2" /> Open announcement editor
-            </Link>
+            <Link to="/announcements"><Megaphone className="h-4 w-4 mr-2" /> Open announcement editor</Link>
           </Button>
         </CardContent>
       </Card>
@@ -236,9 +217,7 @@ function AdminPage() {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link to="/live-menu-timetable">
-              <Clock className="h-4 w-4 mr-2" /> Open timetable
-            </Link>
+            <Link to="/live-menu-timetable"><Clock className="h-4 w-4 mr-2" /> Open timetable</Link>
           </Button>
         </CardContent>
       </Card>
@@ -252,27 +231,18 @@ function AdminPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              type="url"
-              placeholder="https://example.com/webhooks/menu"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-            />
-            <Button
-              size="sm"
-              disabled={webhookSaving}
-              onClick={async () => {
-                setWebhookSaving(true);
-                try {
-                  await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
-                  toast.success("Webhook URL saved");
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Failed to save");
-                } finally {
-                  setWebhookSaving(false);
-                }
-              }}
-            >
+            <Input type="url" placeholder="https://example.com/webhooks/menu" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
+            <Button size="sm" disabled={webhookSaving} onClick={async () => {
+              setWebhookSaving(true);
+              try {
+                await saveWebhookUrl({ data: { url: webhookUrl.trim() } });
+                toast.success("Webhook URL saved");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to save");
+              } finally {
+                setWebhookSaving(false);
+              }
+            }}>
               <Save className="h-4 w-4 mr-2" /> {webhookSaving ? "Saving…" : "Save"}
             </Button>
           </div>
@@ -285,24 +255,14 @@ function AdminPage() {
             <div>
               <CardTitle><DollarSign className="h-4 w-4 inline mr-2" />Labor Cost</CardTitle>
               <CardDescription className="mt-1">
-                {laborData
-                  ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}`
-                  : "Current week labor cost by department"}
+                {laborData ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}` : "Current week labor cost by department"}
               </CardDescription>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => setWeekOffset((o) => o - 1)}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={weekOffset === 0}
-                onClick={() => setWeekOffset(0)}
-                className="text-xs px-2"
-              >
-                Today
-              </Button>
+              <Button variant="ghost" size="sm" disabled={weekOffset === 0} onClick={() => setWeekOffset(0)} className="text-xs px-2">Today</Button>
               <Button variant="ghost" size="icon" disabled={weekOffset >= 0} onClick={() => setWeekOffset((o) => o + 1)}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -319,6 +279,38 @@ function AdminPage() {
             </Alert>
           )}
           {laborData && !laborLoading && <LaborCostContent data={laborData} />}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6 border-dashed">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground"><Bug className="h-4 w-4 inline mr-2" />7shifts API Debug</CardTitle>
+          <CardDescription>Inspect raw API payloads to diagnose wage/hours issues. Remove once resolved.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={debugLoading}
+            onClick={async () => {
+              setDebugLoading(true);
+              try {
+                const result = await fetchDebug();
+                setDebugData(result);
+              } catch (e) {
+                setDebugData({ error: e instanceof Error ? e.message : String(e) });
+              } finally {
+                setDebugLoading(false);
+              }
+            }}
+          >
+            {debugLoading ? "Fetching…" : "Fetch debug payload"}
+          </Button>
+          {debugData && (
+            <pre className="mt-4 text-xs bg-muted rounded p-3 overflow-auto max-h-96 whitespace-pre-wrap break-all">
+              {JSON.stringify(debugData, null, 2)}
+            </pre>
+          )}
         </CardContent>
       </Card>
 
@@ -342,13 +334,10 @@ function AdminPage() {
               </Button>
             </div>
             <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-              <Label htmlFor="as-admin" className="text-sm font-normal">
-                Make this user an admin on signup
-              </Label>
+              <Label htmlFor="as-admin" className="text-sm font-normal">Make this user an admin on signup</Label>
               <Switch id="as-admin" checked={asAdmin} onCheckedChange={setAsAdmin} />
             </div>
           </form>
-
           <div className="border-t border-border">
             {isLoading ? (
               <p className="py-6 text-sm text-muted-foreground">Loading…</p>
