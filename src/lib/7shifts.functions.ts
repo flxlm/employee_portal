@@ -17,17 +17,6 @@ export type LaborCostResult = {
   totalLaborCost: number | null;
 };
 
-export type LaborDebugResult = {
-  weekStart: string;
-  weekEnd: string;
-  firstPunch: any;        // full first time_punch object
-  firstShift: any;       // full first scheduled shift object
-  wageReportTopKeys: string[];  // top-level keys of hours_and_wages response
-  firstWageUser: any;    // first user entry from hours_and_wages
-  wageMapSize: number;   // how many userId:roleId pairs we found wages for
-  punchCount: number;
-};
-
 async function ensureAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
@@ -58,56 +47,30 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
   return res.json();
 }
 
-async function buildWageMap(
-  companyId: string,
-  locationId: string | undefined,
-  weekStart: string,
-  weekEnd: string,
-  monday: Date,
-  apiKey: string,
-): Promise<Map<string, number>> {
-  const wageMap = new Map<string, number>();
-
-  function tryAddWage(userId: any, roleId: any, wage: any) {
-    if (!userId || !roleId) return;
-    if (typeof wage !== "number" || wage < 3 || wage > 500) return;
-    const key = `${userId}:${roleId}`;
-    if (!wageMap.has(key)) wageMap.set(key, wage);
+// Each shift entry has: user_id, role_id, wage, total.total_hours, total.total_pay
+function extractReportShifts(response: any): any[] {
+  if (!response) return [];
+  // { data: { users: [{ shifts: [...] }] } }
+  if (Array.isArray(response.data?.users)) {
+    return response.data.users.flatMap((u: any) => u.shifts ?? []);
   }
-
-  // Source 1: scheduled shifts
-  try {
-    const qs = new URLSearchParams({ start: weekStart, end: weekEnd, limit: "500" });
-    if (locationId) qs.set("location_id", locationId);
-    const res = await shifts7fetch(`/company/${companyId}/shifts?${qs}`, apiKey);
-    for (const s of res.data ?? []) tryAddWage(s.user_id, s.role_id, s.wage);
-  } catch { }
-
-  // Source 2: hours_and_wages report (past 12 weeks)
-  try {
-    const from = new Date(monday);
-    from.setUTCDate(monday.getUTCDate() - 77);
-    const qs = new URLSearchParams({
-      company_id: companyId,
-      from: toISODate(from),
-      to: weekEnd,
-      punches: "true",
-    });
-    if (locationId) qs.set("location_id", locationId);
-    const res = await shifts7fetch(`/reports/hours_and_wages?${qs}`, apiKey);
-    const users: any[] = Array.isArray(res.data)
-      ? res.data
-      : (res.data?.users ?? res.users ?? []);
-    for (const u of users) {
-      const userId = u.user_id ?? u.id;
-      for (const week of u.weeks ?? []) {
-        for (const s of week.shifts ?? []) tryAddWage(userId, s.role_id, s.wage);
-      }
-      for (const s of u.shifts ?? []) tryAddWage(userId, s.role_id, s.wage);
+  // { data: { shifts: [...] } }
+  if (Array.isArray(response.data?.shifts)) return response.data.shifts;
+  // { data: [{ shifts: [...] }] }
+  if (Array.isArray(response.data)) {
+    const first = response.data[0];
+    if (first && Array.isArray(first.shifts)) {
+      return response.data.flatMap((u: any) => u.shifts ?? []);
     }
-  } catch { }
-
-  return wageMap;
+    return response.data;
+  }
+  // { users: [{ shifts: [...] }] }
+  if (Array.isArray(response.users)) {
+    return response.users.flatMap((u: any) => u.shifts ?? []);
+  }
+  // { shifts: [...] }
+  if (Array.isArray(response.shifts)) return response.shifts;
+  return [];
 }
 
 export const getLaborCost = createServerFn({ method: "POST" })
@@ -139,18 +102,66 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    const rolesRes = await shifts7fetch(`/company/${companyId}/roles`, apiKey);
+    // Roles → Map<roleId, departmentId> and Departments → Map<deptId, name>
+    const [rolesRes, deptsRes] = await Promise.all([
+      shifts7fetch(`/company/${companyId}/roles`, apiKey),
+      shifts7fetch(`/company/${companyId}/departments`, apiKey),
+    ]);
     const roleDeptMap = new Map<number, number>();
     for (const r of rolesRes.data ?? []) {
       if (r.department_id) roleDeptMap.set(r.id, r.department_id);
     }
-
-    const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
-    const wageMap = await buildWageMap(companyId, locationId, weekStart, weekEnd, monday, apiKey);
+    type Acc = { departmentName: string; totalHours: number; laborCost: number; hasAllWages: boolean };
+    const accMap = new Map<number, Acc>();
+    function upsert(deptId: number, deptName: string): Acc {
+      if (!accMap.has(deptId)) {
+        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, hasAllWages: true });
+      }
+      return accMap.get(deptId)!;
+    }
 
+    // --- Source 1: hours_and_wages report (approved punches) ---
+    // Use total_pay and total_hours directly from each shift entry.
+    // Also build wageMap for estimating cost of unapproved punches below.
+    const wageMap = new Map<string, number>(); // "userId:roleId" → hourly wage
+    const reportQs = new URLSearchParams({
+      company_id: companyId,
+      from: weekStart,
+      to: weekEnd,
+      punches: "true",
+    });
+    if (locationId) reportQs.set("location_id", locationId);
+
+    try {
+      const reportRes = await shifts7fetch(`/reports/hours_and_wages?${reportQs}`, apiKey);
+      const shifts = extractReportShifts(reportRes);
+
+      for (const shift of shifts) {
+        const roleId: number = shift.role_id ?? 0;
+        const deptId: number = roleDeptMap.get(roleId) ?? 0;
+        const deptName = deptMap.get(deptId) ?? "Unassigned";
+        const hours: number = shift.total?.total_hours ?? 0;
+        const pay: number = shift.total?.total_pay ?? 0;
+        const wage = shift.wage;
+
+        if (shift.user_id && roleId && typeof wage === "number" && wage > 0 && wage <= 500) {
+          const wk = `${shift.user_id}:${roleId}`;
+          if (!wageMap.has(wk)) wageMap.set(wk, wage);
+        }
+
+        const acc = upsert(deptId, deptName);
+        acc.totalHours += hours;
+        acc.laborCost += pay;
+      }
+    } catch {
+      // report unavailable; unapproved punches below will still show hours
+    }
+
+    // --- Source 2: unapproved time punches ---
+    // Approved punches are already counted above. Only add unapproved ones to avoid double-counting.
     const punchQs = new URLSearchParams({
       start: monday.toISOString(),
       end: sunday.toISOString(),
@@ -158,35 +169,23 @@ export const getLaborCost = createServerFn({ method: "POST" })
     });
     if (locationId) punchQs.set("location_id", locationId);
     const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${punchQs}`, apiKey);
-    const punches: any[] = punchRes.data ?? [];
+    const unapproved: any[] = (punchRes.data ?? []).filter((p: any) => !p.approved);
 
-    type Acc = { departmentName: string; totalHours: number; laborCost: number; hasAllWages: boolean };
-    const accMap = new Map<number, Acc>();
-
-    for (const punch of punches) {
+    for (const punch of unapproved) {
       const roleId: number = punch.role_id ?? 0;
       const deptId: number = punch.department_id ?? roleDeptMap.get(roleId) ?? 0;
       const deptName = deptMap.get(deptId) ?? "Unassigned";
 
       let hours = 0;
-      if (punch.clocked_in && punch.clocked_out) {
-        hours = Math.max(
-          0,
-          (new Date(punch.clocked_out).getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60),
-        );
+      if (punch.clocked_in) {
+        const end = punch.clocked_out ? new Date(punch.clocked_out) : new Date();
+        hours = Math.max(0, (end.getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60));
       }
 
-      const wageKey = `${punch.user_id}:${roleId}`;
-      const punchRate = typeof punch.wage_rate === "number" && punch.wage_rate >= 3 && punch.wage_rate <= 500
-        ? punch.wage_rate : null;
-      const wage = wageMap.get(wageKey) ?? punchRate;
-
-      if (!accMap.has(deptId)) {
-        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, hasAllWages: true });
-      }
-      const acc = accMap.get(deptId)!;
+      const wage = wageMap.get(`${punch.user_id}:${roleId}`) ?? null;
+      const acc = upsert(deptId, deptName);
       acc.totalHours += hours;
-      if (wage != null && acc.hasAllWages) {
+      if (wage !== null && acc.hasAllWages) {
         acc.laborCost += hours * wage;
       } else {
         acc.hasAllWages = false;
@@ -210,84 +209,4 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
 
     return { weekStart, weekEnd, departments, totalHours, totalLaborCost };
-  });
-
-// Temporary debug endpoint — returns raw API payloads so we can inspect field names
-export const getLaborDebug = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<LaborDebugResult> => {
-    await ensureAdmin(context.supabase, context.userId);
-
-    const apiKey = process.env.SECRET_7SHIFTS_API_KEY;
-    if (!apiKey) throw new Error("SECRET_7SHIFTS_API_KEY not set");
-    const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID?.trim();
-    if (!companyId) throw new Error("SEVEN_SHIFTS_COMPANY_ID not set");
-    const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID?.trim() || undefined;
-
-    const now = new Date();
-    const day = now.getUTCDay();
-    const diffToMon = day === 0 ? -6 : 1 - day;
-    const monday = new Date(now);
-    monday.setUTCDate(now.getUTCDate() + diffToMon);
-    monday.setUTCHours(0, 0, 0, 0);
-    const sunday = new Date(monday);
-    sunday.setUTCDate(monday.getUTCDate() + 6);
-    sunday.setUTCHours(23, 59, 59, 999);
-    const weekStart = toISODate(monday);
-    const weekEnd = toISODate(sunday);
-
-    // Fetch first time punch
-    let firstPunch: any = null;
-    let punchCount = 0;
-    try {
-      const qs = new URLSearchParams({ start: monday.toISOString(), end: sunday.toISOString(), limit: "5" });
-      if (locationId) qs.set("location_id", locationId);
-      const res = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
-      firstPunch = res.data?.[0] ?? null;
-      punchCount = res.data?.length ?? 0;
-    } catch (e: any) {
-      firstPunch = { error: e.message };
-    }
-
-    // Fetch first scheduled shift
-    let firstShift: any = null;
-    try {
-      const qs = new URLSearchParams({ start: weekStart, end: weekEnd, limit: "5" });
-      if (locationId) qs.set("location_id", locationId);
-      const res = await shifts7fetch(`/company/${companyId}/shifts?${qs}`, apiKey);
-      firstShift = res.data?.[0] ?? null;
-    } catch (e: any) {
-      firstShift = { error: e.message };
-    }
-
-    // Fetch hours_and_wages report and capture structure
-    let wageReportTopKeys: string[] = [];
-    let firstWageUser: any = null;
-    let wageMapSize = 0;
-    try {
-      const from = new Date(monday);
-      from.setUTCDate(monday.getUTCDate() - 77);
-      const qs = new URLSearchParams({
-        company_id: companyId,
-        from: toISODate(from),
-        to: weekEnd,
-        punches: "true",
-      });
-      if (locationId) qs.set("location_id", locationId);
-      const res = await shifts7fetch(`/reports/hours_and_wages?${qs}`, apiKey);
-      wageReportTopKeys = Object.keys(res);
-      // Show first user regardless of nesting
-      const users: any[] = Array.isArray(res.data)
-        ? res.data
-        : (res.data?.users ?? res.users ?? []);
-      firstWageUser = users[0] ?? null;
-
-      // Count wage map entries
-      const wm = await buildWageMap(companyId, locationId, weekStart, weekEnd, monday, apiKey);
-      wageMapSize = wm.size;
-    } catch (e: any) {
-      wageReportTopKeys = ["error: " + e.message];
-    }
-
-    return { weekStart, weekEnd, firstPunch, firstShift, wageReportTopKeys, firstWageUser, wageMapSize, punchCount };
   });

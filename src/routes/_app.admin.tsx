@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, getLaborDebug, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
+import { getLaborCost, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableC
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight, Bug } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -152,10 +152,6 @@ function AdminPage() {
     retry: 1,
   });
 
-  const fetchDebug = useServerFn(getLaborDebug);
-  const [debugData, setDebugData] = useState<any>(null);
-  const [debugLoading, setDebugLoading] = useState(false);
-
   const fetchWebhookUrl = useServerFn(getMenuWebhookUrl);
   const saveWebhookUrl = useServerFn(setMenuWebhookUrl);
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -279,38 +275,6 @@ function AdminPage() {
             </Alert>
           )}
           {laborData && !laborLoading && <LaborCostContent data={laborData} />}
-        </CardContent>
-      </Card>
-
-      <Card className="mb-6 border-dashed">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground"><Bug className="h-4 w-4 inline mr-2" />7shifts API Debug</CardTitle>
-          <CardDescription>Inspect raw API payloads to diagnose wage/hours issues. Remove once resolved.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={debugLoading}
-            onClick={async () => {
-              setDebugLoading(true);
-              try {
-                const result = await fetchDebug();
-                setDebugData(result);
-              } catch (e) {
-                setDebugData({ error: e instanceof Error ? e.message : String(e) });
-              } finally {
-                setDebugLoading(false);
-              }
-            }}
-          >
-            {debugLoading ? "Fetching…" : "Fetch debug payload"}
-          </Button>
-          {debugData && (
-            <pre className="mt-4 text-xs bg-muted rounded p-3 overflow-auto max-h-96 whitespace-pre-wrap break-all">
-              {JSON.stringify(debugData, null, 2)}
-            </pre>
-          )}
         </CardContent>
       </Card>
 
