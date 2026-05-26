@@ -32,11 +32,12 @@ function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function shifts7fetch(version: "v1" | "v2", path: string, apiKey: string): Promise<any> {
-  const res = await fetch(`https://api.7shifts.com/${version}${path}`, {
+async function shifts7fetch(path: string, apiKey: string): Promise<any> {
+  const res = await fetch(`https://api.7shifts.com/v2${path}`, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       Accept: "application/json",
+      "x-api-version": "2022-10-01",
     },
   });
   if (!res.ok) {
@@ -74,23 +75,30 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    // 1. Roles → Map<roleId, departmentId>  (v2)
-    const rolesRes = await shifts7fetch("v2", `/company/${companyId}/roles`, apiKey);
+    // 1. Roles → Map<roleId, departmentId>
+    const rolesRes = await shifts7fetch(`/company/${companyId}/roles`, apiKey);
     const roleDeptMap = new Map<number, number>();
     for (const r of rolesRes.data ?? []) {
       if (r.department_id) roleDeptMap.set(r.id, r.department_id);
     }
 
-    // 2. Departments → Map<deptId, name>  (v2)
-    const deptsRes = await shifts7fetch("v2", `/company/${companyId}/departments`, apiKey);
+    // 2. Departments → Map<deptId, name>
+    const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
-    // 3. Hours & wages report  (v1 — this endpoint only exists in v1)
-    const qs = new URLSearchParams({ week: weekStart });
+    // 3. Hours & wages report
+    // Endpoint: GET /v2/reports/hours_and_wages
+    // company_id is a query param, not in the path
+    const qs = new URLSearchParams({
+      company_id: companyId,
+      from: weekStart,
+      to: weekEnd,
+      punches: "true",
+    });
     const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID;
     if (locationId) qs.set("location_id", locationId);
-    const reportRes = await shifts7fetch("v1", `/company/${companyId}/hours_and_wages?${qs}`, apiKey);
+    const reportRes = await shifts7fetch(`/reports/hours_and_wages?${qs}`, apiKey);
 
     // 4. Aggregate total_hours and total_pay by department
     const accMap = new Map<number, { departmentName: string; totalHours: number; laborCost: number }>();
