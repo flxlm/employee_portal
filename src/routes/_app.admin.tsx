@@ -72,6 +72,11 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
     <div className="space-y-6">
       <LaborBarChart departments={data.departments} hasCost={hasCost} />
       <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} />
+      {data.wageSource === "none" && (
+        <p className="text-xs text-muted-foreground">
+          Wage data not found in 7shifts — ensure employee wages are set in the 7shifts dashboard.
+        </p>
+      )}
     </div>
   );
 }
