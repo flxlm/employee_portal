@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type RoleHours = {
@@ -51,7 +52,10 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
 
 export const getLaborCost = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<LaborCostResult> => {
+  .inputValidator((input) =>
+    z.object({ weekOffset: z.number().int().optional().default(0) }).parse(input)
+  )
+  .handler(async ({ data: input, context }): Promise<LaborCostResult> => {
     await ensureAdmin(context.supabase, context.userId);
 
     const apiKey = process.env.SECRET_7SHIFTS_API_KEY;
@@ -60,12 +64,12 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID;
     if (!companyId) throw new Error("7shifts company ID is not configured (SEVEN_SHIFTS_COMPANY_ID).");
 
-    // Compute current ISO week: Monday–Sunday in UTC
+    // Compute ISO week (Mon–Sun) offset by weekOffset weeks
     const now = new Date();
-    const day = now.getUTCDay(); // 0=Sun, 1=Mon, …
+    const day = now.getUTCDay();
     const diffToMon = day === 0 ? -6 : 1 - day;
     const monday = new Date(now);
-    monday.setUTCDate(now.getUTCDate() + diffToMon);
+    monday.setUTCDate(now.getUTCDate() + diffToMon + (input.weekOffset ?? 0) * 7);
     monday.setUTCHours(0, 0, 0, 0);
     const sunday = new Date(monday);
     sunday.setUTCDate(monday.getUTCDate() + 6);
@@ -81,7 +85,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
       roleMap.set(r.id, r.name);
     }
 
-    // 2. Fetch time punches for the week (single request — a week never exceeds 500 punches)
+    // 2. Fetch time punches for the week
     const qs = new URLSearchParams({
       start: monday.toISOString(),
       end: sunday.toISOString(),
@@ -90,7 +94,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
     const punches: any[] = punchRes.data ?? [];
 
-    // 3. Aggregate by role
+    // 3. Aggregate by role — compute hours from clocked_in/clocked_out timestamps
     type Acc = {
       roleName: string;
       regularHours: number;
@@ -103,19 +107,26 @@ export const getLaborCost = createServerFn({ method: "GET" })
     for (const punch of punches) {
       const roleId: number = punch.role_id ?? 0;
       const roleName = roleMap.get(roleId) ?? (roleId === 0 ? "Unassigned" : `Unknown Role #${roleId}`);
-      const regular: number = punch.regular_hours ?? 0;
-      const overtime: number = punch.overtime_hours ?? 0;
+
+      // Calculate hours from timestamps; fall back to API fields if present
+      let hours = 0;
+      if (punch.clocked_in && punch.clocked_out) {
+        hours = (new Date(punch.clocked_out).getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60);
+      } else {
+        hours = (punch.regular_hours ?? 0) + (punch.overtime_hours ?? 0);
+      }
+      hours = Math.max(0, hours);
+
       const wageRate: number | null = punch.wage_rate ?? null;
 
       if (!accMap.has(roleId)) {
         accMap.set(roleId, { roleName, regularHours: 0, overtimeHours: 0, estimatedCost: 0, hasAllWages: true });
       }
       const acc = accMap.get(roleId)!;
-      acc.regularHours += regular;
-      acc.overtimeHours += overtime;
+      acc.regularHours += hours;
 
       if (wageRate !== null && acc.hasAllWages) {
-        (acc.estimatedCost as number) += (regular + overtime) * wageRate;
+        (acc.estimatedCost as number) += hours * wageRate;
       } else {
         acc.hasAllWages = false;
         acc.estimatedCost = null;
@@ -131,7 +142,6 @@ export const getLaborCost = createServerFn({ method: "GET" })
       estimatedCost: acc.hasAllWages ? acc.estimatedCost : null,
     }));
 
-    // Sort by total hours descending
     roles.sort((a, b) => b.totalHours - a.totalHours);
 
     const totalRegularHours = roles.reduce((s, r) => s + r.regularHours, 0);

@@ -13,7 +13,7 @@ import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableC
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle } from "lucide-react";
+import { Trash2, UserPlus, ShieldAlert, Type, Clock, Save, Webhook, Megaphone, DollarSign, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-// ─── Labor Cost helpers & sub-components ────────────────────────────────────
+// ─── Labor Cost helpers & sub-components ──────────────────────────────────────────────
 
 function formatWeekLabel(weekStart: string, weekEnd: string): string {
   const fmt = (s: string, opts: Intl.DateTimeFormatOptions) =>
@@ -85,8 +85,7 @@ function LaborBarChart({ roles }: { roles: RoleHours[] }) {
   }
   const data = roles.map((r) => ({
     role: r.roleName.length > 14 ? r.roleName.slice(0, 13) + "…" : r.roleName,
-    regularHours: parseFloat(r.regularHours.toFixed(1)),
-    overtimeHours: parseFloat(r.overtimeHours.toFixed(1)),
+    Hours: parseFloat(r.totalHours.toFixed(1)),
   }));
   return (
     <div className="h-52 w-full">
@@ -96,18 +95,10 @@ function LaborBarChart({ roles }: { roles: RoleHours[] }) {
           <XAxis dataKey="role" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={(v) => `${v}h`} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(1)}h`,
-              name === "regularHours" ? "Regular" : "Overtime",
-            ]}
+            formatter={(value: number) => [`${value.toFixed(1)}h`, "Hours"]}
             contentStyle={{ fontSize: 12 }}
           />
-          <Legend
-            formatter={(value) => (value === "regularHours" ? "Regular" : "Overtime")}
-            wrapperStyle={{ fontSize: 12 }}
-          />
-          <Bar dataKey="regularHours" name="regularHours" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="overtimeHours" name="overtimeHours" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Hours" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -116,16 +107,12 @@ function LaborBarChart({ roles }: { roles: RoleHours[] }) {
 
 function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEstimatedCost: number | null }) {
   const showCost = roles.some((r) => r.estimatedCost !== null);
-  const totalRegular = roles.reduce((s, r) => s + r.regularHours, 0);
-  const totalOvertime = roles.reduce((s, r) => s + r.overtimeHours, 0);
-  const totalAll = totalRegular + totalOvertime;
+  const totalAll = roles.reduce((s, r) => s + r.totalHours, 0);
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Role</TableHead>
-          <TableHead className="text-right">Regular</TableHead>
-          <TableHead className="text-right">Overtime</TableHead>
           <TableHead className="text-right">Total Hours</TableHead>
           {showCost && <TableHead className="text-right">Est. Cost</TableHead>}
         </TableRow>
@@ -134,8 +121,6 @@ function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEs
         {roles.map((r) => (
           <TableRow key={r.roleId}>
             <TableCell className="font-medium">{r.roleName}</TableCell>
-            <TableCell className="text-right tabular-nums">{fmtHours(r.regularHours)}</TableCell>
-            <TableCell className="text-right tabular-nums">{fmtHours(r.overtimeHours)}</TableCell>
             <TableCell className="text-right tabular-nums font-medium">{fmtHours(r.totalHours)}</TableCell>
             {showCost && <TableCell className="text-right tabular-nums">{fmtCost(r.estimatedCost)}</TableCell>}
           </TableRow>
@@ -144,8 +129,6 @@ function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEs
       <TableFooter>
         <TableRow>
           <TableCell className="font-semibold">Total</TableCell>
-          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalRegular)}</TableCell>
-          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalOvertime)}</TableCell>
           <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalAll)}</TableCell>
           {showCost && <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalEstimatedCost)}</TableCell>}
         </TableRow>
@@ -154,7 +137,7 @@ function LaborTable({ roles, totalEstimatedCost }: { roles: RoleHours[]; totalEs
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 function AdminPage() {
   const list = useServerFn(listAllowedEmails);
@@ -165,9 +148,10 @@ function AdminPage() {
   const [asAdmin, setAsAdmin] = useState(false);
 
   const fetchLaborCost = useServerFn(getLaborCost);
+  const [weekOffset, setWeekOffset] = useState(0);
   const { data: laborData, isLoading: laborLoading, error: laborError } = useQuery({
-    queryKey: ["labor-cost"],
-    queryFn: () => fetchLaborCost(),
+    queryKey: ["labor-cost", weekOffset],
+    queryFn: () => fetchLaborCost({ data: { weekOffset } }),
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
@@ -283,12 +267,33 @@ function AdminPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle><DollarSign className="h-4 w-4 inline mr-2" />Labor Cost</CardTitle>
-          <CardDescription>
-            {laborData
-              ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}`
-              : "Current week hours by role"}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle><DollarSign className="h-4 w-4 inline mr-2" />Labor Cost</CardTitle>
+              <CardDescription className="mt-1">
+                {laborData
+                  ? `Week of ${formatWeekLabel(laborData.weekStart, laborData.weekEnd)}`
+                  : "Current week hours by role"}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={() => setWeekOffset((o) => o - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={weekOffset === 0}
+                onClick={() => setWeekOffset(0)}
+                className="text-xs px-2"
+              >
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" disabled={weekOffset >= 0} onClick={() => setWeekOffset((o) => o + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {laborLoading && <LaborCostSkeleton />}
