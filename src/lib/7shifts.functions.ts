@@ -47,24 +47,36 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
   return res.json();
 }
 
+// Only accept values that look like a plausible hourly wage ($3–$200/h).
+// This rejects annual salaries, IDs, and other large numeric fields that
+// happen to be non-zero.
+function plausibleHourlyWage(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) : NaN;
+  if (isNaN(n) || n < 3 || n > 200) return null;
+  return n;
+}
+
 function extractWage(obj: any): number | null {
   if (!obj) return null;
-  const candidates = [
-    obj.wage,
-    obj.default_wage,
-    obj.hourly_wage,
-    obj.hourly_rate,
-    obj.base_wage,
-    obj.base_hourly_rate,
-    obj.pay_rate,
-    obj.wage_rate,
-    obj.employee_wage,
-    obj.compensation?.hourly_rate,
-    obj.compensation?.wage,
+  const fields = [
+    "hourly_wage",
+    "hourly_rate",
+    "base_hourly_rate",
+    "wage",
+    "default_wage",
+    "pay_rate",
+    "wage_rate",
   ];
-  for (const v of candidates) {
-    if (typeof v === "number" && v > 0) return v;
-    if (typeof v === "string" && parseFloat(v) > 0) return parseFloat(v);
+  for (const key of fields) {
+    const w = plausibleHourlyWage(obj[key]);
+    if (w !== null) return w;
+  }
+  // Nested compensation object
+  if (obj.compensation) {
+    for (const key of ["hourly_rate", "wage", "rate"]) {
+      const w = plausibleHourlyWage(obj.compensation[key]);
+      if (w !== null) return w;
+    }
   }
   return null;
 }
@@ -139,7 +151,6 @@ export const getLaborCost = createServerFn({ method: "GET" })
       }
       hours = Math.max(0, hours);
 
-      // Try user-level wage first, then wage embedded in the punch itself
       let wage = wageMap.get(punch.user_id) ?? null;
       if (wage !== null) anyUserWage = true;
       if (wage === null) {
