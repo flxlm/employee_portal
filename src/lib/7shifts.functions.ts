@@ -6,7 +6,7 @@ export type DeptCost = {
   departmentId: number;
   departmentName: string;
   totalHours: number;
-  laborCost: number | null;
+  laborCost: number;
 };
 
 export type LaborCostResult = {
@@ -14,8 +14,7 @@ export type LaborCostResult = {
   weekEnd: string;
   departments: DeptCost[];
   totalHours: number;
-  totalLaborCost: number | null;
-  wageSource: "user" | "punch" | "none";
+  totalLaborCost: number;
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
@@ -47,40 +46,6 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
   return res.json();
 }
 
-// Only accept values that look like a plausible hourly wage ($3–$200/h).
-// This rejects annual salaries, IDs, and other large numeric fields that
-// happen to be non-zero.
-function plausibleHourlyWage(v: unknown): number | null {
-  const n = typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) : NaN;
-  if (isNaN(n) || n < 3 || n > 200) return null;
-  return n;
-}
-
-function extractWage(obj: any): number | null {
-  if (!obj) return null;
-  const fields = [
-    "hourly_wage",
-    "hourly_rate",
-    "base_hourly_rate",
-    "wage",
-    "default_wage",
-    "pay_rate",
-    "wage_rate",
-  ];
-  for (const key of fields) {
-    const w = plausibleHourlyWage(obj[key]);
-    if (w !== null) return w;
-  }
-  // Nested compensation object
-  if (obj.compensation) {
-    for (const key of ["hourly_rate", "wage", "rate"]) {
-      const w = plausibleHourlyWage(obj.compensation[key]);
-      if (w !== null) return w;
-    }
-  }
-  return null;
-}
-
 export const getLaborCost = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -95,7 +60,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID;
     if (!companyId) throw new Error("7shifts company ID is not configured (SEVEN_SHIFTS_COMPANY_ID).");
 
-    // Compute ISO week (Mon–Sun)
+    // Compute ISO week Monday
     const now = new Date();
     const day = now.getUTCDay();
     const diffToMon = day === 0 ? -6 : 1 - day;
@@ -109,65 +74,43 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    // 1. Departments
+    // 1. Roles → Map<roleId, departmentId>
+    const rolesRes = await shifts7fetch(`/company/${companyId}/roles`, apiKey);
+    const roleDeptMap = new Map<number, number>();
+    for (const r of rolesRes.data ?? []) {
+      if (r.department_id) roleDeptMap.set(r.id, r.department_id);
+    }
+
+    // 2. Departments → Map<deptId, name>
     const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
-    // 2. Employees → wage map
-    const usersRes = await shifts7fetch(`/company/${companyId}/users?limit=500`, apiKey);
-    const wageMap = new Map<number, number | null>();
-    for (const u of usersRes.data ?? []) {
-      wageMap.set(u.id, extractWage(u));
-    }
+    // 3. Hours & wages report for the week
+    const qs = new URLSearchParams({ week: weekStart });
+    const locationId = process.env.SEVEN_SHIFTS_LOCATION_ID;
+    if (locationId) qs.set("location_id", locationId);
+    const reportRes = await shifts7fetch(`/company/${companyId}/hours_and_wages?${qs}`, apiKey);
 
-    // 3. Time punches
-    const qs = new URLSearchParams({
-      start: monday.toISOString(),
-      end: sunday.toISOString(),
-      limit: "500",
-    });
-    const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
-    const punches: any[] = punchRes.data ?? [];
+    // 4. Aggregate total_hours and total_pay by department
+    const accMap = new Map<number, { departmentName: string; totalHours: number; laborCost: number }>();
 
-    // 4. Aggregate by department
-    type Acc = {
-      departmentName: string;
-      totalHours: number;
-      laborCost: number;
-      hasAllWages: boolean;
-    };
-    const accMap = new Map<number, Acc>();
-    let anyUserWage = false;
-    let anyPunchWage = false;
+    for (const userEntry of reportRes.users ?? []) {
+      for (const weekEntry of userEntry.weeks ?? []) {
+        for (const shift of weekEntry.shifts ?? []) {
+          const roleId: number = shift.role_id ?? 0;
+          const deptId: number = roleDeptMap.get(roleId) ?? 0;
+          const deptName = deptMap.get(deptId) ?? "Unassigned";
+          const hours: number = shift.total?.total_hours ?? 0;
+          const pay: number = shift.total?.total_pay ?? 0;
 
-    for (const punch of punches) {
-      const deptId: number = punch.department_id ?? 0;
-      const deptName = deptMap.get(deptId) ?? (deptId === 0 ? "Unassigned" : `Department #${deptId}`);
-
-      let hours = 0;
-      if (punch.clocked_in && punch.clocked_out) {
-        hours = (new Date(punch.clocked_out).getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60);
-      }
-      hours = Math.max(0, hours);
-
-      let wage = wageMap.get(punch.user_id) ?? null;
-      if (wage !== null) anyUserWage = true;
-      if (wage === null) {
-        wage = extractWage(punch);
-        if (wage !== null) anyPunchWage = true;
-      }
-
-      if (!accMap.has(deptId)) {
-        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, hasAllWages: true });
-      }
-      const acc = accMap.get(deptId)!;
-      acc.totalHours += hours;
-
-      if (wage !== null && acc.hasAllWages) {
-        acc.laborCost += hours * wage;
-      } else {
-        acc.hasAllWages = false;
+          if (!accMap.has(deptId)) {
+            accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0 });
+          }
+          const acc = accMap.get(deptId)!;
+          acc.totalHours += hours;
+          acc.laborCost += pay;
+        }
       }
     }
 
@@ -175,7 +118,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
       departmentId,
       departmentName: acc.departmentName,
       totalHours: acc.totalHours,
-      laborCost: acc.hasAllWages ? acc.laborCost : null,
+      laborCost: acc.laborCost,
     }));
 
     departments.sort((a, b) => {
@@ -186,9 +129,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
     });
 
     const totalHours = departments.reduce((s, d) => s + d.totalHours, 0);
-    const anyNullCost = departments.some((d) => d.laborCost === null);
-    const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
-    const wageSource: "user" | "punch" | "none" = anyUserWage ? "user" : anyPunchWage ? "punch" : "none";
+    const totalLaborCost = departments.reduce((s, d) => s + d.laborCost, 0);
 
-    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, wageSource };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost };
   });

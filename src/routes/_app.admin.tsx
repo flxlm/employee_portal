@@ -48,8 +48,7 @@ function fmtHours(h: number): string {
   return h.toFixed(1) + "h";
 }
 
-function fmtCost(c: number | null): string {
-  if (c === null) return "—";
+function fmtCost(c: number): string {
   return "$" + c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -67,31 +66,25 @@ function LaborCostSkeleton() {
 }
 
 function LaborCostContent({ data }: { data: LaborCostResult }) {
-  const hasCost = data.departments.some((d) => d.laborCost !== null);
   return (
     <div className="space-y-6">
-      <LaborBarChart departments={data.departments} hasCost={hasCost} />
+      <LaborBarChart departments={data.departments} />
       <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} />
-      {data.wageSource === "none" && (
-        <p className="text-xs text-muted-foreground">
-          Wage data not found in 7shifts — ensure employee wages are set in the 7shifts dashboard.
-        </p>
-      )}
     </div>
   );
 }
 
-function LaborBarChart({ departments, hasCost }: { departments: DeptCost[]; hasCost: boolean }) {
+function LaborBarChart({ departments }: { departments: DeptCost[] }) {
   if (departments.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8">
-        No time punches recorded for this week.
+        No shifts recorded for this week.
       </p>
     );
   }
   const chartData = departments.map((d) => ({
     name: d.departmentName,
-    value: hasCost ? parseFloat((d.laborCost ?? 0).toFixed(2)) : parseFloat(d.totalHours.toFixed(1)),
+    value: parseFloat(d.laborCost.toFixed(2)),
   }));
   return (
     <div className="h-44 w-full">
@@ -100,14 +93,11 @@ function LaborBarChart({ departments, hasCost }: { departments: DeptCost[]; hasC
           <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis
-            tickFormatter={(v) => hasCost ? `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}` : `${v}h`}
+            tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(value: number) => [
-              hasCost ? fmtCost(value) : fmtHours(value),
-              hasCost ? "Labor Cost" : "Hours",
-            ]}
+            formatter={(value: number) => [fmtCost(value), "Labor Cost"]}
             contentStyle={{ fontSize: 12 }}
           />
           <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -117,21 +107,18 @@ function LaborBarChart({ departments, hasCost }: { departments: DeptCost[]; hasC
   );
 }
 
-function LaborTable({
-  departments, totalHours, totalLaborCost,
-}: {
+function LaborTable({ departments, totalHours, totalLaborCost }: {
   departments: DeptCost[];
   totalHours: number;
-  totalLaborCost: number | null;
+  totalLaborCost: number;
 }) {
-  const hasCost = departments.some((d) => d.laborCost !== null);
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Department</TableHead>
           <TableHead className="text-right">Hours</TableHead>
-          {hasCost && <TableHead className="text-right">Labor Cost</TableHead>}
+          <TableHead className="text-right">Labor Cost</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -139,7 +126,7 @@ function LaborTable({
           <TableRow key={d.departmentId}>
             <TableCell className="font-medium">{d.departmentName}</TableCell>
             <TableCell className="text-right tabular-nums">{fmtHours(d.totalHours)}</TableCell>
-            {hasCost && <TableCell className="text-right tabular-nums font-medium">{fmtCost(d.laborCost)}</TableCell>}
+            <TableCell className="text-right tabular-nums font-medium">{fmtCost(d.laborCost)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -147,7 +134,7 @@ function LaborTable({
         <TableRow>
           <TableCell className="font-semibold">Total</TableCell>
           <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalHours)}</TableCell>
-          {hasCost && <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalLaborCost)}</TableCell>}
+          <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalLaborCost)}</TableCell>
         </TableRow>
       </TableFooter>
     </Table>
