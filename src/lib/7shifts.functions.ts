@@ -57,6 +57,9 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const apiKey = process.env.SECRET_7SHIFTS_API_KEY;
     if (!apiKey) throw new Error("7shifts API key is not configured (SECRET_7SHIFTS_API_KEY).");
 
+    const companyId = process.env.SEVEN_SHIFTS_COMPANY_ID;
+    if (!companyId) throw new Error("7shifts company ID is not configured (SEVEN_SHIFTS_COMPANY_ID).");
+
     // Compute current ISO week: Monday–Sunday in UTC
     const now = new Date();
     const day = now.getUTCDay(); // 0=Sun, 1=Mon, …
@@ -71,20 +74,14 @@ export const getLaborCost = createServerFn({ method: "GET" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    // 1. Get company ID
-    const companyRes = await shifts7fetch("/company", apiKey);
-    const companies: any[] = companyRes.data ?? [];
-    if (companies.length === 0) throw new Error("7shifts: no company found");
-    const companyId: number = companies[0].id;
-
-    // 2. Get roles → Map<id, name>
+    // 1. Get roles → Map<id, name>
     const rolesRes = await shifts7fetch(`/company/${companyId}/roles`, apiKey);
     const roleMap = new Map<number, string>();
     for (const r of rolesRes.data ?? []) {
       roleMap.set(r.id, r.name);
     }
 
-    // 3. Fetch all time punches for the week (paginated)
+    // 2. Fetch all time punches for the week (paginated)
     const punches: any[] = [];
     let cursor: string | null = null;
     do {
@@ -99,7 +96,7 @@ export const getLaborCost = createServerFn({ method: "GET" })
       cursor = punchRes.meta?.cursor ?? null;
     } while (cursor);
 
-    // 4. Aggregate by role
+    // 3. Aggregate by role
     type Acc = {
       roleName: string;
       regularHours: number;
