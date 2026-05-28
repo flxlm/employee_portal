@@ -105,7 +105,14 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
+    const [rolesRes, deptsRes] = await Promise.all([
+      shifts7fetch(`/company/${companyId}/roles`, apiKey),
+      shifts7fetch(`/company/${companyId}/departments`, apiKey),
+    ]);
+    const roleDeptMap = new Map<number, number>();
+    for (const r of rolesRes.data ?? []) {
+      if (r.department_id) roleDeptMap.set(r.id, r.department_id);
+    }
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
 
@@ -138,7 +145,7 @@ export const getLaborCost = createServerFn({ method: "POST" })
 
     for (const punch of allPunches) {
       if (punch.deleted) continue;
-      const deptId: number = punch.department_id ?? 0;
+      const deptId: number = punch.department_id || roleDeptMap.get(punch.role_id) || 0;
       const deptName = deptMap.get(deptId) ?? "Unassigned";
       const hours = calcPunchHours(punch);
       const hourlyWage = centsToHours(punch.hourly_wage ?? 0);
