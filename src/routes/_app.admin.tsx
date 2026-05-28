@@ -44,9 +44,10 @@ function formatWeekLabel(weekStart: string, weekEnd: string): string {
 
 function fmtHours(h: number): string { return h.toFixed(1) + "h"; }
 
-function fmtCost(c: number | null): string {
+function fmtCost(c: number | null, partial?: boolean): string {
   if (c === null) return "—";
-  return "$" + c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatted = "$" + c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return partial ? "~" + formatted : formatted;
 }
 
 function LaborCostSkeleton() {
@@ -64,7 +65,7 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
   return (
     <div className="space-y-6">
       <LaborBarChart departments={data.departments} />
-      <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} />
+      <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} partialLaborCost={data.partialLaborCost} />
       {data.punchNotes.length > 0 && <PunchNotes notes={data.punchNotes} />}
     </div>
   );
@@ -124,37 +125,50 @@ function LaborBarChart({ departments }: { departments: DeptCost[] }) {
   );
 }
 
-function LaborTable({ departments, totalHours, totalLaborCost }: {
+function LaborTable({ departments, totalHours, totalLaborCost, partialLaborCost }: {
   departments: DeptCost[];
   totalHours: number;
   totalLaborCost: number | null;
+  partialLaborCost: boolean;
 }) {
+  const hasAnyPartial = departments.some((d) => d.partialCost);
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Department</TableHead>
-          <TableHead className="text-right">Hours</TableHead>
-          <TableHead className="text-right">Labor Cost</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {departments.map((d) => (
-          <TableRow key={d.departmentId}>
-            <TableCell className="font-medium">{d.departmentName}</TableCell>
-            <TableCell className="text-right tabular-nums">{fmtHours(d.totalHours)}</TableCell>
-            <TableCell className="text-right tabular-nums font-medium">{fmtCost(d.laborCost)}</TableCell>
+    <div className="space-y-1">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Department</TableHead>
+            <TableHead className="text-right">Hours</TableHead>
+            <TableHead className="text-right">Labor Cost</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell className="font-semibold">Total</TableCell>
-          <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalHours)}</TableCell>
-          <TableCell className="text-right font-semibold tabular-nums">{fmtCost(totalLaborCost)}</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {departments.map((d) => (
+            <TableRow key={d.departmentId}>
+              <TableCell className="font-medium">{d.departmentName}</TableCell>
+              <TableCell className="text-right tabular-nums">{fmtHours(d.totalHours)}</TableCell>
+              <TableCell className="text-right tabular-nums font-medium">
+                {fmtCost(d.laborCost, d.partialCost)}
+                {d.partialCost && <span className="ml-1 text-xs text-muted-foreground">*</span>}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell className="font-semibold">Total</TableCell>
+            <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalHours)}</TableCell>
+            <TableCell className="text-right font-semibold tabular-nums">
+              {fmtCost(totalLaborCost, partialLaborCost)}
+              {partialLaborCost && <span className="ml-1 text-xs text-muted-foreground">*</span>}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+      {hasAnyPartial && (
+        <p className="text-xs text-muted-foreground">* Some punches have no wage on file — cost shown is a partial estimate.</p>
+      )}
+    </div>
   );
 }
 

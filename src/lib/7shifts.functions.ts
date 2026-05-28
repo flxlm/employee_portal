@@ -6,7 +6,8 @@ export type DeptCost = {
   departmentId: number;
   departmentName: string;
   totalHours: number;
-  laborCost: number | null;
+  laborCost: number | null; // null = no wage data at all; partial = some punches had no wage
+  partialCost: boolean;
 };
 
 export type PunchNote = {
@@ -23,6 +24,7 @@ export type LaborCostResult = {
   departments: DeptCost[];
   totalHours: number;
   totalLaborCost: number | null;
+  partialLaborCost: boolean;
   punchNotes: PunchNote[];
 };
 
@@ -132,11 +134,11 @@ export const getLaborCost = createServerFn({ method: "POST" })
       page++;
     } while (cursor && page < 20);
 
-    type Acc = { departmentName: string; totalHours: number; laborCost: number; hasAllWages: boolean };
+    type Acc = { departmentName: string; totalHours: number; laborCost: number; wageCount: number; noWageCount: number };
     const accMap = new Map<number, Acc>();
     function upsert(deptId: number, deptName: string): Acc {
       if (!accMap.has(deptId)) {
-        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, hasAllWages: true });
+        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, wageCount: 0, noWageCount: 0 });
       }
       return accMap.get(deptId)!;
     }
@@ -154,8 +156,9 @@ export const getLaborCost = createServerFn({ method: "POST" })
       acc.totalHours += hours;
       if (hourlyWage > 0) {
         acc.laborCost += hours * hourlyWage;
+        acc.wageCount++;
       } else {
-        acc.hasAllWages = false;
+        acc.noWageCount++;
       }
 
       if (punch.notes && typeof punch.notes === "string" && punch.notes.trim()) {
@@ -173,7 +176,8 @@ export const getLaborCost = createServerFn({ method: "POST" })
       departmentId,
       departmentName: acc.departmentName,
       totalHours: acc.totalHours,
-      laborCost: acc.hasAllWages ? acc.laborCost : null,
+      laborCost: acc.wageCount > 0 ? acc.laborCost : null,
+      partialCost: acc.noWageCount > 0,
     }));
 
     departments.sort((a, b) => {
@@ -182,8 +186,9 @@ export const getLaborCost = createServerFn({ method: "POST" })
     });
 
     const totalHours = departments.reduce((s, d) => s + d.totalHours, 0);
-    const anyNullCost = departments.some((d) => d.laborCost === null);
+    const anyNullCost = departments.every((d) => d.laborCost === null);
     const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
+    const partialLaborCost = departments.some((d) => d.partialCost || d.laborCost === null);
 
-    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, punchNotes };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, partialLaborCost, punchNotes };
   });
