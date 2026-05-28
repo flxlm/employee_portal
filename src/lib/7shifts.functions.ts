@@ -8,7 +8,7 @@ export type DeptCost = {
   totalHours: number;
   laborCost: number | null; // null = no wage data at all; partial = some punches had no wage
   partialCost: boolean;
-  hasLongPunch: boolean;
+  hasPunchError: boolean;
 };
 
 export type PunchNote = {
@@ -19,22 +19,14 @@ export type PunchNote = {
   note: string;
 };
 
-export type WagelessPunch = {
+export type PunchError = {
   userId: number;
   departmentId: number;
   departmentName: string;
-  clockedIn: string;
+  clockedIn: string | null;
   clockedOut: string | null;
   hours: number;
-};
-
-export type LongPunch = {
-  userId: number;
-  departmentId: number;
-  departmentName: string;
-  clockedIn: string;
-  clockedOut: string | null;
-  hours: number;
+  reasons: string[];
 };
 
 export type LaborCostResult = {
@@ -45,8 +37,7 @@ export type LaborCostResult = {
   totalLaborCost: number | null;
   partialLaborCost: boolean;
   punchNotes: PunchNote[];
-  wagelessPunches: WagelessPunch[];
-  longPunches: LongPunch[];
+  punchErrors: PunchError[];
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
@@ -155,18 +146,17 @@ export const getLaborCost = createServerFn({ method: "POST" })
       page++;
     } while (cursor && page < 20);
 
-    type Acc = { departmentName: string; totalHours: number; laborCost: number; wageCount: number; noWageCount: number; hasLongPunch: boolean };
+    type Acc = { departmentName: string; totalHours: number; laborCost: number; wageCount: number; noWageCount: number; hasPunchError: boolean };
     const accMap = new Map<number, Acc>();
     function upsert(deptId: number, deptName: string): Acc {
       if (!accMap.has(deptId)) {
-        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, wageCount: 0, noWageCount: 0, hasLongPunch: false });
+        accMap.set(deptId, { departmentName: deptName, totalHours: 0, laborCost: 0, wageCount: 0, noWageCount: 0, hasPunchError: false });
       }
       return accMap.get(deptId)!;
     }
 
     const punchNotes: PunchNote[] = [];
-    const wagelessPunches: WagelessPunch[] = [];
-    const longPunches: LongPunch[] = [];
+    const punchErrors: PunchError[] = [];
 
     for (const punch of allPunches) {
       if (punch.deleted) continue;
@@ -182,25 +172,24 @@ export const getLaborCost = createServerFn({ method: "POST" })
         acc.wageCount++;
       } else {
         acc.noWageCount++;
-        wagelessPunches.push({
-          userId: punch.user_id,
-          departmentId: deptId,
-          departmentName: deptName,
-          clockedIn: punch.clocked_in,
-          clockedOut: punch.clocked_out ?? null,
-          hours,
-        });
       }
 
-      if (hours > 10) {
-        acc.hasLongPunch = true;
-        longPunches.push({
+      const reasons: string[] = [];
+      if (!punch.clocked_in) reasons.push("No clock-in");
+      if (!punch.clocked_out) reasons.push("No clock-out");
+      if (hourlyWage === 0) reasons.push("No wage on file");
+      if (hours > 10) reasons.push("Over 10 hours");
+
+      if (reasons.length > 0) {
+        acc.hasPunchError = true;
+        punchErrors.push({
           userId: punch.user_id,
           departmentId: deptId,
           departmentName: deptName,
-          clockedIn: punch.clocked_in,
+          clockedIn: punch.clocked_in ?? null,
           clockedOut: punch.clocked_out ?? null,
           hours,
+          reasons,
         });
       }
 
@@ -221,7 +210,7 @@ export const getLaborCost = createServerFn({ method: "POST" })
       totalHours: acc.totalHours,
       laborCost: acc.wageCount > 0 ? acc.laborCost : null,
       partialCost: acc.noWageCount > 0,
-      hasLongPunch: acc.hasLongPunch,
+      hasPunchError: acc.hasPunchError,
     }));
 
     departments.sort((a, b) => {
@@ -234,5 +223,5 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
     const partialLaborCost = departments.some((d) => d.partialCost || d.laborCost === null);
 
-    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, partialLaborCost, punchNotes, wagelessPunches, longPunches };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, partialLaborCost, punchNotes, punchErrors };
   });
