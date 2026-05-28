@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, type LaborCostResult, type DeptCost, type PunchNote } from "@/lib/7shifts.functions";
+import { getLaborCost, type LaborCostResult, type DeptCost, type PunchNote, type WagelessPunch } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,33 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
       <LaborBarChart departments={data.departments} />
       <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} partialLaborCost={data.partialLaborCost} />
       {data.punchNotes.length > 0 && <PunchNotes notes={data.punchNotes} />}
+      {data.wagelessPunches.length > 0 && <WagelessPunches punches={data.wagelessPunches} />}
+    </div>
+  );
+}
+
+function WagelessPunches({ punches }: { punches: WagelessPunch[] }) {
+  const fmtDt = (iso: string) =>
+    new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-muted-foreground">Punches Missing Wages ({punches.length})</p>
+      <ul className="divide-y divide-border rounded-md border border-border">
+        {punches.map((p, i) => (
+          <li key={i} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium">{p.departmentName}</span>
+              <span className="text-xs text-muted-foreground">
+                {fmtDt(p.clockedIn)} → {p.clockedOut ? fmtDt(p.clockedOut) : "still clocked in"}
+              </span>
+            </span>
+            <span className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground tabular-nums">
+              <span>{p.hours.toFixed(1)}h</span>
+              <span>UID {p.userId}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

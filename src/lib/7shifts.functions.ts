@@ -18,6 +18,15 @@ export type PunchNote = {
   note: string;
 };
 
+export type WagelessPunch = {
+  userId: number;
+  departmentId: number;
+  departmentName: string;
+  clockedIn: string;
+  clockedOut: string | null;
+  hours: number;
+};
+
 export type LaborCostResult = {
   weekStart: string;
   weekEnd: string;
@@ -26,6 +35,7 @@ export type LaborCostResult = {
   totalLaborCost: number | null;
   partialLaborCost: boolean;
   punchNotes: PunchNote[];
+  wagelessPunches: WagelessPunch[];
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
@@ -144,6 +154,7 @@ export const getLaborCost = createServerFn({ method: "POST" })
     }
 
     const punchNotes: PunchNote[] = [];
+    const wagelessPunches: WagelessPunch[] = [];
 
     for (const punch of allPunches) {
       if (punch.deleted) continue;
@@ -159,6 +170,14 @@ export const getLaborCost = createServerFn({ method: "POST" })
         acc.wageCount++;
       } else {
         acc.noWageCount++;
+        wagelessPunches.push({
+          userId: punch.user_id,
+          departmentId: deptId,
+          departmentName: deptName,
+          clockedIn: punch.clocked_in,
+          clockedOut: punch.clocked_out ?? null,
+          hours,
+        });
       }
 
       if (punch.notes && typeof punch.notes === "string" && punch.notes.trim()) {
@@ -190,5 +209,5 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
     const partialLaborCost = departments.some((d) => d.partialCost || d.laborCost === null);
 
-    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, partialLaborCost, punchNotes };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, partialLaborCost, punchNotes, wagelessPunches };
   });
