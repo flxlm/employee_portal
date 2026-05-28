@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, type LaborCostResult, type DeptCost, type PunchNote, type WagelessPunch, type LongPunch } from "@/lib/7shifts.functions";
+import { getLaborCost, type LaborCostResult, type DeptCost, type PunchNote, type PunchError } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,56 +67,34 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
       <LaborBarChart departments={data.departments} />
       <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} partialLaborCost={data.partialLaborCost} />
       {data.punchNotes.length > 0 && <PunchNotes notes={data.punchNotes} />}
-      {data.wagelessPunches.length > 0 && <WagelessPunches punches={data.wagelessPunches} />}
-      {data.longPunches.length > 0 && <LongPunches punches={data.longPunches} />}
+      {data.punchErrors.length > 0 && <PunchErrors errors={data.punchErrors} />}
     </div>
   );
 }
 
-function WagelessPunches({ punches }: { punches: WagelessPunch[] }) {
-  const fmtDt = (iso: string) =>
-    new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+function PunchErrors({ errors }: { errors: PunchError[] }) {
+  const fmtDt = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-muted-foreground">Punches Missing Wages ({punches.length})</p>
-      <ul className="divide-y divide-border rounded-md border border-border">
-        {punches.map((p, i) => (
-          <li key={i} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
-            <span className="flex flex-col gap-0.5">
-              <span className="font-medium">{p.departmentName}</span>
-              <span className="text-xs text-muted-foreground">
-                {fmtDt(p.clockedIn)} → {p.clockedOut ? fmtDt(p.clockedOut) : "still clocked in"}
-              </span>
-            </span>
-            <span className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground tabular-nums">
-              <span>{p.hours.toFixed(1)}h</span>
-              <span>UID {p.userId}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function LongPunches({ punches }: { punches: LongPunch[] }) {
-  const fmtDt = (iso: string) =>
-    new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-destructive">Punches Over 10 Hours ({punches.length})</p>
+      <p className="text-sm font-medium text-destructive">Punch Mistakes / Errors ({errors.length})</p>
       <ul className="divide-y divide-border rounded-md border border-destructive/40">
-        {punches.map((p, i) => (
-          <li key={i} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
+        {errors.map((e, i) => (
+          <li key={i} className="flex items-start justify-between gap-4 px-3 py-2 text-sm">
             <span className="flex flex-col gap-0.5">
-              <span className="font-medium">{p.departmentName}</span>
+              <span className="font-medium">{e.departmentName}</span>
               <span className="text-xs text-muted-foreground">
-                {fmtDt(p.clockedIn)} → {p.clockedOut ? fmtDt(p.clockedOut) : "still clocked in"}
+                {fmtDt(e.clockedIn)} → {e.clockedOut ? fmtDt(e.clockedOut) : "no clock-out"}
+              </span>
+              <span className="flex flex-wrap gap-1 mt-0.5">
+                {e.reasons.map((r) => (
+                  <span key={r} className="inline-block rounded bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">{r}</span>
+                ))}
               </span>
             </span>
-            <span className="flex items-center gap-3 shrink-0 text-xs tabular-nums">
-              <span className="text-destructive font-medium">{p.hours.toFixed(1)}h</span>
-              <span className="text-muted-foreground">UID {p.userId}</span>
+            <span className="flex items-center gap-3 shrink-0 text-xs tabular-nums pt-0.5">
+              <span className="text-muted-foreground">{e.hours.toFixed(1)}h</span>
+              <span className="text-muted-foreground">UID {e.userId}</span>
             </span>
           </li>
         ))}
@@ -185,7 +163,6 @@ function LaborTable({ departments, totalHours, totalLaborCost, partialLaborCost 
   totalLaborCost: number | null;
   partialLaborCost: boolean;
 }) {
-  const hasAnyPartial = departments.some((d) => d.partialCost);
   return (
     <div className="space-y-1">
       <Table>
@@ -201,12 +178,11 @@ function LaborTable({ departments, totalHours, totalLaborCost, partialLaborCost 
             <TableRow key={d.departmentId}>
               <TableCell className="font-medium">
                 {d.departmentName}
-                {d.hasLongPunch && <span className="ml-1 text-xs text-destructive" title="Contains punches over 10 hours">*</span>}
+                {d.hasPunchError && <span className="ml-1 text-xs text-destructive" title="Contains punch errors">*</span>}
               </TableCell>
               <TableCell className="text-right tabular-nums">{fmtHours(d.totalHours)}</TableCell>
               <TableCell className="text-right tabular-nums font-medium">
                 {fmtCost(d.laborCost, d.partialCost)}
-                {d.partialCost && <span className="ml-1 text-xs text-muted-foreground">*</span>}
               </TableCell>
             </TableRow>
           ))}
@@ -217,14 +193,10 @@ function LaborTable({ departments, totalHours, totalLaborCost, partialLaborCost 
             <TableCell className="text-right font-semibold tabular-nums">{fmtHours(totalHours)}</TableCell>
             <TableCell className="text-right font-semibold tabular-nums">
               {fmtCost(totalLaborCost, partialLaborCost)}
-              {partialLaborCost && <span className="ml-1 text-xs text-muted-foreground">*</span>}
             </TableCell>
           </TableRow>
         </TableFooter>
       </Table>
-      {hasAnyPartial && (
-        <p className="text-xs text-muted-foreground">* Some punches have no wage on file — cost shown is a partial estimate.</p>
-      )}
     </div>
   );
 }
