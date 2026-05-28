@@ -9,12 +9,21 @@ export type DeptCost = {
   laborCost: number | null;
 };
 
+export type PunchNote = {
+  userId: number;
+  departmentId: number;
+  departmentName: string;
+  clockedIn: string;
+  note: string;
+};
+
 export type LaborCostResult = {
   weekStart: string;
   weekEnd: string;
   departments: DeptCost[];
   totalHours: number;
   totalLaborCost: number | null;
+  punchNotes: PunchNote[];
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
@@ -47,30 +56,24 @@ async function shifts7fetch(path: string, apiKey: string): Promise<any> {
   return res.json();
 }
 
-// Each shift entry has: user_id, role_id, wage, total.total_hours, total.total_pay
-function extractReportShifts(response: any): any[] {
-  if (!response) return [];
-  // { data: { users: [{ shifts: [...] }] } }
-  if (Array.isArray(response.data?.users)) {
-    return response.data.users.flatMap((u: any) => u.shifts ?? []);
-  }
-  // { data: { shifts: [...] } }
-  if (Array.isArray(response.data?.shifts)) return response.data.shifts;
-  // { data: [{ shifts: [...] }] }
-  if (Array.isArray(response.data)) {
-    const first = response.data[0];
-    if (first && Array.isArray(first.shifts)) {
-      return response.data.flatMap((u: any) => u.shifts ?? []);
+// hourly_wage in the time_punches response is in cents
+function centsToHours(cents: number): number {
+  return cents / 100;
+}
+
+function calcPunchHours(punch: any): number {
+  if (!punch.clocked_in) return 0;
+  const clockIn = new Date(punch.clocked_in).getTime();
+  const clockOut = punch.clocked_out ? new Date(punch.clocked_out).getTime() : Date.now();
+  let ms = Math.max(0, clockOut - clockIn);
+  for (const brk of punch.breaks ?? []) {
+    if (!brk.paid && brk.in) {
+      const bIn = new Date(brk.in).getTime();
+      const bOut = brk.out ? new Date(brk.out).getTime() : Date.now();
+      ms -= Math.max(0, bOut - bIn);
     }
-    return response.data;
   }
-  // { users: [{ shifts: [...] }] }
-  if (Array.isArray(response.users)) {
-    return response.users.flatMap((u: any) => u.shifts ?? []);
-  }
-  // { shifts: [...] }
-  if (Array.isArray(response.shifts)) return response.shifts;
-  return [];
+  return Math.max(0, ms / (1000 * 60 * 60));
 }
 
 export const getLaborCost = createServerFn({ method: "POST" })
@@ -102,17 +105,25 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const weekStart = toISODate(monday);
     const weekEnd = toISODate(sunday);
 
-    // Roles → Map<roleId, departmentId> and Departments → Map<deptId, name>
-    const [rolesRes, deptsRes] = await Promise.all([
-      shifts7fetch(`/company/${companyId}/roles`, apiKey),
-      shifts7fetch(`/company/${companyId}/departments`, apiKey),
-    ]);
-    const roleDeptMap = new Map<number, number>();
-    for (const r of rolesRes.data ?? []) {
-      if (r.department_id) roleDeptMap.set(r.id, r.department_id);
-    }
+    const deptsRes = await shifts7fetch(`/company/${companyId}/departments`, apiKey);
     const deptMap = new Map<number, string>();
     for (const d of deptsRes.data ?? []) deptMap.set(d.id, d.name);
+
+    // Fetch all time punches for the week via cursor pagination
+    const allPunches: any[] = [];
+    const baseQs = new URLSearchParams({ business_date_start: weekStart, business_date_end: weekEnd, limit: "200" });
+    if (locationId) baseQs.set("location_id", locationId);
+
+    let cursor: string | null = null;
+    let page = 0;
+    do {
+      const qs = new URLSearchParams(baseQs);
+      if (cursor) qs.set("cursor", cursor);
+      const res = await shifts7fetch(`/company/${companyId}/time_punches?${qs}`, apiKey);
+      allPunches.push(...(res.data ?? []));
+      cursor = res.meta?.cursor?.next ?? null;
+      page++;
+    } while (cursor && page < 20);
 
     type Acc = { departmentName: string; totalHours: number; laborCost: number; hasAllWages: boolean };
     const accMap = new Map<number, Acc>();
@@ -123,72 +134,31 @@ export const getLaborCost = createServerFn({ method: "POST" })
       return accMap.get(deptId)!;
     }
 
-    // --- Source 1: hours_and_wages report (approved punches) ---
-    // Use total_pay and total_hours directly from each shift entry.
-    // Also build wageMap for estimating cost of unapproved punches below.
-    const wageMap = new Map<string, number>(); // "userId:roleId" → hourly wage
-    const reportQs = new URLSearchParams({
-      company_id: companyId,
-      from: weekStart,
-      to: weekEnd,
-      punches: "true",
-    });
-    if (locationId) reportQs.set("location_id", locationId);
+    const punchNotes: PunchNote[] = [];
 
-    try {
-      const reportRes = await shifts7fetch(`/reports/hours_and_wages?${reportQs}`, apiKey);
-      const shifts = extractReportShifts(reportRes);
-
-      for (const shift of shifts) {
-        const roleId: number = shift.role_id ?? 0;
-        const deptId: number = roleDeptMap.get(roleId) ?? 0;
-        const deptName = deptMap.get(deptId) ?? "Unassigned";
-        const hours: number = shift.total?.total_hours ?? 0;
-        const pay: number = shift.total?.total_pay ?? 0;
-        const wage = shift.wage;
-
-        if (shift.user_id && roleId && typeof wage === "number" && wage > 0 && wage <= 500) {
-          const wk = `${shift.user_id}:${roleId}`;
-          if (!wageMap.has(wk)) wageMap.set(wk, wage);
-        }
-
-        const acc = upsert(deptId, deptName);
-        acc.totalHours += hours;
-        acc.laborCost += pay;
-      }
-    } catch {
-      // report unavailable; unapproved punches below will still show hours
-    }
-
-    // --- Source 2: unapproved time punches ---
-    // Approved punches are already counted above. Only add unapproved ones to avoid double-counting.
-    const punchQs = new URLSearchParams({
-      start: monday.toISOString(),
-      end: sunday.toISOString(),
-      limit: "500",
-    });
-    if (locationId) punchQs.set("location_id", locationId);
-    const punchRes = await shifts7fetch(`/company/${companyId}/time_punches?${punchQs}`, apiKey);
-    const unapproved: any[] = (punchRes.data ?? []).filter((p: any) => !p.approved);
-
-    for (const punch of unapproved) {
-      const roleId: number = punch.role_id ?? 0;
-      const deptId: number = punch.department_id ?? roleDeptMap.get(roleId) ?? 0;
+    for (const punch of allPunches) {
+      if (punch.deleted) continue;
+      const deptId: number = punch.department_id ?? 0;
       const deptName = deptMap.get(deptId) ?? "Unassigned";
+      const hours = calcPunchHours(punch);
+      const hourlyWage = centsToHours(punch.hourly_wage ?? 0);
 
-      let hours = 0;
-      if (punch.clocked_in) {
-        const end = punch.clocked_out ? new Date(punch.clocked_out) : new Date();
-        hours = Math.max(0, (end.getTime() - new Date(punch.clocked_in).getTime()) / (1000 * 60 * 60));
-      }
-
-      const wage = wageMap.get(`${punch.user_id}:${roleId}`) ?? null;
       const acc = upsert(deptId, deptName);
       acc.totalHours += hours;
-      if (wage !== null && acc.hasAllWages) {
-        acc.laborCost += hours * wage;
+      if (hourlyWage > 0) {
+        acc.laborCost += hours * hourlyWage;
       } else {
         acc.hasAllWages = false;
+      }
+
+      if (punch.notes && typeof punch.notes === "string" && punch.notes.trim()) {
+        punchNotes.push({
+          userId: punch.user_id,
+          departmentId: deptId,
+          departmentName: deptName,
+          clockedIn: punch.clocked_in,
+          note: punch.notes.trim(),
+        });
       }
     }
 
@@ -208,5 +178,5 @@ export const getLaborCost = createServerFn({ method: "POST" })
     const anyNullCost = departments.some((d) => d.laborCost === null);
     const totalLaborCost = anyNullCost ? null : departments.reduce((s, d) => s + (d.laborCost ?? 0), 0);
 
-    return { weekStart, weekEnd, departments, totalHours, totalLaborCost };
+    return { weekStart, weekEnd, departments, totalHours, totalLaborCost, punchNotes };
   });

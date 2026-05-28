@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addAllowedEmail, listAllowedEmails, removeAllowedEmail } from "@/lib/admin.functions";
 import { getMenuWebhookUrl, setMenuWebhookUrl } from "@/lib/app-settings.functions";
-import { getLaborCost, type LaborCostResult, type DeptCost } from "@/lib/7shifts.functions";
+import { getLaborCost, type LaborCostResult, type DeptCost, type PunchNote } from "@/lib/7shifts.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,29 @@ function LaborCostContent({ data }: { data: LaborCostResult }) {
     <div className="space-y-6">
       <LaborBarChart departments={data.departments} />
       <LaborTable departments={data.departments} totalHours={data.totalHours} totalLaborCost={data.totalLaborCost} />
+      {data.punchNotes.length > 0 && <PunchNotes notes={data.punchNotes} />}
+    </div>
+  );
+}
+
+function PunchNotes({ notes }: { notes: PunchNote[] }) {
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-muted-foreground">Punch Notes</p>
+      <ul className="divide-y divide-border rounded-md border border-border">
+        {notes.map((n, i) => (
+          <li key={i} className="flex flex-col gap-0.5 px-3 py-2 text-sm">
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{n.departmentName}</span>
+              <span>·</span>
+              <span>{fmt(n.clockedIn)}</span>
+            </span>
+            <span>{n.note}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
