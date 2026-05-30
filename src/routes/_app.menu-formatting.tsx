@@ -263,10 +263,22 @@ function MenuFormattingPage() {
   };
 
   const handleSave = async () => {
+    // Freeze the fully-merged state (code defaults + user overrides) so that
+    // future changes to DEFAULT_FORMATTING in code never silently alter the display.
+    const ALL_KEYS: FormattingKey[] = [
+      "global", "section", "subsection", "itemTitle",
+      "itemDescription", "modification", "price", "priceSuperscript", "brand",
+    ];
+    const frozen: MenuFormatting = {};
+    for (const key of ALL_KEYS) {
+      const merged: TextStyle = { ...(DEFAULT_FORMATTING[key] ?? {}), ...(settings[key] ?? {}) };
+      if (Object.keys(merged).length > 0) frozen[key] = merged;
+    }
     setSaving(true);
     try {
-      await save({ data: { settings } });
-      setSavedSettings(settings);
+      await save({ data: { settings: frozen } });
+      setSettings(frozen);
+      setSavedSettings(frozen);
       refreshDisplay({}).catch((e) => console.error("[formatting] refresh failed", e));
       toast.success("Formatting saved");
     } catch (e) {
