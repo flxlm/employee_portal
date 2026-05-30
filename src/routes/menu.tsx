@@ -590,24 +590,52 @@ function DisplayPage() {
       const unscaledHeight = flowRect.height / scale;
       const columnWidth = (unscaledWidth - columnGap * (columnCount - 1)) / columnCount;
 
+      // Collect bounds of all rendered content to check for occupancy before placing a star.
+      const contentBounds = Array.from(
+        flow.querySelectorAll<HTMLElement>(
+          ".menu-item, .menu-section-title, .menu-section-block, .menu-item-note, .menu-end-logo",
+        ),
+      ).map((ce) => {
+        const r = ce.getBoundingClientRect();
+        return {
+          top: (r.top - flowRect.top) / scale,
+          bottom: (r.bottom - flowRect.top) / scale,
+          left: (r.left - flowRect.left) / scale,
+          right: (r.right - flowRect.left) / scale,
+        };
+      });
+
       const lastElements = flow.querySelectorAll<HTMLElement>(".subsection-last-of-section");
       const placements: AsteriskPlacement[] = [];
 
       lastElements.forEach((el) => {
         const rect = el.getBoundingClientRect();
         const elBottomUnscaled = (rect.bottom - flowRect.top) / scale;
-        const elLeftUnscaled = (rect.left - flowRect.left) / scale;
+        // Use rect.right to find the column where the element's bottom actually sits.
+        // For multi-column elements, rect.left is the start column but rect.right is the end column.
+        const elRightUnscaled = (rect.right - flowRect.left) / scale;
         const gap = unscaledHeight - elBottomUnscaled;
         if (gap < MIN_GAP_PX) return;
 
         const columnIndex = Math.max(
           0,
-          Math.min(columnCount - 1, Math.floor((elLeftUnscaled + 1) / (columnWidth + columnGap))),
+          Math.min(columnCount - 1, Math.floor(elRightUnscaled / (columnWidth + columnGap))),
         );
         const columnLeft = columnIndex * (columnWidth + columnGap);
+        const asteriskTop = elBottomUnscaled + 8;
+
+        // Skip placement if any content element already occupies the proposed star area.
+        const hasOverlap = contentBounds.some(
+          (r) =>
+            r.bottom > asteriskTop &&
+            r.top < unscaledHeight &&
+            r.left < columnLeft + columnWidth - 4 &&
+            r.right > columnLeft + 4,
+        );
+        if (hasOverlap) return;
+
         const height = Math.min(gap - 16, MAX_ASTERISK_PX);
-        const top = elBottomUnscaled + 8;
-        placements.push({ top, left: columnLeft, width: columnWidth, height });
+        placements.push({ top: asteriskTop, left: columnLeft, width: columnWidth, height });
       });
 
       setAsteriskPlacements((prev) => {
