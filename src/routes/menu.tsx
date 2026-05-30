@@ -454,10 +454,13 @@ function DisplayPage() {
 
   const styleFor = useMemo(() => {
     return (key: FormattingKey): React.CSSProperties => {
+      // Merge order: code global defaults → code key defaults → user global → user key.
+      // User-configured settings (at any level) beat code-level defaults.
+      // This matches the preview order in the formatting page.
       const merged: TextStyle = {
         ...DEFAULT_FORMATTING.global,
-        ...formatting.global,
         ...DEFAULT_FORMATTING[key],
+        ...formatting.global,
         ...formatting[key],
       };
       return {
