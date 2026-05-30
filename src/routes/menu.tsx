@@ -275,6 +275,11 @@ const COLUMN_CSS = `
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
 }
+.menu-flow > section > div:not(:last-child) {
+  break-after: avoid;
+  -webkit-column-break-after: avoid;
+  page-break-after: avoid;
+}
 .menu-end-logo {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
